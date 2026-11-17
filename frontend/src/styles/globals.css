@@ -1,0 +1,379 @@
+/* ============================================================
+   MAKARIOVS & MATIÈRE — Global Styles & Brand Design Tokens
+   ============================================================ */
+
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-paper: #FDFBF7;
+  --color-paper2: #F1EADA;
+  --color-ink: #14110F;
+  --color-ink-soft: #3A332D;
+  --color-wax: #6B1D2F;
+  --color-wax-light: #8A1D2E;
+  --color-gold: #B08D57;
+  --color-gold-light: #C8A97A;
+  --color-gold-dark: #8C6E3D;
+
+  --font-display: var(--font-cormorant), 'Playfair Display', Georgia, serif;
+  --font-script: var(--font-pinyon), cursive, serif;
+  --font-body: var(--font-eb-garamond), Georgia, serif;
+  --font-arabic: var(--font-amiri), serif;
+  --font-arabic-display: 'Noto Naskh Arabic', var(--font-amiri), serif;
+  --font-arabic-sans: var(--font-ibm-plex-arabic), system-ui, sans-serif;
+}
+
+/* ── Brand Custom Properties ─────────────────────────── */
+:root {
+  --font-cormorant: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  --font-pinyon: 'Pinyon Script', cursive, serif;
+  --font-eb-garamond: 'EB Garamond', Georgia, serif;
+  --font-amiri: 'Amiri', serif;
+  --font-noto-naskh: 'Noto Naskh Arabic', 'Amiri', serif;
+  --font-ibm-plex-arabic: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+
+  --color-paper: #FDFBF7;
+  --color-paper2: #F1EADA;
+  --color-ink: #14110F;
+  --color-ink-soft: #3A332D;
+  --color-wax: #6B1D2F;
+  --color-wax-light: #8A1D2E;
+  --color-gold: #B08D57;
+  --color-gold-light: #C8A97A;
+  --color-gold-dark: #8C6E3D;
+}
+
+/* ── Dark Theme Custom Properties ───────────────────────── */
+.dark, html.dark {
+  --color-paper: #0D0A08;
+  --color-paper2: #161210;
+  --color-ink: #FDFBF7;
+  --color-ink-soft: #C8C0B7;
+  --color-wax: #8A1D2E;
+  --color-wax-light: #A8283D;
+  --color-gold: #C8A97A;
+  --color-gold-light: #DFCA9B;
+  --color-gold-dark: #A07F4A;
+}
+
+/* ── Base Styles ─────────────────────────────────────────── */
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "swsh" 1;
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+  background-color: #FDFBF7;
+  color: #14110F;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html.dark {
+  background-color: #0D0A08 !important;
+  color: #FDFBF7 !important;
+}
+
+body {
+  background-color: #FDFBF7;
+  color: #14110F;
+  font-family: var(--font-eb-garamond), Georgia, serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html.dark body {
+  background-color: #0D0A08 !important;
+  color: #FDFBF7 !important;
+}
+
+/* ── Paper Grain Texture ─────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  opacity: 0.6;
+  mix-blend-mode: multiply;
+  transition: opacity 0.3s ease;
+}
+
+html.dark body::before {
+  opacity: 0.16;
+  mix-blend-mode: screen;
+}
+
+/* ── Anchor Scroll Offset ────────────────────────────────── */
+[id] {
+  scroll-margin-top: 80px;
+}
+
+/* ── Typography Base ─────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-cormorant), 'Playfair Display', Georgia, serif;
+  letter-spacing: 0.05em;
+  font-feature-settings: "kern" 1, "liga" 1, "swsh" 1;
+}
+
+/* ── Selection ───────────────────────────────────────────── */
+::selection {
+  background-color: #6B1D2F;
+  color: #FDFBF7;
+}
+
+html.dark ::selection {
+  background-color: #8A1D2E;
+  color: #FDFBF7;
+}
+
+/* ── Luxury Scrollbar ────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #FDFBF7;
+}
+html.dark ::-webkit-scrollbar-track {
+  background: #0D0A08;
+}
+::-webkit-scrollbar-thumb {
+  background: #B08D57;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6B1D2F;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #C8A97A;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #8A1D2E;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #B08D57 #FDFBF7;
+}
+
+/* ── RTL Support ─────────────────────────────────────────── */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+  font-family: var(--font-amiri), serif;
+}
+
+[dir="rtl"] .flip-rtl {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3 {
+  font-family: 'Noto Naskh Arabic', 'Amiri', serif;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+
+[dir="rtl"] h4,
+[dir="rtl"] h5,
+[dir="rtl"] h6 {
+  font-family: 'Noto Naskh Arabic', 'Amiri', serif;
+  letter-spacing: 0.01em;
+}
+
+[dir="rtl"] body,
+[dir="rtl"] p {
+  font-family: 'Amiri', serif;
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+/* RTL font-display class: use Amiri with tight Arabic tracking */
+[dir="rtl"] .font-display {
+  font-family: var(--font-amiri);
+  letter-spacing: 0.01em;
+}
+
+/* ── Arabic Font Utility ──────────────────────────────────── */
+/* Apply to any element that needs Amiri with proper Arabic tracking */
+.font-display-ar {
+  font-family: 'Amiri', serif;
+  letter-spacing: 0.01em;
+  line-height: 1.6;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+/* ── Hairline Dividers ───────────────────────────────────── */
+.hairline {
+  display: block;
+  height: 1px;
+  background: #B08D57;
+  width: 0;
+  animation: draw-line 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ── Keyframes ───────────────────────────────────────────── */
+@keyframes draw-line {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes float-petal {
+  0%, 100% { transform: translateY(0px) rotate(0deg);   opacity: 0.3; }
+  33%       { transform: translateY(-12px) rotate(5deg); opacity: 0.7; }
+  66%       { transform: translateY(-6px) rotate(-3deg); opacity: 0.5; }
+}
+
+@keyframes wax-stamp {
+  0%   { transform: scale(0) rotate(-15deg);   opacity: 0; }
+  60%  { transform: scale(1.15) rotate(2deg);  opacity: 1; }
+  80%  { transform: scale(0.95) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg);     opacity: 1; }
+}
+
+@keyframes float-up {
+  0%, 100% { transform: translateY(0px) rotate(0deg);   opacity: 0.4; }
+  50%       { transform: translateY(-18px) rotate(8deg); opacity: 0.8; }
+}
+
+@keyframes gold-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ── Animation Utility Classes ───────────────────────────── */
+.animate-draw-line  { animation: draw-line  1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.animate-wax-stamp  { animation: wax-stamp  0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.animate-float-up   { animation: float-up   6s ease-in-out infinite; }
+.animate-float-petal { animation: float-petal 8s ease-in-out infinite; }
+
+/* Gold shimmer utility — apply to gold hairlines */
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    #B08D57 0%,
+    #C8A97A 40%,
+    #8C6E3D 50%,
+    #C8A97A 60%,
+    #B08D57 100%
+  );
+  background-size: 200% auto;
+  animation: gold-shimmer 3s linear infinite;
+}
+
+/* ── Apple iOS Glassmorphism System ────────────────────────── */
+.ios-glass {
+  background: rgba(251, 248, 238, 0.72) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 
+    0 10px 32px 0 rgba(20, 17, 15, 0.07),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
+}
+
+.ios-glass-dark {
+  background: rgba(15, 12, 10, 0.7) !important;
+  backdrop-filter: blur(32px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(190%) !important;
+  border: 1px solid rgba(176, 141, 87, 0.28) !important;
+  box-shadow: 
+    0 20px 50px 0 rgba(0, 0, 0, 0.45),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+.ios-glass-pill {
+  background: rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 
+    0 4px 16px 0 rgba(0, 0, 0, 0.06),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+.ios-glass-pill-dark {
+  background: rgba(24, 20, 18, 0.65) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(176, 141, 87, 0.35) !important;
+  box-shadow: 
+    0 4px 24px 0 rgba(0, 0, 0, 0.38),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.ios-glass-card {
+  background: rgba(251, 248, 238, 0.65);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 
+    0 12px 36px -4px rgba(20, 17, 15, 0.08),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.7);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ios-glass-card:hover {
+  background: rgba(251, 248, 238, 0.85);
+  border-color: rgba(176, 141, 87, 0.45);
+  box-shadow: 
+    0 22px 55px -4px rgba(20, 17, 15, 0.15),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.85);
+  transform: translateY(-4px);
+}
+
+/* ── Dark Mode Glassmorphism Adaptations ─────────────────── */
+html.dark .ios-glass {
+  background: rgba(16, 13, 11, 0.85) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1px solid rgba(176, 141, 87, 0.25) !important;
+  box-shadow: 
+    0 12px 40px 0 rgba(0, 0, 0, 0.65),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.08) !important;
+  color: #FDFBF7 !important;
+}
+
+html.dark .ios-glass-pill {
+  background: rgba(24, 19, 16, 0.85) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(176, 141, 87, 0.35) !important;
+  box-shadow: 
+    0 6px 24px 0 rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.1) !important;
+  color: #FDFBF7 !important;
+}
+
+html.dark .ios-glass-card {
+  background: rgba(20, 16, 14, 0.75) !important;
+  border: 1px solid rgba(176, 141, 87, 0.22) !important;
+  box-shadow: 
+    0 16px 45px -4px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.06) !important;
+  color: #FDFBF7 !important;
+}
+
+html.dark .ios-glass-card:hover {
+  background: rgba(28, 22, 19, 0.92) !important;
+  border-color: rgba(200, 169, 122, 0.5) !important;
+  box-shadow: 
+    0 24px 60px -4px rgba(0, 0, 0, 0.8),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.14) !important;
+}

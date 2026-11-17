@@ -1,0 +1,15 @@
+{
+  "name": "makariovs-matiere-wep",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MAKARIOVS & MATIÈRE — Luxury Perfume E-Commerce (Next.js + Laravel monorepo)",
+  "scripts": {
+    "dev:all": "concurrently -n frontend,backend -c cyan,magenta \"npm run dev --prefix frontend\" \"cd backend && php artisan serve --port=8000\"",
+    "dev": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "lint": "npm run lint --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

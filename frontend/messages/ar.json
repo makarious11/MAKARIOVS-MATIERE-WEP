@@ -1,0 +1,103 @@
+{
+  "nav": {
+    "home": "الرئيسية",
+    "shop": "المتجر",
+    "collections": "المجموعات",
+    "about": "قصتنا",
+    "contact": "تواصل معنا",
+    "search": "بحث",
+    "cart": "السلة",
+    "account": "حسابي",
+    "logout": "تسجيل الخروج"
+  },
+  "home": {
+    "hero_tagline": "ارتدِ اللامرئي",
+    "hero_cta": "استكشف المجموعة",
+    "featured_heading": "الأكثر مبيعاً",
+    "new_heading": "وصل حديثاً",
+    "about_heading": "صُنع في القاهرة",
+    "about_body": "ماكاريوفز وماتيير — دار عطور فاخرة مستقلة، جذورها في التراث المصري وتعبيرها في الفن المعاصر."
+  },
+  "product": {
+    "add_to_cart": "أضف إلى الحقيبة",
+    "out_of_stock": "نفد المخزون",
+    "select_size": "اختر الحجم",
+    "size_ml": "{size} مل",
+    "notes": "مكونات العطر",
+    "family": "عائلة العطر",
+    "gender": {
+      "masculine": "رجالي",
+      "feminine": "نسائي",
+      "unisex": "للجنسين"
+    },
+    "reviews": "التقييمات",
+    "no_reviews": "لا توجد تقييمات بعد — كن أول من يقيّم.",
+    "write_review": "اكتب تقييماً",
+    "added_to_cart": "تمت الإضافة إلى حقيبتك"
+  },
+  "cart": {
+    "title": "حقيبتك",
+    "empty": "حقيبتك فارغة",
+    "empty_cta": "تسوق الآن",
+    "subtotal": "المجموع الفرعي",
+    "discount": "الخصم",
+    "shipping": "الشحن",
+    "shipping_free": "مجاني",
+    "shipping_calculated": "يحسب عند الدفع",
+    "total": "الإجمالي",
+    "checkout": "المتابعة للدفع",
+    "coupon_placeholder": "كود الخصم",
+    "coupon_apply": "تطبيق",
+    "coupon_applied": "تم تطبيق الكود!",
+    "coupon_invalid": "كود غير صالح أو منتهي الصلاحية",
+    "remove": "حذف",
+    "qty": "الكمية"
+  },
+  "checkout": {
+    "title": "إتمام الطلب",
+    "contact": "بيانات التواصل",
+    "shipping_address": "عنوان الشحن",
+    "name": "الاسم الكامل",
+    "email": "البريد الإلكتروني",
+    "phone": "رقم الهاتف",
+    "governorate": "المحافظة",
+    "address": "عنوان الشارع",
+    "notes": "ملاحظات الطلب (اختياري)",
+    "place_order": "تأكيد الطلب",
+    "processing": "جارٍ المعالجة…",
+    "success_title": "تم تأكيد الطلب!",
+    "success_body": "تم استلام طلبك #{reference}. سنتواصل معك قريباً.",
+    "error": "حدث خطأ ما. يرجى المحاولة مجدداً."
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "confirm_password": "تأكيد كلمة المرور",
+    "name": "الاسم الكامل",
+    "forgot_password": "نسيت كلمة المرور؟",
+    "no_account": "ليس لديك حساب؟",
+    "has_account": "لديك حساب بالفعل؟"
+  },
+  "common": {
+    "loading": "جارٍ التحميل…",
+    "error": "حدث خطأ ما",
+    "retry": "المحاولة مجدداً",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "see_all": "عرض الكل",
+    "currency": "ج.م",
+    "free": "مجاني"
+  },
+  "footer": {
+    "tagline": "عطور فاخرة — القاهرة، مصر",
+    "links_heading": "روابط سريعة",
+    "legal_heading": "قانوني",
+    "privacy": "سياسة الخصوصية",
+    "terms": "الشروط والأحكام",
+    "returns": "سياسة الإرجاع",
+    "follow": "تابعنا",
+    "rights": "© {year} ماكاريوفز وماتيير. جميع الحقوق محفوظة."
+  }
+}

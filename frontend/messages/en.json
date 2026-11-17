@@ -1,0 +1,103 @@
+{
+  "nav": {
+    "home": "Home",
+    "shop": "Shop",
+    "collections": "Collections",
+    "about": "Our Story",
+    "contact": "Contact",
+    "search": "Search",
+    "cart": "Cart",
+    "account": "Account",
+    "logout": "Logout"
+  },
+  "home": {
+    "hero_tagline": "Wear the Invisible",
+    "hero_cta": "Explore Collection",
+    "featured_heading": "Bestsellers",
+    "new_heading": "New Arrivals",
+    "about_heading": "Crafted in Cairo",
+    "about_body": "MAKARIOVS & MATIÈRE is an independent luxury perfume house rooted in Egyptian heritage and expressed through contemporary artistry."
+  },
+  "product": {
+    "add_to_cart": "Add to Bag",
+    "out_of_stock": "Out of Stock",
+    "select_size": "Select Size",
+    "size_ml": "{size} ml",
+    "notes": "Fragrance Notes",
+    "family": "Fragrance Family",
+    "gender": {
+      "masculine": "Masculine",
+      "feminine": "Feminine",
+      "unisex": "Unisex"
+    },
+    "reviews": "Reviews",
+    "no_reviews": "No reviews yet — be the first.",
+    "write_review": "Write a Review",
+    "added_to_cart": "Added to your bag"
+  },
+  "cart": {
+    "title": "Your Bag",
+    "empty": "Your bag is empty",
+    "empty_cta": "Start Shopping",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "shipping": "Shipping",
+    "shipping_free": "Free",
+    "shipping_calculated": "Calculated at checkout",
+    "total": "Total",
+    "checkout": "Proceed to Checkout",
+    "coupon_placeholder": "Promo code",
+    "coupon_apply": "Apply",
+    "coupon_applied": "Promo code applied!",
+    "coupon_invalid": "Invalid or expired code",
+    "remove": "Remove",
+    "qty": "Qty"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "contact": "Contact",
+    "shipping_address": "Shipping Address",
+    "name": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "governorate": "Governorate",
+    "address": "Street Address",
+    "notes": "Order Notes (optional)",
+    "place_order": "Place Order",
+    "processing": "Processing…",
+    "success_title": "Order Confirmed!",
+    "success_body": "Your order #{reference} has been received. We'll contact you shortly.",
+    "error": "Something went wrong. Please try again."
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Create Account",
+    "email": "Email",
+    "password": "Password",
+    "confirm_password": "Confirm Password",
+    "name": "Full Name",
+    "forgot_password": "Forgot password?",
+    "no_account": "Don't have an account?",
+    "has_account": "Already have an account?"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Try Again",
+    "close": "Close",
+    "back": "Back",
+    "see_all": "See All",
+    "currency": "EGP",
+    "free": "Free"
+  },
+  "footer": {
+    "tagline": "Luxury Perfumery — Cairo, Egypt",
+    "links_heading": "Quick Links",
+    "legal_heading": "Legal",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions",
+    "returns": "Returns Policy",
+    "follow": "Follow Us",
+    "rights": "© {year} MAKARIOVS & MATIÈRE. All rights reserved."
+  }
+}

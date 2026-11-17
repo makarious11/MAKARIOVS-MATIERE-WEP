@@ -1,0 +1,52 @@
+# ── Node / Next.js ────────────────────────────────────────
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# ── Laravel / PHP ─────────────────────────────────────────
+backend/vendor/
+backend/.env
+backend/storage/app/public/
+backend/storage/logs/*.log
+backend/bootstrap/cache/*.php
+backend/database/database.sqlite
+*.sqlite
+
+# ── OS / Editor ───────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# ── Env / Secrets ─────────────────────────────────────────
+.env
+.env.local
+.env.production
+.env.staging
+*.pem
+*.p12
+
+# ── Build artifacts ───────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Misc ──────────────────────────────────────────────────
+.vercel
+coverage/
+.nyc_output/
