@@ -14,7 +14,7 @@ import {
   Share2,
   Bell,
 } from 'lucide-react';
-import { getPerfumeBySlug, getOtherPerfumes, PERFUMES, PerfumeData } from '@/lib/catalog';
+import { getPerfumeBySlug, getOtherPerfumes, PERFUMES, PerfumeData, addProductReview } from '@/lib/catalog';
 import { ArchFrame } from '@/components/ui/ArchFrame';
 import { WaxSeal } from '@/components/ui/WaxSeal';
 import { StarRating } from '@/components/ui/StarRating';
@@ -131,22 +131,42 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reviewName || !reviewBody) return;
+    if (!reviewName.trim() || !reviewBody.trim()) return;
+
     try {
-      await fetch('/api/v1/reviews', {
+      // 1. Immediately persist review into catalog and localStorage
+      const updated = addProductReview(perfume.slug, {
+        name: reviewName.trim(),
+        rating: reviewRating,
+        body_en: reviewBody.trim(),
+        body_ar: reviewBody.trim(),
+      });
+
+      if (updated) {
+        setPerfume(updated);
+      }
+
+      // 2. Background sync to reviews API
+      fetch('/api/v1/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: reviewName,
+          name: reviewName.trim(),
           rating: reviewRating,
-          body: reviewBody,
+          body: reviewBody.trim(),
           product_id: perfume.id,
+          product_slug: perfume.slug,
         }),
-      });
+      }).catch(() => {});
+
       setReviewSubmitted(true);
       setReviewName('');
       setReviewBody('');
-    } catch {
+      setTimeout(() => {
+        setReviewSubmitted(false);
+      }, 5000);
+    } catch (err) {
+      console.error('Error submitting review:', err);
       setReviewSubmitted(true);
     }
   };
@@ -294,7 +314,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               <div className="flex items-center justify-between">
                 <Badge variant="gold">{isArabic ? perfume.family_ar : perfume.family_en}</Badge>
                 <div className="flex items-center gap-2">
-                  <StarRating rating={5} count={perfume.reviews?.length || 8} />
+                  <StarRating rating={5} count={perfume.reviews?.length || 0} />
                   <button
                     type="button"
                     onClick={() => setIsLiked(!isLiked)}
@@ -488,26 +508,32 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
               {/* Existing Reviews List */}
               <div className="space-y-4">
-                {perfume.reviews?.map((r: any) => (
-                  <div
-                    key={r.id}
-                    className="p-5 rounded-2xl bg-[#F1EADA]/50 dark:bg-[#161210] border border-[#B08D57]/20 space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-display text-xs uppercase tracking-wider font-semibold text-[#14110F] dark:text-[#FDFBF7]">
-                        {r.name}
-                      </span>
-                      <StarRating rating={r.rating} />
-                    </div>
-                    <p
-                      className="text-sm text-[#3A332D] dark:text-[#FDFBF7]/90 italic"
-                      style={{ fontFamily: isArabic ? "'Amiri', serif" : "'EB Garamond', Georgia, serif" }}
+                {(!perfume.reviews || perfume.reviews.length === 0) ? (
+                  <p className="p-6 rounded-2xl bg-[#F1EADA]/40 dark:bg-[#161210] border border-[#B08D57]/20 text-xs text-[#8C6E3D] dark:text-[#DFCA9B]/70 text-center">
+                    {isArabic ? 'كن أول من يكتب انطباعه العطري عن هذا الإبداع' : 'Be the first to record an olfactory impression for this creation.'}
+                  </p>
+                ) : (
+                  perfume.reviews.map((r: any) => (
+                    <div
+                      key={r.id}
+                      className="p-5 rounded-2xl bg-[#F1EADA]/50 dark:bg-[#161210] border border-[#B08D57]/20 space-y-2"
                     >
-                      “{isArabic ? r.body_ar : r.body_en}”
-                    </p>
-                    <span className="text-[10px] text-[#3A332D]/50 dark:text-[#DFCA9B]/50 font-mono block">{r.date}</span>
-                  </div>
-                ))}
+                      <div className="flex items-center justify-between">
+                        <span className="font-display text-xs uppercase tracking-wider font-semibold text-[#14110F] dark:text-[#FDFBF7]">
+                          {r.name}
+                        </span>
+                        <StarRating rating={r.rating} />
+                      </div>
+                      <p
+                        className="text-sm text-[#3A332D] dark:text-[#FDFBF7]/90 italic"
+                        style={{ fontFamily: isArabic ? "'Amiri', serif" : "'EB Garamond', Georgia, serif" }}
+                      >
+                        “{isArabic ? r.body_ar || r.body_en : r.body_en || r.body_ar}”
+                      </p>
+                      <span className="text-[10px] text-[#3A332D]/50 dark:text-[#DFCA9B]/50 font-mono block">{r.date}</span>
+                    </div>
+                  ))
+                )}
               </div>
 
               {/* Leave a review form */}

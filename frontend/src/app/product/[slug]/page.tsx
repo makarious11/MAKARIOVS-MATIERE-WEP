@@ -13,7 +13,7 @@ import {
   ShoppingBag,
   Share2,
 } from 'lucide-react';
-import { getPerfumeBySlug, getOtherPerfumes, PERFUMES, PerfumeData } from '@/lib/catalog';
+import { getPerfumeBySlug, getOtherPerfumes, PERFUMES, PerfumeData, addProductReview } from '@/lib/catalog';
 import { ArchFrame } from '@/components/ui/ArchFrame';
 import { WaxSeal } from '@/components/ui/WaxSeal';
 import { StarRating } from '@/components/ui/StarRating';
@@ -124,21 +124,37 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reviewName || !reviewBody) return;
+    if (!reviewName.trim() || !reviewBody.trim()) return;
     try {
-      await fetch('/api/v1/reviews', {
+      // 1. Immediately persist review into catalog and localStorage
+      const updated = addProductReview(perfume.slug, {
+        name: reviewName.trim(),
+        rating: reviewRating,
+        body_en: reviewBody.trim(),
+        body_ar: reviewBody.trim(),
+      });
+
+      if (updated) {
+        setPerfume(updated);
+      }
+
+      // 2. Background sync to reviews API
+      fetch('/api/v1/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: reviewName,
+          name: reviewName.trim(),
           rating: reviewRating,
-          body: reviewBody,
+          body: reviewBody.trim(),
           product_id: perfume.id,
+          product_slug: perfume.slug,
         }),
-      });
+      }).catch(() => {});
+
       setReviewSubmitted(true);
       setReviewName('');
       setReviewBody('');
+      setTimeout(() => setReviewSubmitted(false), 5000);
     } catch {
       setReviewSubmitted(true);
     }
@@ -482,7 +498,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                     Customer Reviews
                   </h3>
                   <span className="font-body text-xs text-[#8C6E3D] dark:text-[#DFCA9B]/80">
-                    5.0 from {perfume.reviews.length} verified collectors
+                    5.0 from {perfume.reviews?.length || 0} verified collectors
                   </span>
                 </div>
                 <WaxSeal size={32} />
@@ -490,25 +506,31 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
               {/* Existing Reviews */}
               <div className="space-y-4">
-                {perfume.reviews.map((r) => (
-                  <div
-                    key={r.id}
-                    className="p-5 rounded-2xl bg-[#F1EADA]/60 dark:bg-[#161210] border border-[#B08D57]/20 space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-display text-xs font-semibold uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
-                        {r.name}
+                {!perfume.reviews || perfume.reviews.length === 0 ? (
+                  <p className="text-xs text-[#3A332D]/70 dark:text-[#DFCA9B]/70 italic py-4">
+                    Be the first to share your olfactory impressions of this creation.
+                  </p>
+                ) : (
+                  perfume.reviews.map((r) => (
+                    <div
+                      key={r.id}
+                      className="p-5 rounded-2xl bg-[#F1EADA]/60 dark:bg-[#161210] border border-[#B08D57]/20 space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-display text-xs font-semibold uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
+                          {r.name}
+                        </span>
+                        <StarRating rating={r.rating} size={12} />
+                      </div>
+                      <p className="font-body text-xs sm:text-sm text-[#3A332D] dark:text-[#FDFBF7]/90 leading-relaxed italic">
+                        “{r.body_ar || r.body_en}”
+                      </p>
+                      <span className="font-body text-[10px] text-[#3A332D]/50 dark:text-[#DFCA9B]/50 block">
+                        {r.date}
                       </span>
-                      <StarRating rating={r.rating} size={12} />
                     </div>
-                    <p className="font-body text-xs sm:text-sm text-[#3A332D] dark:text-[#FDFBF7]/90 leading-relaxed">
-                      “{r.body_en}”
-                    </p>
-                    <span className="font-body text-[10px] text-[#3A332D]/50 dark:text-[#DFCA9B]/50 block">
-                      {r.date}
-                    </span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               {/* Submit Review Form */}
@@ -520,10 +542,27 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                 {reviewSubmitted ? (
                   <div className="p-4 rounded-xl bg-[#B08D57]/20 border border-[#B08D57] text-xs font-display text-[#14110F] dark:text-[#DFCA9B] flex items-center gap-2">
                     <Check size={16} className="text-[#6B1D2F] dark:text-[#DFCA9B]" />
-                    <span>Your correspondence has been received and submitted for curation.</span>
+                    <span>Your correspondence has been received and added to the maison archive.</span>
                   </div>
                 ) : (
                   <form onSubmit={handleReviewSubmit} className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-display text-[#3A332D] dark:text-[#DFCA9B]">Rating:</span>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setReviewRating(star)}
+                            className={`p-1 cursor-pointer text-sm ${
+                              star <= reviewRating ? 'text-[#B08D57]' : 'text-gray-300'
+                            }`}
+                          >
+                            ★
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     <div>
                       <input
                         type="text"

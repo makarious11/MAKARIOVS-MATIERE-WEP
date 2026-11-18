@@ -535,6 +535,12 @@ export default function AdminDashboardPage() {
       ...prev,
       reviews: [newRev, ...prev.reviews],
     }));
+
+    if (editingProductId && productForm.slug) {
+      addProductReview(productForm.slug, newRev);
+      setProducts(getStoredCatalog());
+    }
+
     setNewReviewAuthor('');
     setNewReviewText('');
     setNewReviewRating(5);
@@ -545,6 +551,11 @@ export default function AdminDashboardPage() {
       ...prev,
       reviews: prev.reviews.filter((r) => r.id !== reviewId),
     }));
+
+    if (editingProductId && productForm.slug) {
+      deleteProductReview(productForm.slug, reviewId);
+      setProducts(getStoredCatalog());
+    }
   };
 
   // Category Submit
