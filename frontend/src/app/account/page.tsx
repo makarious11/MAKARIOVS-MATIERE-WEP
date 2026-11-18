@@ -73,6 +73,16 @@ export default function AccountPage() {
   useEffect(() => {
     loadPatronData();
 
+    // Sync patrons registry with server database
+    fetch('/api/v1/patrons')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+          localStorage.setItem('lv_patrons_registry', JSON.stringify(json.data));
+        }
+      })
+      .catch(() => {});
+
     const handleAuthChange = () => {
       loadPatronData();
     };
@@ -106,6 +116,13 @@ export default function AccountPage() {
 
     setPatron(res.patron);
     setPatronOrders(getPatronOrders(res.patron.phone, res.patron.name));
+
+    // Save patron permanently to server database so it never disappears from admin
+    fetch('/api/v1/patrons', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(res.patron),
+    }).catch(() => {});
   };
 
   // Handle Register
@@ -137,6 +154,13 @@ export default function AccountPage() {
 
     setPatron(res.patron);
     setPatronOrders(getPatronOrders(res.patron.phone, res.patron.name));
+
+    // Save patron permanently to server database so it never disappears from admin
+    fetch('/api/v1/patrons', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(res.patron),
+    }).catch(() => {});
   };
 
   // Handle Logout

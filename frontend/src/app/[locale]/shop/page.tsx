@@ -38,6 +38,18 @@ export default function LocalizedShopPage({ params }: PageProps) {
       setCategories(getStoredCategories());
     };
     syncData();
+
+    // Sync live catalog from server database so edits from admin reflect immediately
+    fetch('/api/v1/products')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+          setProducts(json.data);
+          localStorage.setItem('lvenus_custom_catalog', JSON.stringify(json.data));
+        }
+      })
+      .catch(() => {});
+
     window.addEventListener('lv_catalog_updated', syncData);
     window.addEventListener('lv_categories_updated', syncData);
     window.addEventListener('storage', syncData);

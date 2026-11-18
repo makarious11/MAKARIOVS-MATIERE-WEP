@@ -1,19 +1,9 @@
-﻿import { NextResponse } from 'next/server';
-import { PERFUMES } from '@/lib/catalog';
+import { NextResponse } from 'next/server';
+import { getServerCatalog, getServerOrders, saveServerOrder, updateServerOrderStatus, deleteServerOrder, saveServerPatron } from '@/lib/serverDb';
 import { EGYPT_GOVERNORATES } from '@/lib/governorates';
+import { MaisonOrder } from '@/lib/orders';
 
-// In-memory orders store for local runtime persistence
-declare global {
-  var __LV_ORDERS__: Map<string, any> | undefined;
-}
-
-function getOrdersStore(): Map<string, any> {
-  const g = globalThis as any;
-  if (!g.__LV_ORDERS__) {
-    g.__LV_ORDERS__ = new Map();
-  }
-  return g.__LV_ORDERS__;
-}
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
@@ -48,12 +38,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const catalog = getServerCatalog();
+
     // Server-side price recalculation (Never trust client prices)
     let recalculatedSubtotal = 0;
     const validatedItems = [];
 
     for (const item of items) {
-      const perfume = PERFUMES.find((p) => p.id === item.product_id || p.slug === item.product_slug);
+      const perfume = catalog.find((p) => p.id === item.product_id || p.slug === item.product_slug);
       const variant = perfume?.variants?.find((v) => v.id === item.variant_id) || perfume?.variants?.[0] || {
         id: item.variant_id || 1,
         size_ml: item.size_ml || 50,
@@ -99,20 +91,19 @@ export async function POST(request: Request) {
 
     const total = recalculatedSubtotal + shippingFee + giftFee - discount;
 
-    // Use client-provided order number if passed, otherwise generate LV-XXXXXX
     const randomSuffix = Math.floor(100000 + Math.random() * 900000);
     const orderNumber = body.order_number || `LV-${randomSuffix}`;
 
-    const orderRecord = {
+    const orderRecord: any = {
       order_number: orderNumber,
       customer: {
-        name,
-        phone,
+        name: String(name).trim(),
+        phone: String(phone).trim(),
         email: email || null,
         governorate: govData ? govData.name_en : 'Cairo',
         governorate_ar: govData ? govData.name_ar : 'القاهرة',
         city: city || (govData ? govData.name_en : 'Cairo'),
-        address,
+        address: String(address).trim(),
         notes: notes || null,
       },
       gift: {
@@ -137,11 +128,38 @@ export async function POST(request: Request) {
       eta_days: govData ? govData.eta_days : '1–2 days',
     };
 
-    getOrdersStore().set(orderNumber, orderRecord);
+    // Format for MaisonOrder display
+    const maisonOrder: MaisonOrder = {
+      id: orderNumber,
+      customer: String(name).trim(),
+      phone: String(phone).trim(),
+      gov: `${govData ? govData.name_ar : 'القاهرة'} — ${city || address}`,
+      items: validatedItems.map((i) => `${i.name_ar || i.name_en} (${i.size_ml}ml)`).join(', '),
+      total,
+      payment: payment_method === 'cod' ? 'COD' : 'Card',
+      status: 'Processing',
+      date: new Date().toISOString().split('T')[0],
+      is_new: true,
+    };
+
+    // 1. Save order persistently to disk
+    saveServerOrder(maisonOrder);
+
+    // 2. Also register patron persistently so customer never disappears
+    saveServerPatron({
+      id: `patron_${Date.now()}`,
+      name: String(name).trim(),
+      phone: String(phone).trim(),
+      email: email || undefined,
+      governorate: govData ? govData.name_en : 'Cairo',
+      city: city || '',
+      address: String(address).trim(),
+      registeredAt: new Date().getFullYear().toString(),
+    });
 
     return NextResponse.json({
       success: true,
-      message: 'Order created successfully',
+      message: 'Order created and persisted successfully',
       data: orderRecord,
     });
   } catch (error: any) {
@@ -153,16 +171,56 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const number = searchParams.get('number');
-  const store = getOrdersStore();
+  try {
+    const { searchParams } = new URL(request.url);
+    const number = searchParams.get('number');
+    const orders = getServerOrders();
 
-  if (number && store.has(number)) {
-    return NextResponse.json({ data: store.get(number) });
+    if (number) {
+      const found = orders.find((o) => o.id === number);
+      if (found) return NextResponse.json({ data: found });
+      return NextResponse.json({ message: 'Order not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      data: orders,
+    });
+  } catch (err) {
+    return NextResponse.json({ message: 'Error retrieving orders', error: String(err) }, { status: 500 });
   }
-
-  return NextResponse.json({
-    data: Array.from(store.values()),
-  });
 }
 
+export async function PATCH(request: Request) {
+  try {
+    const { orderId, status } = await request.json();
+    if (!orderId || !status) {
+      return NextResponse.json({ message: 'orderId and status are required' }, { status: 422 });
+    }
+
+    const updated = updateServerOrderStatus(orderId, status);
+    return NextResponse.json({
+      success: true,
+      data: updated,
+    });
+  } catch (err) {
+    return NextResponse.json({ message: 'Error updating order', error: String(err) }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ message: 'Order id is required' }, { status: 422 });
+    }
+
+    const updated = deleteServerOrder(id);
+    return NextResponse.json({
+      success: true,
+      data: updated,
+    });
+  } catch (err) {
+    return NextResponse.json({ message: 'Error deleting order', error: String(err) }, { status: 500 });
+  }
+}

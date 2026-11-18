@@ -13,7 +13,7 @@ import {
   ShoppingBag,
   Share2,
 } from 'lucide-react';
-import { getPerfumeBySlug, getOtherPerfumes, PERFUMES, PerfumeData, addProductReview } from '@/lib/catalog';
+import { getPerfumeBySlug, getOtherPerfumes, PERFUMES, PerfumeData, addProductReview, saveProductToCatalog } from '@/lib/catalog';
 import { ArchFrame } from '@/components/ui/ArchFrame';
 import { WaxSeal } from '@/components/ui/WaxSeal';
 import { StarRating } from '@/components/ui/StarRating';
@@ -57,6 +57,18 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     };
 
     sync();
+
+    // Fetch live product data & reviews from server database
+    fetch(`/api/v1/products/${slug}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json?.data) {
+          setPerfume(json.data);
+          if (json.data.images?.bottle) setSelectedImage(json.data.images.bottle);
+        }
+      })
+      .catch(() => {});
+
     window.addEventListener('lv_catalog_updated', sync);
     window.addEventListener('storage', sync);
     return () => {
@@ -138,7 +150,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         setPerfume(updated);
       }
 
-      // 2. Background sync to reviews API
+      // 2. Persist to server database so admin and all website visitors see it immediately
       fetch('/api/v1/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -149,7 +161,15 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           product_id: perfume.id,
           product_slug: perfume.slug,
         }),
-      }).catch(() => {});
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.product) {
+            setPerfume(data.product);
+            saveProductToCatalog(data.product);
+          }
+        })
+        .catch(() => {});
 
       setReviewSubmitted(true);
       setReviewName('');

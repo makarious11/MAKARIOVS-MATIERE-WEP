@@ -206,6 +206,7 @@ export default function AdminDashboardPage() {
   const [orderFilter, setOrderFilter] = useState<'all' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled'>('all');
   const [orderSearch, setOrderSearch] = useState('');
   const [patronSearch, setPatronSearch] = useState('');
+  const [patronsTrigger, setPatronsTrigger] = useState(0);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [latestToast, setLatestToast] = useState<MaisonOrder | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -218,24 +219,37 @@ export default function AdminDashboardPage() {
         const json = await res.json();
         if (Array.isArray(json.data) && json.data.length > 0) {
           const apiOrders: MaisonOrder[] = json.data.map((item: any) => ({
-            id: item.order_number,
-            customer: item.customer?.name || 'Royal Patron',
-            phone: item.customer?.phone || '',
-            gov: `${item.customer?.governorate || 'Cairo'} — ${item.customer?.city || ''}`,
-            items:
-              item.items?.map((i: any) => `${i.name_en || 'Flacon'} (${i.size_ml || 50}ml)`).join(', ') ||
-              'Bespoke Flacon',
-            total: item.pricing?.total || 3600,
-            payment: item.payment?.method === 'cod' ? 'COD' : 'Paymob Card',
-            status: 'Processing',
-            date: item.created_at
-              ? new Date(item.created_at).toLocaleDateString('en-GB', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                })
-              : 'Today',
-            is_new: true,
+            id: item.id || item.order_number,
+            customer:
+              typeof item.customer === 'object' && item.customer
+                ? item.customer.name
+                : item.customer || 'Royal Patron',
+            phone:
+              typeof item.customer === 'object' && item.customer
+                ? item.customer.phone
+                : item.phone || '',
+            gov:
+              typeof item.customer === 'object' && item.customer
+                ? `${item.customer?.governorate || 'Cairo'} — ${item.customer?.city || ''}`
+                : item.gov || 'Cairo',
+            items: item.items
+              ? typeof item.items === 'string'
+                ? item.items
+                : item.items?.map((i: any) => `${i.name_en || 'Flacon'} (${i.size_ml || 50}ml)`).join(', ')
+              : 'Bespoke Flacon',
+            total: item.total || item.pricing?.total || 3600,
+            payment: item.payment || (item.payment?.method === 'cod' ? 'COD' : 'Paymob Card'),
+            status: item.status || 'Processing',
+            date:
+              item.date ||
+              (item.created_at
+                ? new Date(item.created_at).toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                  })
+                : 'Today'),
+            is_new: item.is_new !== false,
           }));
 
           const rawClient = typeof window !== 'undefined' ? localStorage.getItem('lv_client_orders') : null;
@@ -266,6 +280,28 @@ export default function AdminDashboardPage() {
     setCategories(getStoredCategories());
     refreshOrders();
 
+    // 1. Sync server catalog to keep products & reviews updated
+    fetch('/api/v1/products')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+          setProducts(json.data);
+          localStorage.setItem('lvenus_custom_catalog', JSON.stringify(json.data));
+        }
+      })
+      .catch(() => {});
+
+    // 2. Sync patrons from server database so registered patrons never disappear
+    fetch('/api/v1/patrons')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+          localStorage.setItem('lv_patrons_registry', JSON.stringify(json.data));
+          setPatronsTrigger((prev) => prev + 1);
+        }
+      })
+      .catch(() => {});
+
     const handleStorage = (e: StorageEvent) => {
       if (e.key === 'lv_client_orders' || e.key === 'lv_deleted_orders' || e.key === 'lv_status_overrides') {
         const updated = getStoredOrders();
@@ -274,8 +310,16 @@ export default function AdminDashboardPage() {
       if (e.key === 'lvenus_custom_catalog' || e.key === 'lvenus_deleted_products') {
         setProducts(getStoredCatalog());
       }
+      if (e.key === 'lv_patrons_registry') {
+        setPatronsTrigger((prev) => prev + 1);
+      }
     };
     window.addEventListener('storage', handleStorage);
+
+    const handlePatronsUpdated = () => {
+      setPatronsTrigger((prev) => prev + 1);
+    };
+    window.addEventListener('lv_patrons_updated', handlePatronsUpdated);
 
     const handleLocalNewOrder = (e: any) => {
       const newOrder = e.detail as MaisonOrder;
@@ -293,6 +337,7 @@ export default function AdminDashboardPage() {
 
     return () => {
       window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('lv_patrons_updated', handlePatronsUpdated);
       window.removeEventListener('lv_order_created', handleLocalNewOrder);
       window.removeEventListener('lv_catalog_updated', handleCatalogUpdate);
     };
@@ -462,6 +507,13 @@ export default function AdminDashboardPage() {
     const updated = saveProductToCatalog(productPayload);
     setProducts(updated);
     setIsProductModalOpen(false);
+
+    // Save to server database so all users on website see it immediately
+    fetch('/api/v1/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(productPayload),
+    }).catch(() => {});
   };
 
   // Quick Toggle Homepage Feature directly from Table
@@ -472,6 +524,11 @@ export default function AdminDashboardPage() {
     };
     const updated = saveProductToCatalog(updatedProd);
     setProducts(updated);
+    fetch('/api/v1/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedProd),
+    }).catch(() => {});
   };
 
   // Delete Product
@@ -479,6 +536,7 @@ export default function AdminDashboardPage() {
     if (confirm(isArabic ? 'هل أنت متأكد من حذف هذا المنتج نهائياً من الكتالوج؟' : 'Are you sure you want to permanently delete this product?')) {
       const updated = deleteProductFromCatalog(id);
       setProducts(updated);
+      fetch(`/api/v1/products?id=${id}`, { method: 'DELETE' }).catch(() => {});
     }
   };
 
@@ -539,6 +597,17 @@ export default function AdminDashboardPage() {
     if (editingProductId && productForm.slug) {
       addProductReview(productForm.slug, newRev);
       setProducts(getStoredCatalog());
+      fetch('/api/v1/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newRev.name,
+          rating: newRev.rating,
+          body: newRev.body_ar || newRev.body_en,
+          product_slug: productForm.slug,
+          product_id: editingProductId,
+        }),
+      }).catch(() => {});
     }
 
     setNewReviewAuthor('');
@@ -555,6 +624,9 @@ export default function AdminDashboardPage() {
     if (editingProductId && productForm.slug) {
       deleteProductReview(productForm.slug, reviewId);
       setProducts(getStoredCatalog());
+      fetch(`/api/v1/reviews?product_slug=${productForm.slug}&id=${reviewId}`, {
+        method: 'DELETE',
+      }).catch(() => {});
     }
   };
 
@@ -593,6 +665,11 @@ export default function AdminDashboardPage() {
   const handleUpdateOrderStatus = (orderId: string, newStatus: string) => {
     const updated = updateOrderStatusInStorage(orderId, newStatus);
     setOrders(updated);
+    fetch('/api/v1/orders', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, status: newStatus }),
+    }).catch(() => {});
   };
 
   // Delete Order
@@ -600,6 +677,7 @@ export default function AdminDashboardPage() {
     if (confirm(isArabic ? `هل أنت متأكد من حذف الطلب رقم ${orderId} نهائياً؟` : `Are you sure you want to permanently delete order ${orderId}?`)) {
       const updated = deleteOrderFromStorage(orderId);
       setOrders(updated);
+      fetch(`/api/v1/orders?id=${encodeURIComponent(orderId)}`, { method: 'DELETE' }).catch(() => {});
     }
   };
 
@@ -646,7 +724,7 @@ export default function AdminDashboardPage() {
         (p.email && p.email.toLowerCase().includes(q)) ||
         (p.governorate && p.governorate.toLowerCase().includes(q))
     );
-  }, [orders, patronSearch]);
+  }, [orders, patronSearch, patronsTrigger]);
 
   // Real, Accurate Financial & Analytics Calculations (Calculated from orders and products)
   const nonCancelledOrders = orders.filter((o) => o.status !== 'Cancelled');

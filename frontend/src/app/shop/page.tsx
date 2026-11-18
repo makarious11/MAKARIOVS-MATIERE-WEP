@@ -117,6 +117,17 @@ export default function ShopPage() {
   useEffect(() => {
     const sync = () => setCatalog(getStoredCatalog());
     sync();
+
+    fetch('/api/v1/products')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+          setCatalog(json.data);
+          localStorage.setItem('lvenus_custom_catalog', JSON.stringify(json.data));
+        }
+      })
+      .catch(() => {});
+
     window.addEventListener('lv_catalog_updated', sync);
     window.addEventListener('storage', sync);
     return () => {

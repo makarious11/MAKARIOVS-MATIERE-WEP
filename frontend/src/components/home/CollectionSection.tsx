@@ -27,6 +27,21 @@ export const CollectionSection: React.FC<CollectionSectionProps> = ({ isArabic =
     };
 
     syncCatalog();
+
+    // Sync live catalog from server database so admin featured choices display across all devices
+    fetch('/api/v1/products')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+          const featured = json.data
+            .filter((p: any) => p.featured_on_home !== false)
+            .sort((a: any, b: any) => (a.home_order || 99) - (b.home_order || 99));
+          setProducts(featured.length > 0 ? featured : json.data);
+          localStorage.setItem('lvenus_custom_catalog', JSON.stringify(json.data));
+        }
+      })
+      .catch(() => {});
+
     window.addEventListener('lv_catalog_updated', syncCatalog);
     window.addEventListener('storage', syncCatalog);
     return () => {
