@@ -29,6 +29,7 @@ import {
   Save,
   RefreshCw,
   Eye,
+  EyeOff,
   Sliders,
   DollarSign,
   Lock,
@@ -66,6 +67,7 @@ import {
   deleteProductFromCatalog,
   getStoredCategories,
   saveCategory,
+  deleteCategoryFromStorage,
   addProductReview,
   deleteProductReview,
 } from '@/lib/catalog';
@@ -191,6 +193,7 @@ export default function AdminDashboardPage() {
   const [newReviewText, setNewReviewText] = useState('');
 
   // Form State for Category
+  const [editingCategorySlug, setEditingCategorySlug] = useState<string | null>(null);
   const [categoryForm, setCategoryForm] = useState({
     name_en: '',
     name_ar: '',
@@ -199,6 +202,8 @@ export default function AdminDashboardPage() {
     tagline_ar: '',
     description_en: '',
     description_ar: '',
+    sort_order: 1,
+    is_active: true,
   });
 
   // Orders State (Persisted & Synced)
@@ -276,7 +281,7 @@ export default function AdminDashboardPage() {
 
   // Load persisted catalog & orders on mount + real-time listener
   useEffect(() => {
-    setProducts(getStoredCatalog());
+    setProducts(getStoredCatalog(true));
     setCategories(getStoredCategories());
     refreshOrders();
 
@@ -308,7 +313,7 @@ export default function AdminDashboardPage() {
         setOrders(updated);
       }
       if (e.key === 'lvenus_custom_catalog' || e.key === 'lvenus_deleted_products') {
-        setProducts(getStoredCatalog());
+        setProducts(getStoredCatalog(true));
       }
       if (e.key === 'lv_patrons_registry') {
         setPatronsTrigger((prev) => prev + 1);
@@ -331,7 +336,7 @@ export default function AdminDashboardPage() {
     window.addEventListener('lv_order_created', handleLocalNewOrder);
 
     const handleCatalogUpdate = () => {
-      setProducts(getStoredCatalog());
+      setProducts(getStoredCatalog(true));
     };
     window.addEventListener('lv_catalog_updated', handleCatalogUpdate);
 
@@ -522,8 +527,24 @@ export default function AdminDashboardPage() {
       ...product,
       featured_on_home: product.featured_on_home === false ? true : false,
     };
-    const updated = saveProductToCatalog(updatedProd);
-    setProducts(updated);
+    saveProductToCatalog(updatedProd);
+    setProducts(getStoredCatalog(true));
+    fetch('/api/v1/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedProd),
+    }).catch(() => {});
+  };
+
+  // Quick Toggle Storefront Visibility (Hide / Show) directly from Table
+  const handleToggleStorefrontVisibility = (product: PerfumeData) => {
+    const isCurrentlyHidden = product.is_hidden === true;
+    const updatedProd = {
+      ...product,
+      is_hidden: !isCurrentlyHidden,
+    };
+    saveProductToCatalog(updatedProd);
+    setProducts(getStoredCatalog(true));
     fetch('/api/v1/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -535,9 +556,50 @@ export default function AdminDashboardPage() {
   const handleDeleteProduct = (id: number) => {
     if (confirm(isArabic ? 'هل أنت متأكد من حذف هذا المنتج نهائياً من الكتالوج؟' : 'Are you sure you want to permanently delete this product?')) {
       const updated = deleteProductFromCatalog(id);
-      setProducts(updated);
+      setProducts(getStoredCatalog(true));
       fetch(`/api/v1/products?id=${id}`, { method: 'DELETE' }).catch(() => {});
     }
+  };
+
+  // Toggle Category Active / Hidden
+  const handleToggleCategoryActive = (cat: MaisonCategory) => {
+    const updatedCat: MaisonCategory = {
+      ...cat,
+      is_active: cat.is_active === false ? true : false,
+    };
+    const updated = saveCategory(updatedCat);
+    setCategories(updated);
+    fetch('/api/v1/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedCat),
+    }).catch(() => {});
+  };
+
+  // Delete Category
+  const handleDeleteCategory = (slug: string) => {
+    if (confirm(isArabic ? 'هل أنت متأكد من حذف هذا الخط الإنتاجي نهائياً من الكاتالوج؟' : 'Are you sure you want to permanently delete this line?')) {
+      const updated = deleteCategoryFromStorage(slug);
+      setCategories(updated);
+      fetch(`/api/v1/categories?slug=${encodeURIComponent(slug)}`, { method: 'DELETE' }).catch(() => {});
+    }
+  };
+
+  // Open Edit Category Modal
+  const openEditCategoryModal = (cat: MaisonCategory) => {
+    setEditingCategorySlug(cat.slug);
+    setCategoryForm({
+      name_en: cat.name_en,
+      name_ar: cat.name_ar,
+      slug: cat.slug,
+      tagline_en: cat.tagline_en || '',
+      tagline_ar: cat.tagline_ar || '',
+      description_en: cat.description_en || '',
+      description_ar: cat.description_ar || '',
+      sort_order: cat.sort_order || 1,
+      is_active: cat.is_active !== false,
+    });
+    setIsAddCategoryOpen(true);
   };
 
   // Add Variant inside Modal
@@ -630,26 +692,27 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Category Submit
+  // Category Submit (Add / Edit)
   const handleAddCategorySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const slug = categoryForm.slug.trim() || categoryForm.name_en.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const slug = editingCategorySlug || categoryForm.slug.trim() || categoryForm.name_en.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const newCat: MaisonCategory = {
       id: `cat-${slug}`,
       slug,
-      name_en: categoryForm.name_en,
-      name_ar: categoryForm.name_ar,
-      tagline_en: categoryForm.tagline_en,
-      tagline_ar: categoryForm.tagline_ar,
-      description_en: categoryForm.description_en,
-      description_ar: categoryForm.description_ar,
-      is_active: true,
-      sort_order: categories.length + 1,
+      name_en: categoryForm.name_en.trim(),
+      name_ar: categoryForm.name_ar.trim(),
+      tagline_en: categoryForm.tagline_en.trim(),
+      tagline_ar: categoryForm.tagline_ar.trim(),
+      description_en: categoryForm.description_en.trim(),
+      description_ar: categoryForm.description_ar.trim(),
+      is_active: categoryForm.is_active !== false,
+      sort_order: Number(categoryForm.sort_order) || categories.length + 1,
     };
 
     const updated = saveCategory(newCat);
     setCategories(updated);
     setIsAddCategoryOpen(false);
+    setEditingCategorySlug(null);
     setCategoryForm({
       name_en: '',
       name_ar: '',
@@ -658,7 +721,15 @@ export default function AdminDashboardPage() {
       tagline_ar: '',
       description_en: '',
       description_ar: '',
+      sort_order: 1,
+      is_active: true,
     });
+
+    fetch('/api/v1/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newCat),
+    }).catch(() => {});
   };
 
   // Order Status update
@@ -1106,6 +1177,7 @@ export default function AdminDashboardPage() {
                       <th className="py-4 px-6">{isArabic ? 'المنتج' : 'Creation'}</th>
                       <th className="py-4 px-4">{isArabic ? 'الخط / القسم' : 'Line / Category'}</th>
                       <th className="py-4 px-4">{isArabic ? 'الأحجام والأسعار' : 'Sizes & Prices (EGP)'}</th>
+                      <th className="py-4 px-4">{isArabic ? 'ظهور المتجر' : 'Storefront'}</th>
                       <th className="py-4 px-4">{isArabic ? 'واجهة الموقع' : 'Home Showcase'}</th>
                       <th className="py-4 px-4">{isArabic ? 'التقييمات' : 'Reviews'}</th>
                       <th className="py-4 px-4">{isArabic ? 'المخزون' : 'Stock'}</th>
@@ -1116,6 +1188,7 @@ export default function AdminDashboardPage() {
                     {filteredProducts.map((p) => {
                       const matchedCat = categories.find((c) => c.slug === p.category_slug);
                       const isFeatured = p.featured_on_home !== false;
+                      const isStoreActive = p.is_hidden !== true;
                       return (
                         <tr key={p.id} className="hover:bg-[#F1EADA]/30 dark:hover:bg-[#1C1613]/50 transition-colors">
                           <td className="py-4 px-6">
@@ -1162,6 +1235,23 @@ export default function AdminDashboardPage() {
                             </div>
                           </td>
 
+                          {/* Quick Toggle Storefront Visibility */}
+                          <td className="py-4 px-4">
+                            <button
+                              onClick={() => handleToggleStorefrontVisibility(p)}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wider font-semibold cursor-pointer transition-all ${
+                                isStoreActive
+                                  ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                                  : 'bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-300 dark:border-stone-700'
+                              }`}
+                              title={isArabic ? 'انقر لإخفاء أو إظهار المنتج في المتجر' : 'Toggle storefront visibility'}
+                            >
+                              {isStoreActive ? <Eye size={11} /> : <EyeOff size={11} />}
+                              <span>{isStoreActive ? (isArabic ? 'معروض' : 'Active') : (isArabic ? 'مخفي' : 'Hidden')}</span>
+                            </button>
+                          </td>
+
+                          {/* Quick Toggle Homepage Feature */}
                           <td className="py-4 px-4">
                             <button
                               onClick={() => handleToggleHomeFeatured(p)}
@@ -1201,6 +1291,17 @@ export default function AdminDashboardPage() {
                               >
                                 <ExternalLink size={13} />
                               </Link>
+                              <button
+                                onClick={() => handleToggleStorefrontVisibility(p)}
+                                title={isArabic ? (isStoreActive ? 'إخفاء من المتجر' : 'إظهار في المتجر') : (isStoreActive ? 'Hide from Store' : 'Show in Store')}
+                                className={`p-2 rounded-full border transition-all cursor-pointer ${
+                                  isStoreActive
+                                    ? 'border-emerald-300 text-emerald-600 hover:bg-emerald-600 hover:text-white'
+                                    : 'border-stone-400 text-stone-500 hover:bg-stone-500 hover:text-white'
+                                }`}
+                              >
+                                {isStoreActive ? <Eye size={13} /> : <EyeOff size={13} />}
+                              </button>
                               <button
                                 onClick={() => openEditProductModal(p)}
                                 title={isArabic ? 'تعديل كامل (سعر، وصف، مقاسات، صور، تقييمات)' : 'Full Edit'}
@@ -1242,7 +1343,21 @@ export default function AdminDashboardPage() {
                 </p>
               </div>
               <button
-                onClick={() => setIsAddCategoryOpen(true)}
+                onClick={() => {
+                  setEditingCategorySlug(null);
+                  setCategoryForm({
+                    name_en: '',
+                    name_ar: '',
+                    slug: '',
+                    tagline_en: '',
+                    tagline_ar: '',
+                    description_en: '',
+                    description_ar: '',
+                    sort_order: categories.length + 1,
+                    is_active: true,
+                  });
+                  setIsAddCategoryOpen(true);
+                }}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#6B1D2F] text-white text-xs uppercase tracking-wider font-medium hover:bg-[#8A1D2E] transition-all cursor-pointer"
               >
                 <Plus size={14} />
@@ -1253,10 +1368,15 @@ export default function AdminDashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {categories.map((cat) => {
                 const count = products.filter((p) => p.category_slug === cat.slug).length;
+                const isCatActive = cat.is_active !== false;
                 return (
                   <div
                     key={cat.slug}
-                    className="p-6 rounded-3xl bg-[#FDFBF7] dark:bg-[#14100E] border border-[#B08D57]/30 shadow-sm space-y-4 hover:border-[#B08D57] transition-all"
+                    className={`p-6 rounded-3xl bg-[#FDFBF7] dark:bg-[#14100E] border shadow-sm space-y-4 transition-all ${
+                      isCatActive
+                        ? 'border-[#B08D57]/30 hover:border-[#B08D57]'
+                        : 'border-stone-300 dark:border-stone-800 opacity-75'
+                    }`}
                   >
                     <div className="flex items-start justify-between">
                       <div>
@@ -1272,15 +1392,41 @@ export default function AdminDashboardPage() {
                       </span>
                     </div>
 
-                    <p className="text-xs text-[#3A332D]/80 dark:text-[#FDFBF7]/70 leading-relaxed">
+                    <p className="text-xs text-[#3A332D]/80 dark:text-[#FDFBF7]/70 leading-relaxed min-h-[36px]">
                       {isArabic ? cat.description_ar : cat.description_en}
                     </p>
 
-                    <div className="pt-3 border-t border-[#B08D57]/20 flex items-center justify-between text-xs text-[#8C6E3D] dark:text-[#DFCA9B]/70">
-                      <span>Status: {cat.is_active ? 'Active Boutique' : 'Atelier Preview'}</span>
-                      <span className="text-[10px] font-mono uppercase tracking-widest text-[#B08D57]">
-                        Order: #{cat.sort_order}
-                      </span>
+                    <div className="pt-3 border-t border-[#B08D57]/20 flex items-center justify-between text-xs">
+                      {/* Toggle Active / Hidden */}
+                      <button
+                        onClick={() => handleToggleCategoryActive(cat)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-display uppercase tracking-wider font-semibold cursor-pointer transition-all ${
+                          isCatActive
+                            ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                            : 'bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-300 dark:border-stone-700'
+                        }`}
+                        title={isArabic ? 'انقر لإخفاء أو تفعيل الخط في المتجر' : 'Toggle category visibility'}
+                      >
+                        {isCatActive ? <Eye size={11} /> : <EyeOff size={11} />}
+                        <span>{isCatActive ? (isArabic ? 'مفعل بالمتجر' : 'Active') : (isArabic ? 'مخفي' : 'Hidden')}</span>
+                      </button>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openEditCategoryModal(cat)}
+                          title={isArabic ? 'تعديل بيانات الخط' : 'Edit Line'}
+                          className="p-2 rounded-full border border-[#B08D57]/30 text-[#14110F] dark:text-[#FDFBF7] hover:border-[#6B1D2F] hover:bg-[#6B1D2F] hover:text-[#FDFBF7] transition-all cursor-pointer"
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCategory(cat.slug)}
+                          title={isArabic ? 'حذف الخط' : 'Delete Line'}
+                          className="p-2 rounded-full border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -2308,16 +2454,21 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* MODAL: ADD CATEGORY / LINE */}
+      {/* MODAL: ADD / EDIT CATEGORY / LINE */}
       {isAddCategoryOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-[#FDFBF7] dark:bg-[#14100E] text-[#14110F] dark:text-[#FDFBF7] rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-5 border border-[#B08D57]/30 shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#B08D57]/20 pb-4">
               <h3 className="font-serif text-2xl text-[#14110F] dark:text-[#FDFBF7]">
-                {isArabic ? 'إضافة خط إنتاج جديد للدار' : 'Add New Maison Line'}
+                {editingCategorySlug
+                  ? (isArabic ? 'تعديل بيانات خط الإنتاج' : 'Edit Maison Line')
+                  : (isArabic ? 'إضافة خط إنتاج جديد للدار' : 'Add New Maison Line')}
               </h3>
               <button
-                onClick={() => setIsAddCategoryOpen(false)}
+                onClick={() => {
+                  setIsAddCategoryOpen(false);
+                  setEditingCategorySlug(null);
+                }}
                 className="p-2 rounded-full hover:bg-[#F1EADA] dark:hover:bg-[#1C1613] text-[#14110F]/70 dark:text-[#FDFBF7]/70 hover:text-[#14110F] dark:hover:text-[#FDFBF7]"
               >
                 <X size={20} />
@@ -2393,10 +2544,40 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4 items-center">
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                    {isArabic ? 'ترتيب الظهور' : 'Sort Order'}
+                  </label>
+                  <input
+                    type="number"
+                    value={categoryForm.sort_order}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, sort_order: Number(e.target.value) })}
+                    className="w-full p-2.5 rounded-xl border border-[#B08D57]/40 bg-white dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7]"
+                  />
+                </div>
+                <div className="pt-4">
+                  <label className="inline-flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={categoryForm.is_active}
+                      onChange={(e) => setCategoryForm({ ...categoryForm, is_active: e.target.checked })}
+                      className="w-4 h-4 rounded text-[#6B1D2F] border-[#B08D57]/40 focus:ring-0"
+                    />
+                    <span className="text-xs font-medium text-[#14110F] dark:text-[#FDFBF7]">
+                      {isArabic ? 'تفعيل وظهور في المتجر' : 'Active in Storefront'}
+                    </span>
+                  </label>
+                </div>
+              </div>
+
               <div className="pt-4 flex items-center justify-end gap-3 border-t border-[#B08D57]/20">
                 <button
                   type="button"
-                  onClick={() => setIsAddCategoryOpen(false)}
+                  onClick={() => {
+                    setIsAddCategoryOpen(false);
+                    setEditingCategorySlug(null);
+                  }}
                   className="px-5 py-2.5 rounded-full border border-[#B08D57]/40 text-[#14110F] dark:text-[#FDFBF7] uppercase tracking-wider text-xs hover:bg-[#F1EADA] dark:hover:bg-[#1C1613] cursor-pointer"
                 >
                   {isArabic ? 'إلغاء' : 'Cancel'}
@@ -2405,7 +2586,9 @@ export default function AdminDashboardPage() {
                   type="submit"
                   className="px-6 py-2.5 rounded-full bg-[#6B1D2F] text-[#FDFBF7] uppercase tracking-wider text-xs hover:bg-[#8A1D2E] transition-all shadow-md font-medium cursor-pointer"
                 >
-                  {isArabic ? 'حفظ الخط الجديد' : 'Save Line'}
+                  {editingCategorySlug
+                    ? (isArabic ? 'تحديث الخط' : 'Update Line')
+                    : (isArabic ? 'حفظ الخط الجديد' : 'Save Line')}
                 </button>
               </div>
             </form>

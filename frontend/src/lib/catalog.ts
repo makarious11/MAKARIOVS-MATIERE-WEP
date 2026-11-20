@@ -132,6 +132,7 @@ export interface PerfumeData {
   shade_name_en?: string;
   shade_name_ar?: string;
   featured_on_home?: boolean;
+  is_hidden?: boolean;
   home_order?: number;
   name_en: string;
   name_ar: string;
@@ -872,19 +873,28 @@ export const CANONICAL_PERFUMES: PerfumeData[] = [
 const STORAGE_KEY = 'lvenus_custom_catalog';
 const CATEGORIES_KEY = 'lvenus_custom_categories';
 const DELETED_PRODUCTS_KEY = 'lvenus_deleted_products';
+const DELETED_CATEGORIES_KEY = 'lvenus_deleted_categories';
 
 export function getStoredCategories(): MaisonCategory[] {
   if (typeof window === 'undefined') return MAISON_CATEGORIES;
   try {
+    let deletedSlugs = new Set<string>();
+    try {
+      const dRaw = localStorage.getItem(DELETED_CATEGORIES_KEY);
+      if (dRaw) deletedSlugs = new Set(JSON.parse(dRaw));
+    } catch {}
+
     const raw = localStorage.getItem(CATEGORIES_KEY);
-    if (!raw) return MAISON_CATEGORIES;
+    if (!raw) return MAISON_CATEGORIES.filter((c) => !deletedSlugs.has(c.slug));
     const parsed: MaisonCategory[] = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return MAISON_CATEGORIES;
-    // Ensure all canonical categories exist
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return MAISON_CATEGORIES.filter((c) => !deletedSlugs.has(c.slug));
+    }
+    // Ensure all canonical categories exist unless explicitly deleted
     const existingSlugs = new Set(parsed.map((c) => c.slug));
-    const merged = [...parsed];
+    const merged = parsed.filter((c) => !deletedSlugs.has(c.slug));
     for (const c of MAISON_CATEGORIES) {
-      if (!existingSlugs.has(c.slug)) {
+      if (!existingSlugs.has(c.slug) && !deletedSlugs.has(c.slug)) {
         merged.push(c);
       }
     }
@@ -906,12 +916,44 @@ export function saveCategory(category: MaisonCategory): MaisonCategory[] {
     updated = [...current, category];
   }
   localStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));
+
+  // If was previously marked deleted, unmark it
+  try {
+    const dRaw = localStorage.getItem(DELETED_CATEGORIES_KEY);
+    if (dRaw) {
+      const deleted: string[] = JSON.parse(dRaw);
+      const filtered = deleted.filter((s) => s !== category.slug);
+      localStorage.setItem(DELETED_CATEGORIES_KEY, JSON.stringify(filtered));
+    }
+  } catch {}
+
   window.dispatchEvent(new CustomEvent('lv_categories_updated', { detail: updated }));
   return updated;
 }
 
-export function getStoredCatalog(): PerfumeData[] {
-  if (typeof window === 'undefined') return CANONICAL_PERFUMES;
+export function deleteCategoryFromStorage(slug: string): MaisonCategory[] {
+  if (typeof window === 'undefined') return MAISON_CATEGORIES;
+  const current = getStoredCategories();
+  const updated = current.filter((c) => c.slug !== slug && c.id !== slug);
+  localStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));
+
+  try {
+    const dRaw = localStorage.getItem(DELETED_CATEGORIES_KEY);
+    const deleted: string[] = dRaw ? JSON.parse(dRaw) : [];
+    if (!deleted.includes(slug)) {
+      deleted.push(slug);
+      localStorage.setItem(DELETED_CATEGORIES_KEY, JSON.stringify(deleted));
+    }
+  } catch {}
+
+  window.dispatchEvent(new CustomEvent('lv_categories_updated', { detail: updated }));
+  return updated;
+}
+
+export function getStoredCatalog(includeHidden: boolean = false): PerfumeData[] {
+  if (typeof window === 'undefined') {
+    return includeHidden ? CANONICAL_PERFUMES : CANONICAL_PERFUMES.filter((p) => p.is_hidden !== true);
+  }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     let deletedIds = new Set<number>();
@@ -920,18 +962,26 @@ export function getStoredCatalog(): PerfumeData[] {
       if (dRaw) deletedIds = new Set(JSON.parse(dRaw));
     } catch {}
 
+    const filterList = (list: PerfumeData[]) => {
+      let res = list.filter((p) => !deletedIds.has(p.id));
+      if (!includeHidden) {
+        res = res.filter((p) => p.is_hidden !== true);
+      }
+      return res;
+    };
+
     if (!raw) {
-      return CANONICAL_PERFUMES.filter((p) => !deletedIds.has(p.id));
+      return filterList(CANONICAL_PERFUMES);
     }
 
     const parsed: PerfumeData[] = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) {
-      return CANONICAL_PERFUMES.filter((p) => !deletedIds.has(p.id));
+      return filterList(CANONICAL_PERFUMES);
     }
 
     // Merge: keep custom edits, ensure new canonical items are available unless deleted
     const existingSlugs = new Set(parsed.map((p) => p.slug));
-    const merged = parsed.filter((p) => !deletedIds.has(p.id));
+    const merged = [...parsed];
 
     for (const c of CANONICAL_PERFUMES) {
       if (!existingSlugs.has(c.slug) && !deletedIds.has(c.id)) {
@@ -939,9 +989,9 @@ export function getStoredCatalog(): PerfumeData[] {
       }
     }
 
-    return merged;
+    return filterList(merged);
   } catch {
-    return CANONICAL_PERFUMES;
+    return includeHidden ? CANONICAL_PERFUMES : CANONICAL_PERFUMES.filter((p) => p.is_hidden !== true);
   }
 }
 

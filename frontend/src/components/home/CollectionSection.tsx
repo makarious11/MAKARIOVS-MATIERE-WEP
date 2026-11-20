@@ -4,51 +4,147 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, Star } from 'lucide-react';
-import { PERFUMES, getStoredCatalog, PerfumeData } from '@/lib/catalog';
+import { ArrowUpRight, Sparkles, Layers, ArrowRight } from 'lucide-react';
+import { MAISON_CATEGORIES, getStoredCategories, MaisonCategory } from '@/lib/catalog';
 import { BotanicalPattern } from '@/components/ui/BotanicalPattern';
-import { NumberRoll } from '@/components/ui/NumberRoll';
 
 interface CollectionSectionProps {
   isArabic?: boolean;
 }
 
 export const CollectionSection: React.FC<CollectionSectionProps> = ({ isArabic = false }) => {
-  const [activeMobileIdx, setActiveMobileIdx] = useState(0);
-  const [products, setProducts] = useState<PerfumeData[]>(PERFUMES);
+  const [categories, setCategories] = useState<MaisonCategory[]>(MAISON_CATEGORIES);
 
   useEffect(() => {
-    const syncCatalog = () => {
-      const catalog = getStoredCatalog();
-      const featured = catalog
-        .filter((p) => p.featured_on_home !== false)
-        .sort((a, b) => (a.home_order || 99) - (b.home_order || 99));
-      setProducts(featured.length > 0 ? featured : catalog);
+    const syncCategories = () => {
+      setCategories(getStoredCategories());
     };
 
-    syncCatalog();
+    syncCategories();
 
-    // Sync live catalog from server database so admin featured choices display across all devices
-    fetch('/api/v1/products')
+    // Fetch live categories from server
+    fetch('/api/v1/categories')
       .then((res) => res.json())
       .then((json) => {
         if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
-          const featured = json.data
-            .filter((p: any) => p.featured_on_home !== false)
-            .sort((a: any, b: any) => (a.home_order || 99) - (b.home_order || 99));
-          setProducts(featured.length > 0 ? featured : json.data);
-          localStorage.setItem('lvenus_custom_catalog', JSON.stringify(json.data));
+          setCategories(json.data);
+          localStorage.setItem('lvenus_custom_categories', JSON.stringify(json.data));
         }
       })
       .catch(() => {});
 
-    window.addEventListener('lv_catalog_updated', syncCatalog);
-    window.addEventListener('storage', syncCatalog);
+    window.addEventListener('lv_categories_updated', syncCategories);
+    window.addEventListener('storage', syncCategories);
     return () => {
-      window.removeEventListener('lv_catalog_updated', syncCatalog);
-      window.removeEventListener('storage', syncCatalog);
+      window.removeEventListener('lv_categories_updated', syncCategories);
+      window.removeEventListener('storage', syncCategories);
     };
   }, []);
+
+  const catalogLines = [
+    {
+      id: 'parfums',
+      slug: 'parfums',
+      title_ar: 'العطور الاستثنائية',
+      title_en: 'Haute Parfumerie',
+      chapter_ar: 'الفصل الأول · مستخلصات عطرية بتركيز فائق',
+      chapter_en: 'Chapitre I · Rare Extraits de Parfum (32% - 38%)',
+      subtitle_ar: 'عطور الدار الأيقونية الأربعة بنقاء الزيوت الملكية',
+      subtitle_en: 'The Sovereign Quad — Cairo Savoir-Faire with Parisian Mastery',
+      description_ar:
+        'حجر الأساس لدار لوفينوس. توليفات عطرية نادرة تجمع بين الأناقة الباريسية ونقاء الشرق، تشمل إبداعات الدار الأربعة الكبرى بتركيز نقي وثبات ممتد.',
+      description_en:
+        'The sovereign cornerstone of L’VENUS. Handcrafted extraits with unprecedented concentrations, blending pure botanical absolutes and rare oils.',
+      image: '/images/products/la-fleur-du-nil-bottle.jpg',
+      badge_ar: '٤ عطور نادرة',
+      badge_en: '4 Signature Extraits',
+      price_from_ar: 'ابتداءً من ٢,٤٠٠ ج.م',
+      price_from_en: 'From 2,400 EGP',
+      highlights_ar: ['عود نقي', 'عنبر الإسكندرية', 'زهر النيل', 'خشب الأقصر'],
+      highlights_en: ['Imperial Oud', 'Alexandrian Amber', 'Nile Bloom', 'Luxor Woods'],
+      action_ar: 'استعراض العطور الفاخرة',
+      action_en: 'Explore Haute Parfumerie',
+      href: isArabic ? '/ar/shop?category=parfums' : '/shop?category=parfums',
+    },
+    {
+      id: 'soin',
+      slug: 'soin',
+      title_ar: 'كوتور الشفاه (Lip Gloss)',
+      title_en: 'Élixir Lèvres & Lip Gloss',
+      chapter_ar: 'الفصل الثاني · إصدار الكوتور الجديد ثلاثي الأبعاد',
+      chapter_en: 'Chapitre II · Haute Cosmétique & 3D Interactive Studio',
+      subtitle_ar: 'مجموعة الظلال الثلاثية — بريق زجاجي غير لزج وترطيب عميق',
+      subtitle_en: 'The Iconic 3-Shade Collection in Pure Crystal Flacons',
+      description_ar:
+        'ثلاث درجات حصرية ومميزة (نود خوخي دافئ، وردي كوتور، وتوتي ملكي) في قوارير كريستالية فاخرة بلمعان زجاجي ممتلئ، مع إمكانية تجربة الزجاجة 3D التفاعلية.',
+      description_en:
+        'Three bespoke shades (01 Nude Peach, 02 Dusty Rose, 03 Deep Berry) formulated with cold-distilled Damask petals and desert date seed oil.',
+      image: '/images/lipgloss/shade-collection-trio.jpg',
+      badge_ar: '٣ درجات كوتور + طقم ثلاثي',
+      badge_en: '3 Couture Shades + Trio Set',
+      price_from_ar: '٧٥٠ ج.م / للدرجة · ١,٨٥٠ ج.م / للطقم',
+      price_from_en: '750 EGP / shade · 1,850 EGP / Trio',
+      highlights_ar: ['٠١ نود خوخي', '٠٢ وردي كوتور', '٠٣ توتي ملكي', 'طقم ثلاثي'],
+      highlights_en: ['01 Nude Peach', '02 Dusty Rose', '03 Deep Berry', 'Trio Set'],
+      action_ar: 'دخول استوديو الشفاه 3D',
+      action_en: 'Enter 3D Lip Studio',
+      href: isArabic ? '/ar/lip-gloss' : '/lip-gloss',
+      isNew: true,
+      shades: [
+        { name_ar: 'نود خوخي', name_en: 'Nude Peach', hex: '#D49678' },
+        { name_ar: 'وردي كوتور', name_en: 'Dusty Rose', hex: '#B67583' },
+        { name_ar: 'توتي ملكي', name_en: 'Deep Berry', hex: '#783B4B' },
+      ],
+    },
+    {
+      id: 'brume',
+      slug: 'brume',
+      title_ar: 'بدي اسبلاش ومعطر الجسم والشعر',
+      title_en: 'Brume & Body Splash',
+      chapter_ar: 'الفصل الثالث · رذاذ عطري ناعم وفواح',
+      chapter_en: 'Chapitre III · Fine Refreshing Mists & Hair Veils',
+      subtitle_ar: 'انتعاش ملكي يدوم طوال اليوم بنفحات النيرولي والمسك الحريري',
+      subtitle_en: 'Long-Wearing Delicate Body Splashes & Hair Veils',
+      description_ar:
+        'رذاذ خفيف فاخر صُمم ليغمر الجسم والشعر بهالة منعشة من زهر البرتقال ونسمات البحر الأبيض المتوسط والمسك الأبيض النقي.',
+      description_en:
+        'Delicate, long-wearing body and hair mists blended with neroli, Mediterranean sea breeze, and sheer white musks.',
+      image: '/images/products/la-fleur-du-nil-bottle.jpg',
+      badge_ar: 'رذاذ الجسم والشعر',
+      badge_en: 'Body & Hair Splashes',
+      price_from_ar: 'ابتداءً من ٩٥٠ ج.م',
+      price_from_en: 'From 950 EGP',
+      highlights_ar: ['نيرولي سكندري', 'مسك أبيض', 'ترطيب خفيف', 'ثبات منعش'],
+      highlights_en: ['Alexandrian Neroli', 'White Musk', 'Hydrating Mist', 'Long-Lasting'],
+      action_ar: 'استعراض بدي اسبلاش',
+      action_en: 'Explore Body Splash',
+      href: isArabic ? '/ar/shop?category=brume' : '/shop?category=brume',
+    },
+    {
+      id: 'coffrets',
+      slug: 'coffrets',
+      title_ar: 'صناديق الاستكشاف والبوكسات الفاخرة',
+      title_en: 'Discovery Coffrets & Sets',
+      chapter_ar: 'الفصل الرابع · مجموعات الهدايا والاستكشاف الفاخرة',
+      chapter_en: 'Chapitre IV · Curated Discovery Sets & Travel Chests',
+      subtitle_ar: 'صناديق ورنيشية راقية تضم قوارير مصغرة من أندر إبداعات الدار',
+      subtitle_en: 'Lacquered Presentation Chests & Miniature Discovery Coffrets',
+      description_ar:
+        'صناديق فاخرة تضم قوارير مصغرة ومجموعات مختارة من خلاصة إبداعات الدار لتجربة لا تُنسى ولإهداء راقٍ يليق بأرقى المناسبات.',
+      description_en:
+        'Lacquered presentation chests featuring miniature vials of our canonical extraits and bespoke artisanal botanicals.',
+      image: '/images/products/packaging-mockup.jpg',
+      badge_ar: 'صناديق وهدايا ملكية',
+      badge_en: 'Royal Gift Chests',
+      price_from_ar: 'ابتداءً من ١,٨٥٠ ج.م',
+      price_from_en: 'From 1,850 EGP',
+      highlights_ar: ['صندوق هدايا فاخر', 'مجموعة الاستكشاف', 'قوارير مصغرة'],
+      highlights_en: ['Luxury Gift Chest', 'Discovery Vials', 'Travel Coffret'],
+      action_ar: 'استعراض الصناديق الفاخرة',
+      action_en: 'Explore Coffrets',
+      href: isArabic ? '/ar/shop?category=coffrets' : '/shop?category=coffrets',
+    },
+  ];
 
   return (
     <section
@@ -63,13 +159,13 @@ export const CollectionSection: React.FC<CollectionSectionProps> = ({ isArabic =
       <div className="absolute top-0 bottom-0 right-8 md:right-14 w-px bg-[#B08D57]/15 pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
-        {/* Section Heading */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-6 border-b border-[#B08D57]/20 pb-10">
+        {/* Section Heading: The Royal Catalog */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 border-b border-[#B08D57]/20 pb-10">
           <div>
             <div className="flex items-center gap-3 mb-3">
               <span className="w-8 h-px bg-[#B08D57]" />
               <span className="font-display text-xs tracking-[0.3em] uppercase text-[#B08D57]">
-                {isArabic ? 'المجموعة المختارة' : 'The Signature Catalog'}
+                {isArabic ? 'الكاتالوج الملكي · أصناف الدار' : 'The Royal Catalog · Maison Collections'}
               </span>
             </div>
             <h2
@@ -80,228 +176,156 @@ export const CollectionSection: React.FC<CollectionSectionProps> = ({ isArabic =
                 fontWeight: 300,
               }}
             >
-              {isArabic ? 'إبداعات الدار المختارة' : 'Featured Creations'}
+              {isArabic ? 'أصناف وخطوط لوفينوس' : 'Maison Collections'}
             </h2>
           </div>
 
-          <div className="text-left md:text-right">
+          <div className="text-left md:text-right space-y-1">
             <p
               className="text-lg sm:text-xl text-[#B08D57]"
               style={{ fontFamily: isArabic ? "'Amiri', serif" : "'Pinyon Script', cursive" }}
             >
-              {isArabic ? 'عطور استثنائية · عناية نباتية وشفاه · بدي اسبلاش' : 'Extraits de Parfum · Skincare & Lip Radiance · Body Mist'}
+              {isArabic ? 'عطور استثنائية · كوتور الشفاه 3D · بدي اسبلاش · صناديق فاخرة' : 'Haute Parfumerie · Lip Gloss 3D · Body Splash · Coffrets'}
             </p>
-            <span className="font-display text-[11px] tracking-[0.2em] uppercase text-[#FDFBF7]/50 block mt-1">
-              {isArabic ? 'صيغت بدقة في القاهرة بحرفية باريسية رفيعة' : 'Maison de Parfum — Le Caire · Paris'}
+            <span className="font-display text-[11px] tracking-[0.2em] uppercase text-[#FDFBF7]/50 block">
+              {isArabic ? 'اختر الصنف للدخول في تفاصيل الأنواع والألوان' : 'Select a line to explore creations and formulas'}
             </span>
           </div>
         </div>
 
-        {/* DESKTOP VIEW: High-Fashion Editorial Rows */}
-        <div className="hidden lg:flex flex-col space-y-10">
-          {products.map((perfume, index) => {
-            const productUrl = isArabic ? `/ar/product/${perfume.slug}` : `/product/${perfume.slug}`;
-            const lowestPrice = Math.min(...(perfume.variants || [{ price: 0 }]).map((v) => v.price));
-            const formattedIndex = String(index + 1).padStart(2, '0');
+        {/* 4 Category Showcase Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+          {catalogLines.map((cat, idx) => (
+            <motion.div
+              key={cat.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: idx * 0.1 }}
+              className="group relative flex flex-col rounded-3xl overflow-hidden bg-[#161210] border border-white/10 hover:border-[#B08D57]/60 shadow-xl hover:shadow-[0_24px_60px_rgba(0,0,0,0.7)] transition-all duration-500 hover:-translate-y-1.5"
+            >
+              {/* Top Badge Accent */}
+              <div className="absolute top-5 inset-x-5 z-20 flex items-center justify-between pointer-events-none">
+                <span className="px-3.5 py-1 rounded-full text-[10px] font-display uppercase tracking-widest bg-black/70 backdrop-blur-md text-[#DFCA9B] border border-[#B08D57]/40 font-semibold shadow-sm">
+                  {isArabic ? cat.badge_ar : cat.badge_en}
+                </span>
 
-            return (
-              <motion.div
-                key={perfume.id}
-                initial={{ opacity: 0, y: 35 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.75, delay: index * 0.12 }}
-                className="group relative p-8 sm:p-10 rounded-3xl ios-glass-dark border border-white/10 hover:border-[#B08D57]/50 transition-all duration-500 flex items-center justify-between gap-12 overflow-hidden hover:shadow-[0_24px_60px_rgba(0,0,0,0.65)] hover:-translate-y-1"
-              >
-                {/* Background botanical subtle touch */}
-                <div className="absolute right-1/4 inset-y-0 w-96 opacity-10 pointer-events-none group-hover:opacity-25 transition-opacity duration-700">
+                {cat.isNew && (
+                  <span className="px-3 py-1 rounded-full text-[10px] font-display uppercase tracking-widest bg-[#6B1D2F] text-white shadow-md flex items-center gap-1 font-bold">
+                    <Sparkles size={11} className="text-[#DFCA9B]" />
+                    <span>{isArabic ? 'إصدار 3D' : '3D Edition'}</span>
+                  </span>
+                )}
+              </div>
+
+              {/* Arch Backdrop Image Area */}
+              <div className="relative w-full h-80 sm:h-96 flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#201815] to-[#14100E]">
+                <div className="absolute inset-x-8 bottom-0 h-[88%] bg-[#1A1412] rounded-t-[160px] border border-[#B08D57]/25 transition-transform duration-700 group-hover:scale-105" />
+
+                <div className="relative z-10 w-full h-full flex items-center justify-center p-6">
                   <Image
-                    src="/images/brand/brand-identity.jpg"
-                    alt="Botanical ornament"
+                    src={cat.image}
+                    alt={isArabic ? cat.title_ar : cat.title_en}
                     fill
-                    className="object-cover"
+                    className="object-contain p-6 drop-shadow-[0_20px_35px_rgba(0,0,0,0.5)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </div>
+              </div>
 
-                {/* Left: Index Number & Typography */}
-                <div className="relative z-10 flex items-start gap-8 flex-1">
-                  {/* Big Editorial Row Number */}
-                  <span
-                    className="text-7xl font-light text-transparent select-none shrink-0"
-                    style={{
-                      fontFamily: "'Cormorant Garamond', serif",
-                      WebkitTextStroke: '1px rgba(176,141,87,0.35)',
-                    }}
-                  >
-                    {formattedIndex}
+              {/* Card Editorial Info */}
+              <div className="p-8 flex flex-col flex-grow justify-between space-y-6">
+                <div className="space-y-3">
+                  <span className="text-[11px] font-display uppercase tracking-[0.2em] text-[#B08D57] font-semibold block">
+                    {isArabic ? cat.chapter_ar : cat.chapter_en}
                   </span>
+                  <h3 className="text-2xl sm:text-3xl font-serif text-[#FDFBF7]">
+                    {isArabic ? cat.title_ar : cat.title_en}
+                  </h3>
+                  <p className="text-xs text-[#DFCA9B] font-serif italic">
+                    {isArabic ? cat.subtitle_ar : cat.subtitle_en}
+                  </p>
+                  <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-body">
+                    {isArabic ? cat.description_ar : cat.description_en}
+                  </p>
 
-                  <div className="space-y-3.5 flex-1">
-                    <div className="flex items-center gap-3">
-                      <span className="font-display text-[11px] tracking-[0.2em] uppercase text-[#B08D57] px-3 py-1 rounded-full border border-[#B08D57]/35 bg-[#1B1612]/60">
-                        {isArabic ? perfume.family_ar : perfume.family_en}
+                  {/* If category has shade swatches (Lip Gloss) */}
+                  {cat.shades && (
+                    <div className="pt-2">
+                      <span className="text-[10px] font-display uppercase tracking-widest text-stone-400 block mb-2">
+                        {isArabic ? 'الدرجات الثلاث الحصرية:' : 'The Three Couture Shades:'}
                       </span>
-                      <div className="flex items-center gap-1 text-[#B08D57]">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} size={11} className="fill-[#B08D57]" />
+                      <div className="flex items-center gap-3">
+                        {cat.shades.map((shade) => (
+                          <div
+                            key={shade.hex}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 border border-[#B08D57]/30 text-xs shadow-sm"
+                          >
+                            <span
+                              className="w-3.5 h-3.5 rounded-full shadow-inner border border-white/60"
+                              style={{ backgroundColor: shade.hex }}
+                            />
+                            <span className="font-display text-[11px] text-stone-200">
+                              {isArabic ? shade.name_ar : shade.name_en}
+                            </span>
+                          </div>
                         ))}
-                        <span className="text-xs text-[#FDFBF7]/60 ml-1.5 font-sans">5.0</span>
                       </div>
                     </div>
+                  )}
 
-                    <Link href={productUrl} className="block group/title">
-                      <h3
-                        className="text-4xl xl:text-5xl uppercase tracking-wider text-[#FDFBF7] group-hover/title:text-[#B08D57] transition-colors leading-tight"
-                        style={{
-                          fontFamily: isArabic ? "'Noto Naskh Arabic', serif" : "'Cormorant Garamond', Georgia, serif",
-                          letterSpacing: isArabic ? '0.01em' : '0.06em',
-                        }}
+                  {/* Highlight Chips */}
+                  <div className="flex flex-wrap gap-1.5 pt-2">
+                    {(isArabic ? cat.highlights_ar : cat.highlights_en).map((h) => (
+                      <span
+                        key={h}
+                        className="text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full bg-stone-900/80 text-[#FDFBF7]/80 border border-[#B08D57]/25"
                       >
-                        {isArabic ? perfume.name_ar : perfume.name_en}
-                      </h3>
-                    </Link>
-
-                    <p
-                      className="text-base text-[#B08D57]/90 italic max-w-lg"
-                      style={{ fontFamily: isArabic ? "'Amiri', serif" : "'Pinyon Script', cursive" }}
-                    >
-                      {isArabic ? perfume.tagline_ar : perfume.tagline_en}
-                    </p>
-
-                    <div className="pt-2 flex items-center gap-2 text-xs uppercase tracking-widest text-[#FDFBF7]/55">
-                      <span className="text-[#B08D57] text-sm">✦</span>
-                      <span>{(isArabic ? perfume.top_notes_ar : perfume.top_notes_en).join(' · ')}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Center: Arch Frame with Bottle */}
-                <div className="relative w-52 xl:w-60 aspect-[3/4] flex items-center justify-center shrink-0">
-                  {/* Arched Background */}
-                  <div className="absolute inset-x-3 bottom-0 top-6 ios-glass-dark rounded-t-[120px] border border-[#B08D57]/30 shadow-inner" />
-                  <div className="relative w-4/5 h-4/5 group-hover:scale-105 group-hover:-translate-y-2 transition-transform duration-500 rounded-t-[90px] overflow-hidden">
-                    <Image
-                      src={perfume.images.bottle}
-                      alt={isArabic ? perfume.name_ar : perfume.name_en}
-                      fill
-                      className="object-cover filter drop-shadow-[0_16px_32px_rgba(0,0,0,0.65)]"
-                    />
-                  </div>
-                </div>
-
-                {/* Right: Price & CTA */}
-                <div className="relative z-10 flex flex-col items-end space-y-5 shrink-0 pl-4">
-                  <div className="text-right">
-                    <span className="font-body text-xs text-[#FDFBF7]/50 uppercase tracking-widest block mb-1">
-                      {isArabic ? 'يبدأ من' : 'From'}
-                    </span>
-                    <span className="font-display text-3xl font-light text-[#FDFBF7] tracking-wider">
-                      <NumberRoll value={lowestPrice} />
-                      <span className="text-xs text-[#B08D57] ml-1.5 font-sans uppercase">
-                        {isArabic ? 'ج.م' : 'EGP'}
+                        {h}
                       </span>
-                    </span>
+                    ))}
                   </div>
+                </div>
+
+                {/* Actions Bar */}
+                <div className="pt-4 border-t border-[#B08D57]/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <span className="text-xs font-display text-[#DFCA9B] font-semibold">
+                    {isArabic ? cat.price_from_ar : cat.price_from_en}
+                  </span>
 
                   <Link
-                    href={productUrl}
-                    className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-[#FDFBF7] text-[#14110F] hover:bg-[#6B1D2F] hover:text-[#FDFBF7] font-display text-xs uppercase tracking-[0.2em] transition-all duration-400 group/btn shadow-md border border-[#B08D57]/40"
+                    href={cat.href}
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-[#1F1815] text-[#FDFBF7] hover:bg-[#6B1D2F] text-xs font-display uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-2 border border-[#B08D57]/30 group-hover:border-[#B08D57] cursor-pointer"
                   >
-                    <span>{isArabic ? 'اكتشف العطر' : 'Discover'}</span>
-                    <ArrowUpRight size={14} className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+                    <span>{isArabic ? cat.action_ar : cat.action_en}</span>
+                    <ArrowRight
+                      size={13}
+                      className={isArabic ? 'rotate-180' : ''}
+                    />
                   </Link>
                 </div>
-              </motion.div>
-            );
-          })}
+              </div>
+            </motion.div>
+          ))}
         </div>
 
-        {/* MOBILE VIEW: Luxury Arch Showcase Carousel */}
-        <div className="lg:hidden">
-          <div className="relative flex items-center justify-center py-6">
-            {products.map((perfume, idx) => {
-              const isActive = idx === activeMobileIdx;
-              const productUrl = isArabic ? `/ar/product/${perfume.slug}` : `/product/${perfume.slug}`;
-              const lowestPrice = Math.min(...(perfume.variants || [{ price: 0 }]).map((v) => v.price));
-
-              if (!isActive) return null;
-
-              return (
-                <motion.div
-                  key={perfume.id}
-                  initial={{ opacity: 0, scale: 0.94 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.94 }}
-                  transition={{ duration: 0.4 }}
-                  className="w-full max-w-sm flex flex-col items-center text-center space-y-6 bg-[#14100D] p-6 rounded-3xl border border-[#B08D57]/30 shadow-xl"
-                >
-                  {/* Arched Frame with bottle */}
-                  <div className="relative w-64 aspect-[3/4] flex items-center justify-center">
-                    <div className="absolute inset-x-4 bottom-0 top-6 bg-[#1D1713] rounded-t-[120px] border border-[#B08D57]/40 shadow-inner" />
-                    <div className="relative w-4/5 h-4/5">
-                      <Image
-                        src={perfume.images.bottle}
-                        alt={isArabic ? perfume.name_ar : perfume.name_en}
-                        fill
-                        className="object-contain filter drop-shadow-[0_20px_36px_rgba(0,0,0,0.7)]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Info */}
-                  <div className="space-y-2.5">
-                    <span className="font-display text-[10px] tracking-[0.2em] uppercase text-[#B08D57] px-3 py-1 rounded-full border border-[#B08D57]/35 bg-[#1B1612]">
-                      {isArabic ? perfume.family_ar : perfume.family_en}
-                    </span>
-                    <h3
-                      className="text-3xl uppercase tracking-wider text-[#FDFBF7]"
-                      style={{
-                        fontFamily: isArabic ? "'Noto Naskh Arabic', serif" : "'Cormorant Garamond', Georgia, serif",
-                      }}
-                    >
-                      {isArabic ? perfume.name_ar : perfume.name_en}
-                    </h3>
-                    <p
-                      className="text-sm text-[#B08D57] italic"
-                      style={{ fontFamily: isArabic ? "'Amiri', serif" : "'Pinyon Script', cursive" }}
-                    >
-                      {isArabic ? perfume.tagline_ar : perfume.tagline_en}
-                    </p>
-                    <p className="font-display text-2xl font-light text-[#FDFBF7] pt-1">
-                      <NumberRoll value={lowestPrice} />
-                      <span className="text-xs text-[#B08D57] ml-1 font-sans uppercase">
-                        {isArabic ? 'ج.م' : 'EGP'}
-                      </span>
-                    </p>
-                  </div>
-
-                  {/* CTA */}
-                  <Link
-                    href={productUrl}
-                    className="w-full py-4 rounded-full bg-[#FDFBF7] text-[#14110F] hover:bg-[#6B1D2F] hover:text-[#FDFBF7] font-display text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all shadow-md"
-                  >
-                    <span>{isArabic ? 'اكتشف العطر' : 'Discover'}</span>
-                    <ArrowUpRight size={15} />
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          {/* Dots Indicator */}
-          <div className="flex items-center justify-center gap-3 mt-6">
-            {products.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setActiveMobileIdx(i)}
-                className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
-                  i === activeMobileIdx ? 'bg-[#B08D57] w-8' : 'bg-white/20'
-                }`}
-                aria-label={`Perfume ${i + 1}`}
-              />
-            ))}
-          </div>
+        {/* Global Shop CTA Footer */}
+        <div className="mt-16 text-center">
+          <Link
+            href={isArabic ? '/ar/shop' : '/shop'}
+            className="inline-flex items-center gap-3 px-8 py-3.5 rounded-full bg-[#6B1D2F] text-white hover:bg-[#8A1D2E] font-display text-xs uppercase tracking-[0.25em] shadow-2xl hover:scale-105 transition-all border border-[#B08D57]/40 cursor-pointer"
+          >
+            <Layers size={14} className="text-[#DFCA9B]" />
+            <span>
+              {isArabic
+                ? 'استعراض كافة إبداعات دار لوفينوس في الكاتالوج الكامل'
+                : 'Browse All Creations in The Royal Catalog'}
+            </span>
+            <ArrowRight
+              size={13}
+              className={isArabic ? 'rotate-180' : ''}
+            />
+          </Link>
         </div>
       </div>
     </section>

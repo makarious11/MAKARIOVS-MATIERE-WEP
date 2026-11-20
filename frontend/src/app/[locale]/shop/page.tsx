@@ -431,27 +431,26 @@ export default function LocalizedShopPage({ params }: PageProps) {
                       </span>
 
                       <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <button
-                          type="button"
-                          onClick={() => selectCategory(cat.id)}
-                          className="flex-1 sm:flex-none px-6 py-2.5 rounded-full bg-[#14110F] dark:bg-[#1E1714] text-[#FDFBF7] hover:bg-[#6B1D2F] dark:hover:bg-[#8A1D2E] text-xs font-display uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-                        >
-                          <span>{isArabic ? cat.action_ar : cat.action_en}</span>
-                          <ArrowRight
-                            size={13}
-                            className={isArabic ? 'rotate-180' : ''}
-                          />
-                        </button>
-
-                        {/* Special Direct 3D Studio button for Lip Gloss */}
-                        {cat.specialUrl && (
+                        {cat.specialUrl ? (
                           <Link
                             href={cat.specialUrl}
-                            className="px-5 py-2.5 rounded-full bg-[#6B1D2F] text-white hover:bg-[#8A1D2E] text-xs font-display uppercase tracking-widest transition-all shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
+                            className="flex-1 sm:flex-none px-6 py-2.5 rounded-full bg-[#6B1D2F] text-[#FDFBF7] hover:bg-[#8A1D2E] text-xs font-display uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer font-semibold"
                           >
-                            <Sparkles size={12} className="text-[#DFCA9B]" />
-                            <span>{isArabic ? 'استوديو 3D' : '3D Studio'}</span>
+                            <span>{isArabic ? cat.action_ar : cat.action_en}</span>
+                            <Sparkles size={13} className="text-[#DFCA9B]" />
                           </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => selectCategory(cat.id)}
+                            className="flex-1 sm:flex-none px-6 py-2.5 rounded-full bg-[#14110F] dark:bg-[#1E1714] text-[#FDFBF7] hover:bg-[#6B1D2F] dark:hover:bg-[#8A1D2E] text-xs font-display uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                          >
+                            <span>{isArabic ? cat.action_ar : cat.action_en}</span>
+                            <ArrowRight
+                              size={13}
+                              className={isArabic ? 'rotate-180' : ''}
+                            />
+                          </button>
                         )}
                       </div>
                     </div>
@@ -568,7 +567,10 @@ export default function LocalizedShopPage({ params }: PageProps) {
                 {filtered.map((perfume) => {
                   const defaultVariant = perfume.variants.find((v) => v.is_default) || perfume.variants[0];
                   const lowestPrice = Math.min(...perfume.variants.map((v) => v.price));
-                  const productUrl = isArabic ? `/ar/product/${perfume.slug}` : `/product/${perfume.slug}`;
+                  const isLipGloss = perfume.product_type === 'lipgloss' || perfume.category_slug === 'soin' || perfume.slug.startsWith('lip-gloss') || perfume.slug === 'elixir-levres-satine';
+                  const productUrl = isLipGloss
+                    ? (isArabic ? '/ar/lip-gloss' : '/lip-gloss')
+                    : (isArabic ? `/ar/product/${perfume.slug}` : `/product/${perfume.slug}`);
 
                   return (
                     <div key={perfume.id} className="relative group product-card">

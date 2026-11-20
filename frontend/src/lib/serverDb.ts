@@ -251,3 +251,10 @@ export function saveServerCategory(cat: MaisonCategory): MaisonCategory[] {
   writeJsonFile(CATEGORIES_FILE(), updated);
   return updated;
 }
+
+export function deleteServerCategory(slug: string): MaisonCategory[] {
+  const current = getServerCategories();
+  const updated = current.filter((c) => c.slug !== slug && c.id !== slug);
+  writeJsonFile(CATEGORIES_FILE(), updated);
+  return updated;
+}

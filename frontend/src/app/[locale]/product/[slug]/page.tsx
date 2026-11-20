@@ -31,6 +31,7 @@ import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import { WaitingListModal } from '@/components/product/WaitingListModal';
 import { Price } from '@/components/ui/Price';
+import LipGlossCatalogPage from '@/app/[locale]/lip-gloss/page';
 
 interface ProductPageProps {
   params: Promise<{ slug: string; locale?: string }>;
@@ -40,6 +41,11 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   const resolvedParams = use(params);
   const slug = resolvedParams.slug;
   const isArabic = resolvedParams.locale === 'ar';
+
+  // If this product is any lip gloss shade or the trio, render the dedicated Lip Gloss studio experience
+  if (slug === 'elixir-levres-satine' || slug.startsWith('lip-gloss')) {
+    return <LipGlossCatalogPage params={params} />;
+  }
 
   const [perfume, setPerfume] = useState<PerfumeData>(() => getPerfumeBySlug(slug) || PERFUMES[0]);
   const otherPerfumes = getOtherPerfumes(perfume.slug);
