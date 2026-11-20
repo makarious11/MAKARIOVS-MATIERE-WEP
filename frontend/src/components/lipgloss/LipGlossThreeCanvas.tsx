@@ -25,28 +25,23 @@ export const LipGlossThreeCanvas: React.FC<LipGlossThreeCanvasProps> = ({
   const mountRef = useRef<HTMLDivElement>(null);
   const currentShade = LIP_GLOSS_SHADES.find((s) => s.id === activeShadeId) || LIP_GLOSS_SHADES[1];
 
-  const [isInteracting, setIsInteracting] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isInteracting, setIsInteracting] = useState(false);
 
-  // References to 3D objects for dynamic updates
-  const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const bottleGroupRef = useRef<THREE.Group | null>(null);
-  const liquidMaterialRef = useRef<THREE.MeshPhysicalMaterial | null>(null);
-  const liquidBottomMaterialRef = useRef<THREE.MeshPhysicalMaterial | null>(null);
+  const liquidMatsRef = useRef<THREE.MeshPhysicalMaterial[]>([]);
   const capGroupRef = useRef<THREE.Group | null>(null);
   const wandGroupRef = useRef<THREE.Group | null>(null);
-  const doeFootMaterialRef = useRef<THREE.MeshStandardMaterial | null>(null);
   const dropletMeshRef = useRef<THREE.Mesh | null>(null);
+  const bottomGlowRef = useRef<THREE.PointLight | null>(null);
   const targetColorRef = useRef(new THREE.Color(currentShade.hex));
 
-  // User drag rotation state
   const isDraggingRef = useRef(false);
-  const previousMousePositionRef = useRef({ x: 0, y: 0 });
-  const manualRotationRef = useRef({ x: 0, y: 0 });
+  const prevMouseRef = useRef({ x: 0, y: 0 });
+  const manualRotRef = useRef({ x: 0, y: 0 });
   const mouseTiltRef = useRef({ x: 0, y: 0 });
 
-  // Update target color when active shade changes
   useEffect(() => {
     targetColorRef.current.set(currentShade.hex);
   }, [currentShade.hex]);
@@ -55,483 +50,437 @@ export const LipGlossThreeCanvas: React.FC<LipGlossThreeCanvasProps> = ({
     const container = mountRef.current;
     if (!container) return;
 
-    // 1. Scene setup
+    // ─────────────────── SCENE ────────────────────────────────────────
     const scene = new THREE.Scene();
-    sceneRef.current = scene;
+    const W = container.clientWidth || 400;
+    const H = container.clientHeight || 560;
 
-    const width = container.clientWidth || 450;
-    const height = container.clientHeight || 640;
+    // ─────────────────── CAMERA ───────────────────────────────────────
+    // Narrow FOV, pulled back to show full slim bottle without distortion
+    const camera = new THREE.PerspectiveCamera(26, W / H, 0.1, 100);
+    camera.position.set(0, 0.4, 9.2);
 
-    // 2. Camera setup - Positioned closer so the 3D bottle is enlarged and prominent
-    const camera = new THREE.PerspectiveCamera(36, width / height, 0.1, 100);
-    camera.position.set(0, 0.15, 4.8);
-
-    // 3. WebGL Renderer with full transparency and anti-aliasing
-    const renderer = new THREE.WebGLRenderer({
-      alpha: true,
-      antialias: true,
-      powerPreference: 'high-performance',
-    });
-    renderer.setSize(width, height);
+    // ─────────────────── RENDERER ─────────────────────────────────────
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(W, H);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.3;
+    renderer.toneMappingExposure = 1.15;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // 4. Studio Lighting Rig for glass refraction and liquid gloss
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.1);
-    scene.add(ambientLight);
+    // ─────────────────── LIGHTING ─────────────────────────────────────
+    scene.add(new THREE.AmbientLight(0xffffff, 1.0));
 
-    const keyLight = new THREE.DirectionalLight(0xfff8f4, 3.2);
-    keyLight.position.set(3.5, 5, 4.5);
-    keyLight.castShadow = true;
-    scene.add(keyLight);
+    const keyL = new THREE.DirectionalLight(0xfff8f2, 3.0);
+    keyL.position.set(3.5, 6, 5);
+    keyL.castShadow = true;
+    scene.add(keyL);
 
-    const rimLight = new THREE.DirectionalLight(0xffe8ec, 2.6);
-    rimLight.position.set(-4, 3.5, -3.5);
-    scene.add(rimLight);
+    const rimL = new THREE.DirectionalLight(0xffe0ea, 2.4);
+    rimL.position.set(-4, 4, -5);
+    scene.add(rimL);
 
-    const bottomGlow = new THREE.PointLight(new THREE.Color(currentShade.hex), 2.8, 7);
-    bottomGlow.position.set(0, -3.0, 2);
+    const fillL = new THREE.DirectionalLight(0xffffff, 1.0);
+    fillL.position.set(0, 0, 6);
+    scene.add(fillL);
+
+    const topL = new THREE.DirectionalLight(0xffffff, 0.9);
+    topL.position.set(0, 7, 2);
+    scene.add(topL);
+
+    const bottomGlow = new THREE.PointLight(new THREE.Color(currentShade.hex), 2.8, 12);
+    bottomGlow.position.set(0, -5, 3);
+    bottomGlowRef.current = bottomGlow;
     scene.add(bottomGlow);
 
-    const fillLight = new THREE.DirectionalLight(0xffffff, 1.4);
-    fillLight.position.set(0, -2.5, 3.5);
-    scene.add(fillLight);
-
-    // 5. MASTER BOTTLE GROUP
+    // ─────────────────── MASTER GROUP ─────────────────────────────────
     const masterGroup = new THREE.Group();
     scene.add(masterGroup);
     bottleGroupRef.current = masterGroup;
 
-    // ========================================================
-    // A. OUTER CRYSTAL BEVELLED FLACON (HEAVY LUXURY ACRYLIC)
-    // ========================================================
-    // Main body flacon with thick crystal walls
-    const outerGlassGeo = new THREE.BoxGeometry(1.5, 2.6, 0.95, 4, 4, 4);
-    const outerGlassMat = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      transmission: 0.96,
+    // ─────────────────── SHARED MATERIALS ─────────────────────────────
+
+    // Clear acrylic / heavy crystal glass for outer case
+    const crystalMat = new THREE.MeshPhysicalMaterial({
+      color: 0xf8f8f8,
+      transmission: 0.97,
       opacity: 1,
       transparent: true,
-      roughness: 0.03,
-      ior: 1.54,
-      reflectivity: 0.95,
-      thickness: 0.45,
+      roughness: 0.025,
+      ior: 1.50,
+      reflectivity: 0.98,
+      thickness: 0.7,
       clearcoat: 1.0,
-      clearcoatRoughness: 0.03,
+      clearcoatRoughness: 0.02,
       specularIntensity: 1.0,
     });
-    const outerGlassMesh = new THREE.Mesh(outerGlassGeo, outerGlassMat);
-    outerGlassMesh.position.y = -0.5;
-    masterGroup.add(outerGlassMesh);
 
-    // Solid heavy crystal bottom base (luxury weight characteristic)
-    const baseGeo = new THREE.BoxGeometry(1.48, 0.42, 0.93);
-    const baseMat = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      transmission: 0.95,
-      roughness: 0.02,
-      ior: 1.56,
-      thickness: 0.6,
-      clearcoat: 1.0,
-      transparent: true,
+    // Chrome collar
+    const chromeMat = new THREE.MeshStandardMaterial({
+      color: 0xc8c8c8,
+      metalness: 0.95,
+      roughness: 0.08,
     });
-    const baseMesh = new THREE.Mesh(baseGeo, baseMat);
-    baseMesh.position.y = -1.6;
-    masterGroup.add(baseMesh);
 
-    // ========================================================
-    // B. INNER LIP GLOSS LIQUID CORE (ROUNDED CAPSULE VIAL)
-    // ========================================================
-    // Cylindrical reservoir inside the square flacon
-    const liquidCylinderGeo = new THREE.CylinderGeometry(0.48, 0.48, 1.7, 32);
+    // Inner gloss liquid material (the colorful part)
     const liquidMat = new THREE.MeshPhysicalMaterial({
       color: new THREE.Color(currentShade.hex),
       emissive: new THREE.Color(currentShade.hex),
-      emissiveIntensity: 0.18,
-      roughness: 0.08,
-      metalness: 0.1,
+      emissiveIntensity: 0.10,
+      roughness: 0.07,
+      metalness: 0.06,
       clearcoat: 1.0,
-      clearcoatRoughness: 0.05,
-      transmission: 0.28,
-      opacity: 0.96,
+      clearcoatRoughness: 0.04,
+      transmission: 0.10,
+      opacity: 0.98,
       transparent: true,
-      ior: 1.48,
+      ior: 1.47,
     });
-    liquidMaterialRef.current = liquidMat;
+    liquidMatsRef.current = [liquidMat];
 
-    const liquidCylinderMesh = new THREE.Mesh(liquidCylinderGeo, liquidMat);
-    liquidCylinderMesh.position.y = -0.42;
-    masterGroup.add(liquidCylinderMesh);
+    // ══════════════════════════════════════════════════════════════════
+    // A. BODY OUTER CASE
+    //    Slim rectangular transparent acrylic tube
+    //    Reference: square cross-section, tall and slender
+    //    Width=1.0, Depth=0.95, Height=4.5
+    //    Y center = -0.85 → bottom y=-3.1, top y=1.4
+    // ══════════════════════════════════════════════════════════════════
+    const bodyGeo = new THREE.BoxGeometry(1.0, 4.5, 0.95, 1, 1, 1);
+    masterGroup.add(new THREE.Mesh(bodyGeo, crystalMat));
+    // Position y default = 0, we'll offset the whole group instead
 
-    // Hemispherical rounded bottom for the inner vial (like real lip gloss)
-    const liquidBottomGeo = new THREE.SphereGeometry(0.48, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
-    const liquidBottomMesh = new THREE.Mesh(liquidBottomGeo, liquidMat);
-    liquidBottomMesh.position.y = -1.27;
-    masterGroup.add(liquidBottomMesh);
-    liquidBottomMaterialRef.current = liquidMat;
+    // Solid base plate at the very bottom (thicker to suggest weight)
+    const basePlateGeo = new THREE.BoxGeometry(1.0, 0.22, 0.95);
+    const basePlateMesh = new THREE.Mesh(basePlateGeo, crystalMat);
+    basePlateMesh.position.y = -2.36;
+    masterGroup.add(basePlateMesh);
 
-    // ========================================================
-    // C. CRISP EMBOSSED "L'VENUS" SIGNATURE LOGO
-    // ========================================================
-    const labelCanvas = document.createElement('canvas');
-    labelCanvas.width = 512;
-    labelCanvas.height = 1024;
-    const ctx = labelCanvas.getContext('2d');
-    if (ctx) {
-      ctx.clearRect(0, 0, 512, 1024);
-      ctx.fillStyle = '#FFFFFF';
-      ctx.textAlign = 'center';
+    // ══════════════════════════════════════════════════════════════════
+    // B. INNER GLOSS VIAL — the pill/capsule shape inside the case
+    //    This is the main colored element. Rounded cylinder.
+    //    Diameter ~0.64, sits in BOTTOM portion of the body case.
+    //    The vial extends from y=-2.1 (bottom rounded) to y=0.3 (top dome)
+    // ══════════════════════════════════════════════════════════════════
 
-      // Brand Title
-      ctx.font = 'bold 50px "Cormorant Garamond", Georgia, serif';
-      ctx.letterSpacing = '14px';
-      ctx.fillText("L'VENUS", 256, 490);
+    // Main cylinder body
+    const vialCylGeo = new THREE.CylinderGeometry(0.32, 0.32, 2.2, 36);
+    const vialCylMesh = new THREE.Mesh(vialCylGeo, liquidMat);
+    vialCylMesh.position.y = -1.0; // center of cylinder
+    masterGroup.add(vialCylMesh);
 
-      // Sub-brand
-      ctx.font = '22px "Cormorant Garamond", Georgia, serif';
-      ctx.letterSpacing = '7px';
-      ctx.fillText('LE CAIRE · PARIS', 256, 545);
+    // Rounded dome TOP of vial
+    const vialTopGeo = new THREE.SphereGeometry(0.32, 36, 20, 0, Math.PI * 2, 0, Math.PI / 2);
+    const vialTopMesh = new THREE.Mesh(vialTopGeo, liquidMat);
+    vialTopMesh.position.y = 0.1; // top cap
+    masterGroup.add(vialTopMesh);
 
-      // Delicate Hairline Accent
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(165, 575);
-      ctx.lineTo(347, 575);
-      ctx.stroke();
+    // Rounded dome BOTTOM of vial
+    const vialBotGeo = new THREE.SphereGeometry(0.32, 36, 20, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
+    const vialBotMesh = new THREE.Mesh(vialBotGeo, liquidMat);
+    vialBotMesh.position.y = -2.1; // bottom cap
+    masterGroup.add(vialBotMesh);
 
-      ctx.font = 'italic 22px "EB Garamond", serif';
-      ctx.fillText('Élixir Lèvres Satiné', 256, 615);
-    }
-    const labelTexture = new THREE.CanvasTexture(labelCanvas);
-    labelTexture.needsUpdate = true;
+    // ══════════════════════════════════════════════════════════════════
+    // C. L'VENUS LOGO — embossed on front of inner vial
+    // ══════════════════════════════════════════════════════════════════
+    const lc = document.createElement('canvas');
+    lc.width = 512; lc.height = 1024;
+    const lctx = lc.getContext('2d')!;
+    lctx.clearRect(0, 0, 512, 1024);
+    lctx.fillStyle = 'rgba(255,255,255,0.90)';
+    lctx.textAlign = 'center';
+    // Brand name
+    lctx.font = 'italic 56px "Cormorant Garamond", Georgia, serif';
+    lctx.fillText("L'VENUS", 256, 530);
+    // Fine hairline above/below
+    lctx.strokeStyle = 'rgba(255,255,255,0.65)';
+    lctx.lineWidth = 2;
+    lctx.beginPath(); lctx.moveTo(175, 492); lctx.lineTo(337, 492); lctx.stroke();
+    lctx.beginPath(); lctx.moveTo(195, 565); lctx.lineTo(317, 565); lctx.stroke();
 
-    const labelPlaneGeo = new THREE.PlaneGeometry(1.2, 2.4);
-    const labelMat = new THREE.MeshBasicMaterial({
-      map: labelTexture,
-      transparent: true,
-      opacity: 0.96,
-      depthWrite: false,
-    });
-    const labelMesh = new THREE.Mesh(labelPlaneGeo, labelMat);
-    labelMesh.position.set(0, -0.5, 0.49);
+    const labelTex = new THREE.CanvasTexture(lc);
+    const labelGeo = new THREE.PlaneGeometry(0.56, 2.0);
+    const labelMesh = new THREE.Mesh(labelGeo, new THREE.MeshBasicMaterial({
+      map: labelTex, transparent: true, opacity: 0.92, depthWrite: false,
+    }));
+    labelMesh.position.set(0, -1.0, 0.33);
     masterGroup.add(labelMesh);
 
-    // Subtle back face reflection
-    const backLabelMesh = labelMesh.clone();
-    backLabelMesh.position.set(0, -0.5, -0.49);
-    backLabelMesh.rotation.y = Math.PI;
-    masterGroup.add(backLabelMesh);
-
-    // ========================================================
-    // D. BOTTLE THREADED COLLAR & STOPPER
-    // ========================================================
-    const collarGeo = new THREE.CylinderGeometry(0.44, 0.44, 0.38, 32);
-    const collarMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.1,
-      metalness: 0.2,
-      transparent: true,
-      opacity: 0.88,
-    });
-    const collarMesh = new THREE.Mesh(collarGeo, collarMat);
-    collarMesh.position.y = 0.98;
+    // ══════════════════════════════════════════════════════════════════
+    // D. NECK COLLAR — chrome ring between body top and cap
+    //    At y = 1.4 (top of body case)
+    // ══════════════════════════════════════════════════════════════════
+    const collarGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.22, 36);
+    const collarMesh = new THREE.Mesh(collarGeo, chromeMat);
+    collarMesh.position.y = 1.42;
     masterGroup.add(collarMesh);
 
-    // Inner wiper ring (soft white silicone)
-    const wiperGeo = new THREE.TorusGeometry(0.36, 0.05, 16, 32);
-    const wiperMat = new THREE.MeshStandardMaterial({ color: 0xf5f0eb, roughness: 0.4 });
+    // Inner wiper ring (white silicone look)
+    const wiperGeo = new THREE.TorusGeometry(0.3, 0.038, 12, 32);
+    const wiperMat = new THREE.MeshStandardMaterial({ color: 0xeeeae5, roughness: 0.5 });
     const wiperMesh = new THREE.Mesh(wiperGeo, wiperMat);
     wiperMesh.rotation.x = Math.PI / 2;
-    wiperMesh.position.y = 1.15;
+    wiperMesh.position.y = 1.56;
     masterGroup.add(wiperMesh);
 
-    // ========================================================
-    // E. CRYSTAL CAP WITH TOP ENGRAVED VENUS CAMEO
-    // ========================================================
+    // ══════════════════════════════════════════════════════════════════
+    // E. CAP GROUP
+    //    - Square transparent acrylic cap (same width as body case)
+    //    - Ornate decorative sculptural topper on top
+    //    Cap body: Width=1.0, Depth=0.95, Height=2.5
+    //    Center y = 2.9 → bottom y=1.65, top y=4.15
+    // ══════════════════════════════════════════════════════════════════
     const capGroup = new THREE.Group();
     capGroupRef.current = capGroup;
 
-    // Clear acrylic square cap
-    const capGeo = new THREE.BoxGeometry(1.5, 1.38, 0.95, 4, 4, 4);
-    const capMat = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      transmission: 0.95,
-      roughness: 0.04,
-      ior: 1.54,
-      thickness: 0.45,
+    const capCaseGeo = new THREE.BoxGeometry(1.0, 2.5, 0.95, 1, 1, 1);
+    const capCaseMesh = new THREE.Mesh(capCaseGeo, crystalMat);
+    capCaseMesh.position.y = 2.9;
+    capGroup.add(capCaseMesh);
+
+    // ── DECORATIVE CAP TOPPER ──────────────────────────────────────────
+    // Based on reference: a clear acrylic sculptural floral/rose cameo figure
+    // that sits prominently on top of the square cap
+    const topperMat = new THREE.MeshPhysicalMaterial({
+      color: 0xfafafa,
+      transmission: 0.88,
+      roughness: 0.07,
+      ior: 1.50,
+      thickness: 0.5,
       clearcoat: 1.0,
+      clearcoatRoughness: 0.04,
       transparent: true,
-      opacity: 1,
     });
-    const capMesh = new THREE.Mesh(capGeo, capMat);
-    capMesh.position.y = 1.82;
-    capGroup.add(capMesh);
 
-    // Inner cap core / screw insert
-    const innerCapPlugGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.65, 32);
-    const innerCapPlugMat = new THREE.MeshStandardMaterial({
-      color: 0xe6dfd5,
-      metalness: 0.45,
-      roughness: 0.2,
-    });
-    const innerCapPlugMesh = new THREE.Mesh(innerCapPlugGeo, innerCapPlugMat);
-    innerCapPlugMesh.position.y = 1.55;
-    capGroup.add(innerCapPlugMesh);
+    // Topper base disc (transitions from square cap top to round topper)
+    const tBaseGeo = new THREE.CylinderGeometry(0.45, 0.46, 0.14, 36);
+    const tBaseMesh = new THREE.Mesh(tBaseGeo, topperMat);
+    tBaseMesh.position.y = 4.22;
+    capGroup.add(tBaseMesh);
 
-    // Gold Venus Cameo Medallion on Top of Cap
-    const crestGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.04, 32);
-    const crestMat = new THREE.MeshStandardMaterial({
-      color: 0xb08d57,
-      metalness: 0.85,
-      roughness: 0.2,
-    });
-    const crestMesh = new THREE.Mesh(crestGeo, crestMat);
-    crestMesh.position.y = 2.52;
-    capGroup.add(crestMesh);
+    // Lower ring / skirt of topper
+    const tSkirtGeo = new THREE.TorusGeometry(0.34, 0.07, 12, 32);
+    const tSkirtMesh = new THREE.Mesh(tSkirtGeo, topperMat);
+    tSkirtMesh.position.y = 4.35;
+    capGroup.add(tSkirtMesh);
+
+    // Middle organic bulb
+    const tBulbGeo = new THREE.SphereGeometry(0.3, 32, 24);
+    tBulbGeo.scale(1, 1.1, 1);
+    const tBulbMesh = new THREE.Mesh(tBulbGeo, topperMat);
+    tBulbMesh.position.y = 4.72;
+    capGroup.add(tBulbMesh);
+
+    // Rose petals — 5 organic lobes around the central bulb
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2;
+      const petalGeo = new THREE.SphereGeometry(0.14, 16, 10);
+      petalGeo.scale(0.7, 1.5, 0.65);
+      const petalMesh = new THREE.Mesh(petalGeo, topperMat);
+      const r = 0.28;
+      petalMesh.position.set(Math.cos(angle) * r, 4.55, Math.sin(angle) * r);
+      petalMesh.lookAt(new THREE.Vector3(0, 4.55, 0));
+      capGroup.add(petalMesh);
+    }
+
+    // Inner rose petals (second layer, rotated offset)
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2 + Math.PI / 5;
+      const petalGeo = new THREE.SphereGeometry(0.1, 12, 8);
+      petalGeo.scale(0.65, 1.3, 0.6);
+      const petalMesh = new THREE.Mesh(petalGeo, topperMat);
+      const r = 0.18;
+      petalMesh.position.set(Math.cos(angle) * r, 4.78, Math.sin(angle) * r);
+      capGroup.add(petalMesh);
+    }
+
+    // Center pearl/apex of topper
+    const tApexGeo = new THREE.SphereGeometry(0.1, 20, 14);
+    const tApexMesh = new THREE.Mesh(tApexGeo, topperMat);
+    tApexMesh.position.y = 5.08;
+    capGroup.add(tApexMesh);
+
+    // Top tiny pearl jewel
+    const tJewelGeo = new THREE.SphereGeometry(0.055, 16, 12);
+    const tJewelMat = new THREE.MeshStandardMaterial({ color: 0xd0bfae, metalness: 0.3, roughness: 0.2 });
+    const tJewelMesh = new THREE.Mesh(tJewelGeo, tJewelMat);
+    tJewelMesh.position.y = 5.2;
+    capGroup.add(tJewelMesh);
 
     masterGroup.add(capGroup);
 
-    // ========================================================
-    // F. APPLICATOR WAND & DRIPPING GLOSS DROPLET
-    // ========================================================
+    // ══════════════════════════════════════════════════════════════════
+    // F. APPLICATOR WAND (revealed when cap lifts)
+    // ══════════════════════════════════════════════════════════════════
     const wandGroup = new THREE.Group();
     wandGroupRef.current = wandGroup;
 
-    // Translucent acrylic applicator stem
-    const stemGeo = new THREE.CylinderGeometry(0.068, 0.068, 1.9, 16);
-    const stemMat = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      transmission: 0.92,
-      roughness: 0.08,
-      transparent: true,
+    const wandMat = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff, transmission: 0.9, roughness: 0.07, transparent: true,
     });
-    const stemMesh = new THREE.Mesh(stemGeo, stemMat);
-    stemMesh.position.y = 0.55;
-    wandGroup.add(stemMesh);
 
-    // Angled velvet doe-foot applicator tip
-    const doeFootGeo = new THREE.ConeGeometry(0.125, 0.38, 16);
+    const wandStemGeo = new THREE.CylinderGeometry(0.025, 0.025, 2.1, 12);
+    const wandStemMesh = new THREE.Mesh(wandStemGeo, wandMat);
+    wandStemMesh.position.y = 0.5;
+    wandGroup.add(wandStemMesh);
+
+    const doeFootGeo = new THREE.SphereGeometry(0.07, 16, 10);
+    doeFootGeo.scale(1.0, 0.65, 1.0);
     const doeFootMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(currentShade.hex),
-      roughness: 0.75,
-      metalness: 0.05,
+      color: new THREE.Color(currentShade.hex), roughness: 0.6,
     });
-    doeFootMaterialRef.current = doeFootMat;
     const doeFootMesh = new THREE.Mesh(doeFootGeo, doeFootMat);
-    doeFootMesh.position.y = -0.48;
-    doeFootMesh.rotation.z = 0.22;
+    doeFootMesh.position.y = -0.5;
     wandGroup.add(doeFootMesh);
 
-    // Saturated glossy teardrop hanging from tip
-    const dropletGeo = new THREE.SphereGeometry(0.095, 16, 16);
-    dropletGeo.scale(1, 1.55, 1);
+    const dropletGeo = new THREE.SphereGeometry(0.05, 14, 10);
+    dropletGeo.scale(1, 1.65, 1);
     const dropletMat = new THREE.MeshPhysicalMaterial({
       color: new THREE.Color(currentShade.hex),
-      transmission: 0.45,
-      roughness: 0.03,
-      clearcoat: 1.0,
-      transparent: true,
-      opacity: 0.92,
+      transmission: 0.4, roughness: 0.03, clearcoat: 1.0, transparent: true, opacity: 0.9,
     });
     const dropletMesh = new THREE.Mesh(dropletGeo, dropletMat);
-    dropletMesh.position.set(0.02, -0.76, 0);
+    dropletMesh.position.set(0.01, -0.65, 0);
     dropletMeshRef.current = dropletMesh;
     wandGroup.add(dropletMesh);
 
-    // Initially hide wand inside bottle unless open
     wandGroup.visible = false;
     scene.add(wandGroup);
 
-    // Scale up master bottle to be heroic and prominent
-    masterGroup.scale.set(1.5, 1.5, 1.5);
-    masterGroup.position.set(0, 0.15, 0);
+    // ─── Scale & Position master group ───────────────────────────────
+    // Keep scale at 1.0 — bottle is designed at correct proportions already
+    // Offset slightly down so it's visually centered in the viewport
+    masterGroup.scale.set(1.0, 1.0, 1.0);
+    masterGroup.position.set(0, -0.5, 0);
 
-    // ========================================================
-    // G. MOUSE & DRAG INTERACTION HANDLERS
-    // ========================================================
-    const handleMouseDown = (e: MouseEvent) => {
+    // ══════════════════════════════════════════════════════════════════
+    // G. EVENT HANDLERS
+    // ══════════════════════════════════════════════════════════════════
+    const onMouseDown = (e: MouseEvent) => {
       isDraggingRef.current = true;
-      setIsInteracting(true);
-      setHasInteracted(true);
-      previousMousePositionRef.current = { x: e.clientX, y: e.clientY };
+      setIsInteracting(true); setHasInteracted(true);
+      prevMouseRef.current = { x: e.clientX, y: e.clientY };
     };
-
-    const handleMouseMove = (e: MouseEvent) => {
+    const onMouseMove = (e: MouseEvent) => {
       const rect = container.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-      mouseTiltRef.current = { x, y };
-
-      if (!isDraggingRef.current) return;
-      const deltaX = e.clientX - previousMousePositionRef.current.x;
-      const deltaY = e.clientY - previousMousePositionRef.current.y;
-
-      manualRotationRef.current.y += deltaX * 0.008;
-      manualRotationRef.current.x += deltaY * 0.008;
-
-      previousMousePositionRef.current = { x: e.clientX, y: e.clientY };
-    };
-
-    const handleMouseUp = () => {
-      isDraggingRef.current = false;
-      setIsInteracting(false);
-    };
-
-    // Touch events for mobile devices
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 1) {
-        isDraggingRef.current = true;
-        setIsInteracting(true);
-        setHasInteracted(true);
-        previousMousePositionRef.current = {
-          x: e.touches[0].clientX,
-          y: e.touches[0].clientY,
-        };
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isDraggingRef.current || e.touches.length !== 1) return;
-      const deltaX = e.touches[0].clientX - previousMousePositionRef.current.x;
-      const deltaY = e.touches[0].clientY - previousMousePositionRef.current.y;
-
-      manualRotationRef.current.y += deltaX * 0.01;
-      manualRotationRef.current.x += deltaY * 0.01;
-
-      previousMousePositionRef.current = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
+      mouseTiltRef.current = {
+        x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        y: -(((e.clientY - rect.top) / rect.height) * 2 - 1),
       };
+      if (!isDraggingRef.current) return;
+      manualRotRef.current.y += (e.clientX - prevMouseRef.current.x) * 0.008;
+      manualRotRef.current.x += (e.clientY - prevMouseRef.current.y) * 0.008;
+      prevMouseRef.current = { x: e.clientX, y: e.clientY };
     };
+    const onMouseUp = () => { isDraggingRef.current = false; setIsInteracting(false); };
 
-    const handleTouchEnd = () => {
-      isDraggingRef.current = false;
-      setIsInteracting(false);
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      isDraggingRef.current = true; setIsInteracting(true); setHasInteracted(true);
+      prevMouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     };
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDraggingRef.current || e.touches.length !== 1) return;
+      manualRotRef.current.y += (e.touches[0].clientX - prevMouseRef.current.x) * 0.01;
+      manualRotRef.current.x += (e.touches[0].clientY - prevMouseRef.current.y) * 0.01;
+      prevMouseRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    };
+    const onTouchEnd = () => { isDraggingRef.current = false; setIsInteracting(false); };
 
-    container.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    container.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('touchend', handleTouchEnd);
-
-    // ========================================================
-    // H. RESIZE OBSERVER
-    // ========================================================
-    const handleResize = () => {
-      if (!container || !renderer || !camera) return;
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-      camera.aspect = w / h;
+    const onResize = () => {
+      if (!container) return;
+      camera.aspect = container.clientWidth / container.clientHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
+      renderer.setSize(container.clientWidth, container.clientHeight);
     };
-    window.addEventListener('resize', handleResize);
 
-    // ========================================================
-    // I. ANIMATION / RENDER LOOP
-    // ========================================================
-    let animationFrameId: number;
-    let clock = new THREE.Clock();
+    container.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd);
+    window.addEventListener('resize', onResize);
+
+    // ══════════════════════════════════════════════════════════════════
+    // H. ANIMATION LOOP
+    // ══════════════════════════════════════════════════════════════════
+    let rafId: number;
+    const clock = new THREE.Clock();
 
     const animate = () => {
-      animationFrameId = requestAnimationFrame(animate);
-      const elapsed = clock.getElapsedTime();
+      rafId = requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
 
-      // Smooth color morphing to active shade
-      if (liquidMaterialRef.current) {
-        liquidMaterialRef.current.color.lerp(targetColorRef.current, 0.08);
-        liquidMaterialRef.current.emissive.lerp(targetColorRef.current, 0.08);
+      // Smooth color transition when shade changes
+      liquidMatsRef.current.forEach((mat) => {
+        mat.color.lerp(targetColorRef.current, 0.07);
+        mat.emissive.lerp(targetColorRef.current, 0.07);
+      });
+      if (dropletMeshRef.current) {
+        (dropletMeshRef.current.material as THREE.MeshPhysicalMaterial).color.lerp(targetColorRef.current, 0.07);
       }
-      if (liquidBottomMaterialRef.current) {
-        liquidBottomMaterialRef.current.color.lerp(targetColorRef.current, 0.08);
-      }
-      if (doeFootMaterialRef.current) {
-        doeFootMaterialRef.current.color.lerp(targetColorRef.current, 0.08);
-      }
-      if (bottomGlow) {
-        bottomGlow.color.lerp(targetColorRef.current, 0.08);
-      }
-      if (dropletMeshRef.current && (dropletMeshRef.current.material as THREE.MeshPhysicalMaterial)) {
-        (dropletMeshRef.current.material as THREE.MeshPhysicalMaterial).color.lerp(targetColorRef.current, 0.08);
+      if (bottomGlowRef.current) {
+        bottomGlowRef.current.color.lerp(targetColorRef.current, 0.07);
       }
 
-      // Parallax scroll calculation
-      const scrollRotY = Math.sin((window.scrollY || 0) * 0.0022) * 0.35;
-      const scrollRotX = Math.cos((window.scrollY || 0) * 0.0018) * 0.15;
-      const scrollTransY = (window.scrollY || 0) * -0.0006;
+      // Scroll-based gentle rotation
+      const scrollY_ = window.scrollY || 0;
+      const scrollRotY = Math.sin(scrollY_ * 0.0020) * 0.28;
+      const scrollRotX = Math.cos(scrollY_ * 0.0016) * 0.10;
+      const scrollTransY = scrollY_ * -0.0004;
 
-      // Natural idle floating animation
-      const idleFloatY = Math.sin(elapsed * 1.5) * 0.06;
-      const idleRotY = Math.sin(elapsed * 0.8) * 0.07;
+      // Idle float & gentle sway
+      const idleFloat = Math.sin(t * 1.4) * 0.055;
+      const idleSway = Math.sin(t * 0.75) * 0.06;
 
-      // Apply combined rotations to master bottle
       if (bottleGroupRef.current) {
-        const targetRotY =
-          manualRotationRef.current.y +
-          scrollRotY +
-          idleRotY +
-          mouseTiltRef.current.x * 0.25;
-
-        const targetRotX =
-          manualRotationRef.current.x +
-          scrollRotX +
-          -mouseTiltRef.current.y * 0.2;
-
-        bottleGroupRef.current.rotation.y += (targetRotY - bottleGroupRef.current.rotation.y) * 0.1;
-        bottleGroupRef.current.rotation.x += (targetRotX - bottleGroupRef.current.rotation.x) * 0.1;
-        bottleGroupRef.current.position.y = 0.15 + idleFloatY + scrollTransY;
+        const tgtY = manualRotRef.current.y + scrollRotY + idleSway + mouseTiltRef.current.x * 0.22;
+        const tgtX = manualRotRef.current.x + scrollRotX + (-mouseTiltRef.current.y * 0.18);
+        bottleGroupRef.current.rotation.y += (tgtY - bottleGroupRef.current.rotation.y) * 0.1;
+        bottleGroupRef.current.rotation.x += (tgtX - bottleGroupRef.current.rotation.x) * 0.1;
+        bottleGroupRef.current.position.y = -0.5 + idleFloat + scrollTransY;
       }
 
-      // Open Wand Animation State
+      // Cap open/close animation
       if (capGroupRef.current && wandGroupRef.current) {
         if (isOpenWand) {
-          // Lift cap up and to the side
-          capGroupRef.current.position.y += (1.7 - capGroupRef.current.position.y) * 0.1;
-          capGroupRef.current.position.x += (1.45 - capGroupRef.current.position.x) * 0.1;
-          capGroupRef.current.rotation.z += (0.42 - capGroupRef.current.rotation.z) * 0.1;
+          capGroupRef.current.position.y += (1.8 - capGroupRef.current.position.y) * 0.1;
+          capGroupRef.current.position.x += (1.3 - capGroupRef.current.position.x) * 0.1;
+          capGroupRef.current.rotation.z += (0.38 - capGroupRef.current.rotation.z) * 0.1;
 
-          // Reveal Wand floating next to bottle
-          wandGroup.visible = true;
-          wandGroup.position.set(1.35, 0.45 + idleFloatY, 0.65);
-          wandGroup.rotation.z = -0.3 + Math.sin(elapsed * 2) * 0.03;
+          wandGroupRef.current.visible = true;
+          wandGroupRef.current.position.set(1.2, 0.3 + idleFloat, 0.5);
+          wandGroupRef.current.rotation.z = -0.28 + Math.sin(t * 2.2) * 0.03;
 
-          // Droplet surface tension oscillation
           if (dropletMeshRef.current) {
-            dropletMeshRef.current.scale.y = 1.45 + Math.sin(elapsed * 4.2) * 0.16;
+            dropletMeshRef.current.scale.y = 1.5 + Math.sin(t * 4.5) * 0.18;
           }
         } else {
-          // Return cap to closed position
           capGroupRef.current.position.y += (0 - capGroupRef.current.position.y) * 0.12;
           capGroupRef.current.position.x += (0 - capGroupRef.current.position.x) * 0.12;
           capGroupRef.current.rotation.z += (0 - capGroupRef.current.rotation.z) * 0.12;
-          wandGroup.visible = false;
+          wandGroupRef.current.visible = false;
         }
       }
 
       renderer.render(scene, camera);
     };
-
     animate();
 
     // Cleanup
     return () => {
-      cancelAnimationFrame(animationFrameId);
-      container.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      container.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-      window.removeEventListener('resize', handleResize);
-
+      cancelAnimationFrame(rafId);
+      container.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      container.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('resize', onResize);
       if (renderer.domElement && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
@@ -539,43 +488,32 @@ export const LipGlossThreeCanvas: React.FC<LipGlossThreeCanvasProps> = ({
     };
   }, [isOpenWand]);
 
-  const handleResetView = () => {
-    manualRotationRef.current = { x: 0, y: 0 };
-  };
+  const handleResetView = () => { manualRotRef.current = { x: 0, y: 0 }; };
 
   return (
     <div
       ref={mountRef}
-      className={`relative select-none flex flex-col items-center justify-center cursor-grab active:cursor-grabbing ${className}`}
-      style={{
-        width: '100%',
-        height: '620px',
-        maxHeight: '88vh',
-        background: 'transparent',
-      }}
+      className={`relative select-none cursor-grab active:cursor-grabbing ${className}`}
+      style={{ width: '100%', height: '560px', maxHeight: '86vh', background: 'transparent' }}
     >
-      {/* Soft Dynamic Glow Directly Behind Floating 3D Bottle */}
+      {/* Dynamic color glow behind the floating bottle */}
       <div
-        className="absolute inset-0 m-auto w-[340px] h-[340px] rounded-full blur-[85px] pointer-events-none -z-10 transition-colors duration-700 opacity-60"
+        className="absolute inset-0 m-auto w-[280px] h-[380px] rounded-full blur-[90px] pointer-events-none -z-10 transition-colors duration-700 opacity-50"
         style={{
-          background: `radial-gradient(circle, ${currentShade.hex} 0%, ${currentShade.secondary_hex}33 45%, transparent 72%)`,
+          background: `radial-gradient(ellipse at center, ${currentShade.hex} 0%, ${currentShade.secondary_hex}22 55%, transparent 78%)`,
         }}
       />
 
-      {/* Floating 3D Control Hints & Status */}
+      {/* Top status pill & reset button */}
       <div className="absolute top-4 inset-x-4 flex items-center justify-between pointer-events-none z-20">
         <div
           className="px-4 py-1.5 rounded-full text-xs font-display tracking-widest uppercase backdrop-blur-md border shadow-md flex items-center gap-2 pointer-events-auto"
           style={{
-            backgroundColor: `${currentShade.hex}22`,
-            borderColor: `${currentShade.hex}60`,
-            color: '#2B171D',
+            backgroundColor: `${currentShade.hex}20`,
+            borderColor: `${currentShade.hex}55`,
           }}
         >
-          <span
-            className="w-2.5 h-2.5 rounded-full shadow-sm animate-pulse"
-            style={{ backgroundColor: currentShade.hex }}
-          />
+          <span className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: currentShade.hex }} />
           <span className="font-semibold text-stone-900 dark:text-stone-100">
             {isArabic ? currentShade.name_ar : currentShade.name_en}
           </span>
@@ -586,23 +524,22 @@ export const LipGlossThreeCanvas: React.FC<LipGlossThreeCanvasProps> = ({
             <button
               type="button"
               onClick={handleResetView}
-              title={isArabic ? 'إعادة ضبط الزاوية' : 'Reset 3D Angle'}
-              className="p-2 rounded-full backdrop-blur-md bg-white/70 dark:bg-stone-900/70 border border-[#B08D57]/40 text-[#2B171D] dark:text-[#FDFBF7] hover:scale-110 transition-all shadow-md cursor-pointer"
+              title={isArabic ? 'إعادة ضبط الزاوية' : 'Reset View'}
+              className="p-2 rounded-full backdrop-blur-md bg-white/70 dark:bg-stone-900/70 border border-[#B08D57]/40 hover:scale-110 transition-all shadow-md cursor-pointer"
             >
-              <RotateCw size={13} />
+              <RotateCw size={13} className="text-[#2B171D] dark:text-[#FDFBF7]" />
             </button>
           )}
-
           <div className="px-3.5 py-1.5 rounded-full backdrop-blur-md bg-white/70 dark:bg-stone-900/70 border border-[#B08D57]/30 text-[11px] font-display uppercase tracking-wider text-stone-700 dark:text-stone-300 flex items-center gap-1.5 shadow-sm">
             <Move3d size={13} className="text-[#B08D57]" />
-            <span>{isArabic ? 'تدوير 3D حر 360°' : 'Rotate 360°'}</span>
+            <span>{isArabic ? 'تدوير 360°' : 'Rotate 360°'}</span>
           </div>
         </div>
       </div>
 
-      {/* Open/Close Wand Toggle Button */}
+      {/* Wand toggle button */}
       {onToggleOpenWand && (
-        <div className="absolute bottom-4 z-20 pointer-events-auto">
+        <div className="absolute bottom-4 z-20 pointer-events-auto left-1/2 -translate-x-1/2">
           <button
             type="button"
             onClick={onToggleOpenWand}
@@ -611,12 +548,8 @@ export const LipGlossThreeCanvas: React.FC<LipGlossThreeCanvasProps> = ({
             <Sparkles size={14} className="text-[#B08D57] group-hover:rotate-12 transition-transform" />
             <span className="font-semibold">
               {isOpenWand
-                ? isArabic
-                  ? 'إغلاق الغطاء الكريستالي'
-                  : 'Close Crystal Flacon Cap'
-                : isArabic
-                ? 'استكشفي الموزع والقطرة اللامعة'
-                : 'Reveal Wand & Gloss Droplet'}
+                ? isArabic ? 'إغلاق الغطاء' : 'Close Cap'
+                : isArabic ? 'استعراض الموزع' : 'Reveal Applicator'}
             </span>
           </button>
         </div>
