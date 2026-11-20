@@ -155,6 +155,11 @@ export const Footer: React.FC = () => {
                   {isArabic ? 'مجموعة الاستكشاف' : 'Le Coffret Découverte'}
                 </Link>
               </li>
+              <li>
+                <Link href={isArabic ? '/ar/lip-gloss' : '/lip-gloss'} className="text-[#E8A5B2] hover:text-white font-semibold transition-colors">
+                  {isArabic ? 'إكسير الشفاه — ليب غلوس كوتور' : 'Élixir Lèvres — Lip Gloss'}
+                </Link>
+              </li>
             </ul>
           </div>
 

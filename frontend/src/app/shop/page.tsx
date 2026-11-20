@@ -107,7 +107,7 @@ function ShopCard({ perfume }: { perfume: (typeof PERFUMES)[0] }) {
 /* ─────────────────────────────────────────────
    Shop Page
 ───────────────────────────────────────────── */
-const FAMILIES = ['All', 'Floral', 'Woody', 'Amber', 'Oud'] as const;
+const FAMILIES = ['All', 'Floral', 'Woody', 'Amber', 'Oud', 'Botanical'] as const;
 type Family = (typeof FAMILIES)[number];
 
 export default function ShopPage() {
@@ -200,6 +200,28 @@ export default function ShopPage() {
               </React.Fragment>
             ))}
           </nav>
+        </div>
+
+        {/* Couture Lip Gloss Spotlight Banner */}
+        <div className="mb-12 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#F6EBE6] via-[#F2D6DC] to-[#EBD0D8] dark:from-[#21161B] dark:via-[#2A1821] dark:to-[#1E1117] border border-[#B08D57]/30 shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center md:text-start">
+            <span className="text-[10px] font-display uppercase tracking-[0.25em] text-[#8C4A5A] dark:text-[#DFCA9B] font-semibold">
+              New Haute Cosmétique Edition
+            </span>
+            <h3 className="font-display text-xl sm:text-2xl uppercase tracking-wider text-[#2B171D] dark:text-white">
+              The Shade Collection — 3D Interactive Studio
+            </h3>
+            <p className="text-xs text-stone-600 dark:text-stone-300 max-w-xl">
+              Explore 01 Nude Peach, 02 Dusty Rose, and 03 Deep Berry with the real-time 3D interactive flacon viewer.
+            </p>
+          </div>
+          <Link
+            href="/lip-gloss"
+            className="shrink-0 px-6 py-3 rounded-full bg-[#2B171D] text-white hover:bg-[#8C4A5A] text-xs font-display uppercase tracking-widest transition-colors shadow-md flex items-center gap-2"
+          >
+            <span>Enter 3D Lip Studio</span>
+            <span className="text-amber-400">✦</span>
+          </Link>
         </div>
 
         {/* Product Grid */}

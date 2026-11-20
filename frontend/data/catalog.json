@@ -685,19 +685,22 @@
     "home_order": 6
   },
   {
-    "id": 7,
-    "slug": "elixir-levres-satine",
+    "id": 71,
+    "slug": "lip-gloss-nude-peach",
     "category_slug": "soin",
-    "product_type": "skincare",
-    "name_en": "Élixir Lèvres Satiné — Rose Lip Gloss",
-    "name_ar": "إكسير الشفاه الساتاني — ليب غلوس بورد الإسكندرية",
-    "tagline_en": "Couture plumping lip gloss infused with Damask rose petals and desert date seed elixir",
-    "tagline_ar": "غلوس وسيروم الشفاه الفاخر بتألق ساتاني وخلاصة الورد الدمشقي وبلح الصحراء",
-    "story_en": "An exquisite alchemy of couture lip radiance and cellular botanical care. Distilled with cold-pressed Alexandrian Damask rose petals, desert date seed oil, and botanical squalane. Delivers deep, cushiony hydration with an ethereal mirror-glass shine that never feels sticky.",
-    "story_ar": "توليفة ملكية راقية تجمع بين البريق الساتاني الفاتن والعناية الخلوية العميقة. صيغ بقطرات الورد الدمشقي السكندري وزيت بذور بلح الصحراء والسكوالين النباتي النقي ليمنح الشفاه امتلاءً طبيعياً ولمعاناً زجاجياً فائق النعومة وخالٍ تماماً من اللزوجة.",
+    "product_type": "lipgloss",
+    "shade_hex": "#D49678",
+    "shade_name_en": "01 Nude Peach",
+    "shade_name_ar": "٠١ نود خوخي دافئ",
+    "name_en": "Élixir Lèvres Satiné — 01 Nude Peach",
+    "name_ar": "إكسير الشفاه الساتاني — ٠١ نود خوخي دافئ",
+    "tagline_en": "Couture plumping lip gloss in warm sunlit nude peach with mirror-glass reflection",
+    "tagline_ar": "غلوس الشفاه الفاخر بلون نود خوخي دافئ ولمعان زجاجي عاكس بقطرات الورد وبلح الصحراء",
+    "story_en": "A warm, sun-drenched nude peach inspired by Alexandrian coastal dawns. Formulated with cold-pressed Damask rose petals, desert date seed oil, and botanical squalane. Delivers deep cushiony hydration with an ethereal mirror-glass shine that never feels sticky.",
+    "story_ar": "درجة نود خوخي دافئة مستوحاة من إشراقة فجر الإسكندرية. صيغت بقطرات الورد الدمشقي وزيت بذور بلح الصحراء والسكوالين النباتي لتمنح الشفاه امتلاءً طبيعياً ولمعاناً زجاجياً فائق النعومة وخالٍ تماماً من اللزوجة.",
     "family": "botanical",
-    "family_en": "Botanical Lip Care & Gloss",
-    "family_ar": "عناية نباتية راقية للشفاه",
+    "family_en": "Warm Nude & Botanical Glow",
+    "family_ar": "نود دافئ وتألق نباتي",
     "concentration": "Cellular Lip Gloss & Elixir",
     "gender_vibe": "Feminine",
     "longevity": 8,
@@ -734,58 +737,344 @@
       "سكوالين الحرير"
     ],
     "callout_top": {
-      "en": "Hand-blown applicator vial with gold rim",
-      "ar": "قارورة مذهبة بموزع ناعم مخملي"
+      "en": "Crystal-clear acrylic flacon with bevelled edges",
+      "ar": "قارورة كريستالية مصقولة بحواف هندسية"
     },
     "callout_cap": {
-      "en": "Polished Walnut Cap with Venus Seal",
-      "ar": "غطاء خشب جوز مصقول بختم لوفينوس"
+      "en": "Sculpted Venus profile emblem transparent cap",
+      "ar": "غطاء زجاجي شفاف محفور بشعار لوفينوس"
     },
     "callout_seal": {
-      "en": "Authenticity Guarantee Wax Mark",
-      "ar": "علامة الشمع الدالة على نقاء المكونات"
+      "en": "Plush velvet cloud applicator wand",
+      "ar": "موزع مخملي فائق النعومة والدقة"
     },
     "variants": [
       {
-        "id": 701,
-        "name_en": "15 ml Couture Lip Flacon",
-        "name_ar": "١٥ مل زجاجي محفور",
-        "size_ml": 15,
+        "id": 711,
+        "name_en": "5 ml Couture Lip Flacon",
+        "name_ar": "٥ مل قارورة كوتور محفورة",
+        "size_ml": 5,
         "price": 750,
         "compare_at_price": 950,
-        "sku": "LV-LIP-15",
-        "stock": 40,
+        "sku": "LV-LIP-NP-01",
+        "stock": 50,
         "is_default": true
       }
     ],
     "images": {
-      "hero": "/images/products/packaging-mockup.jpg",
-      "bottle": "/images/products/packaging-mockup.jpg",
-      "box": "/images/products/packaging-mockup.jpg",
-      "lifestyle": "/images/brand/NEW_brand-identity.png",
-      "texture": "/images/brand/NEW_brand-identity.png"
+      "hero": "/images/lipgloss/shade-nude-peach.jpg",
+      "bottle": "/images/lipgloss/shade-nude-peach.jpg",
+      "box": "/images/lipgloss/shade-nude-peach-open.jpg",
+      "lifestyle": "/images/lipgloss/shade-collection-trio.jpg",
+      "texture": "/images/lipgloss/shade-collection-swatches.jpg"
     },
     "reviews": [
       {
-        "id": 71,
+        "id": 711,
         "name": "سارة المنشاوي",
         "rating": 5,
-        "date": "2026-11-15",
-        "body_en": "The most sublime lip gloss in existence. The natural rose aroma is intoxicating, completely non-sticky, and leaves my lips silky smooth for hours.",
-        "body_ar": "أفضل ليب غلوس جربته في حياتي! لمعانه زجاجي راقي وريحته ورد طبيعي خفيف ومفيهوش أي تلزيق نهائياً، وبيرطب الشفايف طول اليوم."
-      },
-      {
-        "id": 72,
-        "name": "ياسمين خليل",
-        "rating": 5,
-        "date": "2026-11-14",
-        "body_en": "Pure luxury. The packaging alone feels like a jewel from a Parisian boutique.",
-        "body_ar": "فخامة حقيقية، شكل الزجاجة والغطاء الخشبي تحفة فنية والترطيب عميق جداً."
+        "date": "2026-11-18",
+        "body_en": "The Nude Peach is my everyday essential. Plumping, deeply nourishing and looks gorgeous alone or over lip liner.",
+        "body_ar": "درجة النود الخوخي خيالية للاستخدام اليومي! بتدي امتلاء طبيعي وترطيب عميق بدون أي تلزيق."
       }
     ],
-    "accent_gradient": "from-[#FAF1ED] via-[#F6E1DC] to-[#DFAEA7]",
+    "accent_gradient": "from-[#FAF1ED] via-[#F4D9C8] to-[#D49678]",
+    "featured_on_home": true,
+    "home_order": 7
+  },
+  {
+    "id": 72,
+    "slug": "lip-gloss-dusty-rose",
+    "category_slug": "soin",
+    "product_type": "lipgloss",
+    "shade_hex": "#B67583",
+    "shade_name_en": "02 Dusty Rose",
+    "shade_name_ar": "٠٢ وردي كوتور",
+    "name_en": "Élixir Lèvres Satiné — 02 Dusty Rose",
+    "name_ar": "إكسير الشفاه الساتاني — ٠٢ وردي كوتور",
+    "tagline_en": "The signature couture mauve-rose gloss infused with Damask rose and plumping botanical squalane",
+    "tagline_ar": "درجة الدار الأيقونية بلون الورد المشمشي الكوتور ولمعان الكريستال الفاتن",
+    "story_en": "The iconic L’VENUS signature shade. An elegant dusty rose with cool undertones that complements every complexion. Infused with pure Damask rose absolute and desert date nectar for timeless Parisian elegance.",
+    "story_ar": "درجة لوفينوس الأيقونية الخالدة. وردي كوتور ساتاني بنغمات هادئة تناسب كافة درجات البشرة وتمنح الشفاه بريقاً زجاجياً عاكساً مع نفحات الورد الطبيعي.",
+    "family": "botanical",
+    "family_en": "Dusty Rose & Botanical Radiance",
+    "family_ar": "وردي كوتور وإشراقة نباتية",
+    "concentration": "Cellular Lip Gloss & Elixir",
+    "gender_vibe": "Feminine",
+    "longevity": 8,
+    "sillage": 6,
+    "intensity": 6,
+    "top_notes_en": [
+      "Alexandrian Damask Rose",
+      "Sweet Orange Blossom",
+      "Raw Honey Accord"
+    ],
+    "top_notes_ar": [
+      "ورد دمشقي سكندري",
+      "زهر البرتقال الحلو",
+      "شهد العسل النقي"
+    ],
+    "heart_notes_en": [
+      "Botanical Hyaluronic Acid",
+      "Desert Date Seed Oil",
+      "Vitamin E Serum"
+    ],
+    "heart_notes_ar": [
+      "حمض الهيالورونيك النباتي",
+      "زيت بذور بلح الصحراء",
+      "سيروم فيتامين E"
+    ],
+    "base_notes_en": [
+      "Madagascar Vanilla Orchid",
+      "Golden Shea Nectar",
+      "Silk Squalane"
+    ],
+    "base_notes_ar": [
+      "أوركيد فانيليا مدغشقر",
+      "رحيق الشيا الذهبي",
+      "سكوالين الحرير"
+    ],
+    "callout_top": {
+      "en": "Crystal-clear acrylic flacon with bevelled edges",
+      "ar": "قارورة كريستالية مصقولة بحواف هندسية"
+    },
+    "callout_cap": {
+      "en": "Sculpted Venus profile emblem transparent cap",
+      "ar": "غطاء زجاجي شفاف محفور بشعار لوفينوس"
+    },
+    "callout_seal": {
+      "en": "Plush velvet cloud applicator wand",
+      "ar": "موزع مخملي فائق النعومة والدقة"
+    },
+    "variants": [
+      {
+        "id": 721,
+        "name_en": "5 ml Couture Lip Flacon",
+        "name_ar": "٥ مل قارورة كوتور محفورة",
+        "size_ml": 5,
+        "price": 750,
+        "compare_at_price": 950,
+        "sku": "LV-LIP-DR-02",
+        "stock": 65,
+        "is_default": true
+      }
+    ],
+    "images": {
+      "hero": "/images/lipgloss/shade-dusty-rose.jpg",
+      "bottle": "/images/lipgloss/shade-dusty-rose.jpg",
+      "box": "/images/lipgloss/shade-dusty-rose-open.jpg",
+      "lifestyle": "/images/lipgloss/shade-collection-trio.jpg",
+      "texture": "/images/lipgloss/shade-collection-swatches.jpg"
+    },
+    "reviews": [
+      {
+        "id": 721,
+        "name": "ياسمين خليل",
+        "rating": 5,
+        "date": "2026-11-19",
+        "body_en": "Pure Parisian luxury. The Dusty Rose shade is perfection, so hydrating and the crystal applicator bottle is a jewel.",
+        "body_ar": "فخامة لا توصف! درجة الدستي روز مثالية ومريحة جداً على الشفايف، وشكل العبوة الكريستالية قطعة مجوهرات."
+      }
+    ],
+    "accent_gradient": "from-[#FAF1ED] via-[#F2D6DC] to-[#B67583]",
     "featured_on_home": true,
     "home_order": 4
+  },
+  {
+    "id": 73,
+    "slug": "lip-gloss-deep-berry",
+    "category_slug": "soin",
+    "product_type": "lipgloss",
+    "shade_hex": "#783B4B",
+    "shade_name_en": "03 Deep Berry",
+    "shade_name_ar": "٠٣ توتي ملكي",
+    "name_en": "Élixir Lèvres Satiné — 03 Deep Berry",
+    "name_ar": "إكسير الشفاه الساتاني — ٠٣ توتي ملكي",
+    "tagline_en": "Rich sovereign berry tint with velvet depth and high-lacquer mirror radiance",
+    "tagline_ar": "درجة التوت الملكي الفاخرة بعمق جذاب ولمعان زجاجي ساحر يفيض بالأنوثة والسيادة",
+    "story_en": "A deep, sovereign berry tone radiating quiet luxury and dramatic allure. Infused with wild blackberries, Alexandrian rose petals, and desert date oil to coat the lips in lustrous, non-sticky perfection.",
+    "story_ar": "درجة التوت الملكي العميقة المستوحاة من ليالي الشرق الفاتنة. تمنح الشفاه لوناً غنياً يفيض بالجاذبية والفخامة مع لمعان زجاجي فائق يدوم طويلاً.",
+    "family": "botanical",
+    "family_en": "Deep Berry & Royal Nectar",
+    "family_ar": "توتي عميق ورحيق ملكي",
+    "concentration": "Cellular Lip Gloss & Elixir",
+    "gender_vibe": "Feminine",
+    "longevity": 9,
+    "sillage": 6,
+    "intensity": 7,
+    "top_notes_en": [
+      "Wild Blackberry Nectar",
+      "Damask Rose Absolute",
+      "Cassis Blossom"
+    ],
+    "top_notes_ar": [
+      "رحيق التوت البري",
+      "مستخلص الورد الدمشقي",
+      "زهر الكشمش الأسود"
+    ],
+    "heart_notes_en": [
+      "Botanical Hyaluronic Acid",
+      "Desert Date Seed Oil",
+      "Vitamin E Serum"
+    ],
+    "heart_notes_ar": [
+      "حمض الهيالورونيك النباتي",
+      "زيت بذور بلح الصحراء",
+      "سيروم فيتامين E"
+    ],
+    "base_notes_en": [
+      "Madagascar Vanilla Orchid",
+      "Golden Shea Nectar",
+      "Silk Squalane"
+    ],
+    "base_notes_ar": [
+      "أوركيد فانيليا مدغشقر",
+      "رحيق الشيا الذهبي",
+      "سكوالين الحرير"
+    ],
+    "callout_top": {
+      "en": "Crystal-clear acrylic flacon with bevelled edges",
+      "ar": "قارورة كريستالية مصقولة بحواف هندسية"
+    },
+    "callout_cap": {
+      "en": "Sculpted Venus profile emblem transparent cap",
+      "ar": "غطاء زجاجي شفاف محفور بشعار لوفينوس"
+    },
+    "callout_seal": {
+      "en": "Plush velvet cloud applicator wand",
+      "ar": "موزع مخملي فائق النعومة والدقة"
+    },
+    "variants": [
+      {
+        "id": 731,
+        "name_en": "5 ml Couture Lip Flacon",
+        "name_ar": "٥ مل قارورة كوتور محفورة",
+        "size_ml": 5,
+        "price": 750,
+        "compare_at_price": 950,
+        "sku": "LV-LIP-DB-03",
+        "stock": 45,
+        "is_default": true
+      }
+    ],
+    "images": {
+      "hero": "/images/lipgloss/shade-deep-berry.jpg",
+      "bottle": "/images/lipgloss/shade-deep-berry.jpg",
+      "box": "/images/lipgloss/shade-deep-berry-open.jpg",
+      "lifestyle": "/images/lipgloss/shade-collection-trio.jpg",
+      "texture": "/images/lipgloss/shade-collection-swatches.jpg"
+    },
+    "reviews": [
+      {
+        "id": 731,
+        "name": "نوران الشاذلي",
+        "rating": 5,
+        "date": "2026-11-19",
+        "body_en": "The Deep Berry gives the most breathtaking juicy berry lip! Not sticky at all and stays vibrant.",
+        "body_ar": "درجة الديب بيري سحرية بجد! بتدي لون توتي شيك جداً وامتلاء ولمعان تحفة، وثابتة ومرطبة جداً."
+      }
+    ],
+    "accent_gradient": "from-[#FAF1ED] via-[#E2BAC6] to-[#783B4B]",
+    "featured_on_home": true,
+    "home_order": 8
+  },
+  {
+    "id": 7,
+    "slug": "elixir-levres-satine",
+    "category_slug": "soin",
+    "product_type": "lipgloss",
+    "shade_hex": "#B67583",
+    "shade_name_en": "The Lip Gloss Collection Trio",
+    "shade_name_ar": "المجموعة الثلاثية الكاملة",
+    "name_en": "Élixir Lèvres Satiné — The Shade Collection Trio",
+    "name_ar": "إكسير الشفاه الساتاني — المجموعة الثلاثية الكاملة",
+    "tagline_en": "The complete three-shade couture lip gloss collection: Nude Peach, Dusty Rose & Deep Berry",
+    "tagline_ar": "المجموعة الثلاثية الكاملة لليب غلوس لوفينوس بالألوان الثلاثة: نود خوخي، وردي كوتور، وتوتي ملكي",
+    "story_en": "Experience the complete spectrum of L’VENUS lip radiance. All three bespoke shades—01 Nude Peach, 02 Dusty Rose, and 03 Deep Berry—presented together in crystal flacons with pure Damask rose infusion.",
+    "story_ar": "اختبري الطيف الكامل لتألق شفاه لوفينوس الملكي. تشمل المجموعة الكاملة الدرجات الثلاث الحصرية: ٠١ نود خوخي دافئ، ٠٢ وردي كوتور ساتاني، و٠٣ توتي ملكي عميق في قوارير كريستالية نقية.",
+    "family": "botanical",
+    "family_en": "Couture Lip Radiance Trio",
+    "family_ar": "ثلاثية الشفاه النباتية الفاخرة",
+    "concentration": "Cellular Lip Gloss & Elixir (3 x 5ml)",
+    "gender_vibe": "Feminine",
+    "longevity": 9,
+    "sillage": 6,
+    "intensity": 7,
+    "top_notes_en": [
+      "Alexandrian Damask Rose",
+      "Sweet Orange Blossom",
+      "Wild Blackberry"
+    ],
+    "top_notes_ar": [
+      "ورد دمشقي سكندري",
+      "زهر البرتقال الحلو",
+      "توت بري نقي"
+    ],
+    "heart_notes_en": [
+      "Botanical Hyaluronic Acid",
+      "Desert Date Seed Oil",
+      "Vitamin E Serum"
+    ],
+    "heart_notes_ar": [
+      "حمض الهيالورونيك النباتي",
+      "زيت بذور بلح الصحراء",
+      "سيروم فيتامين E"
+    ],
+    "base_notes_en": [
+      "Madagascar Vanilla Orchid",
+      "Golden Shea Nectar",
+      "Silk Squalane"
+    ],
+    "base_notes_ar": [
+      "أوركيد فانيليا مدغشقر",
+      "رحيق الشيا الذهبي",
+      "سكوالين الحرير"
+    ],
+    "callout_top": {
+      "en": "Set of 3 crystal acrylic flacons with applicator wands",
+      "ar": "طقم من ٣ قوارير كريستالية بموزعات مخملية"
+    },
+    "callout_cap": {
+      "en": "Engraved Venus profile caps with bevelled edges",
+      "ar": "أغطية مصقولة ومحفورة بتاج وشعار لوفينوس"
+    },
+    "callout_seal": {
+      "en": "L’VENUS Couture Velvet Presentation Box",
+      "ar": "صندوق تقديم مخملي راقي من لوفينوس"
+    },
+    "variants": [
+      {
+        "id": 703,
+        "name_en": "Complete Trio Collection (3 x 5ml)",
+        "name_ar": "المجموعة الثلاثية الكاملة (٣ × ٥ مل)",
+        "size_ml": 15,
+        "price": 1850,
+        "compare_at_price": 2250,
+        "sku": "LV-LIP-TRIO",
+        "stock": 30,
+        "is_default": true
+      }
+    ],
+    "images": {
+      "hero": "/images/lipgloss/shade-collection-trio.jpg",
+      "bottle": "/images/lipgloss/shade-collection-trio.jpg",
+      "box": "/images/lipgloss/shade-dusty-rose-open.jpg",
+      "lifestyle": "/images/lipgloss/shade-collection-trio.jpg",
+      "texture": "/images/lipgloss/shade-collection-swatches.jpg"
+    },
+    "reviews": [
+      {
+        "id": 701,
+        "name": "فريدة عاصم",
+        "rating": 5,
+        "date": "2026-11-19",
+        "body_en": "Buying the full trio was the best decision! Each shade is uniquely stunning and the packaging is absolute art.",
+        "body_ar": "شراء المجموعة الثلاثية بالكامل كان أحسن قرار! كل لون أحلى من التاني والعلب تحفة على التسريحة."
+      }
+    ],
+    "accent_gradient": "from-[#FAF1ED] via-[#F4D9C8] to-[#B67583]",
+    "featured_on_home": true,
+    "home_order": 3
   },
   {
     "id": 8,

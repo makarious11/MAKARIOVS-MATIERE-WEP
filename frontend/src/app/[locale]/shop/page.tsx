@@ -75,7 +75,7 @@ export default function LocalizedShopPage({ params }: PageProps) {
     .filter((p) => {
       if (activeFilter === 'all') return true;
       if (activeFilter === 'parfums') return p.category_slug === 'parfums' || p.product_type === 'perfume' || !p.product_type;
-      if (activeFilter === 'soin') return p.category_slug === 'soin' || p.product_type === 'skincare';
+      if (activeFilter === 'soin') return p.category_slug === 'soin' || p.product_type === 'skincare' || p.product_type === 'lipgloss';
       if (activeFilter === 'brume') return p.category_slug === 'brume' || p.product_type === 'mist';
       if (activeFilter === 'coffrets') return p.category_slug === 'coffrets' || p.product_type === 'coffret';
       return p.family === activeFilter.toLowerCase();
@@ -178,6 +178,28 @@ export default function LocalizedShopPage({ params }: PageProps) {
               <option value="price-desc">{isArabic ? 'السعر: من الأعلى للأقل' : 'Price: High to Low'}</option>
             </select>
           </div>
+        </div>
+
+        {/* Couture Lip Gloss Spotlight Banner */}
+        <div className="mb-12 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#F6EBE6] via-[#F2D6DC] to-[#EBD0D8] dark:from-[#21161B] dark:via-[#2A1821] dark:to-[#1E1117] border border-[#B08D57]/30 shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center md:text-start">
+            <span className="text-[10px] font-display uppercase tracking-[0.25em] text-[#8C4A5A] dark:text-[#DFCA9B] font-semibold">
+              {isArabic ? 'إصدار الشفاه الكوتور الجديد' : 'New Haute Cosmétique Edition'}
+            </span>
+            <h3 className="font-display text-xl sm:text-2xl uppercase tracking-wider text-[#2B171D] dark:text-white">
+              {isArabic ? 'مجموعة ظلال الشفاه الثلاثية — استوديو 3D تفاعلي' : 'The Shade Collection — 3D Interactive Studio'}
+            </h3>
+            <p className="text-xs text-stone-600 dark:text-stone-300 max-w-xl">
+              {isArabic ? 'اكتشفي درجات النود الخوخي، والوردي الكوتور، والتوتي الملكي واستعرضي القارورة الكريستالية بتقنية 3D التفاعلية.' : 'Explore 01 Nude Peach, 02 Dusty Rose, and 03 Deep Berry with the real-time 3D interactive flacon viewer.'}
+            </p>
+          </div>
+          <Link
+            href={isArabic ? '/ar/lip-gloss' : '/lip-gloss'}
+            className="shrink-0 px-6 py-3 rounded-full bg-[#2B171D] text-white hover:bg-[#8C4A5A] text-xs font-display uppercase tracking-widest transition-colors shadow-md flex items-center gap-2"
+          >
+            <span>{isArabic ? 'دخول استوديو الشفاه 3D' : 'Enter 3D Lip Studio'}</span>
+            <Sparkles size={14} className="text-[#B08D57]" />
+          </Link>
         </div>
 
         {/* Editorial Product Grid */}

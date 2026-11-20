@@ -58,6 +58,7 @@ export const Header: React.FC = () => {
 
   const navLinks = [
     { href: isArabic ? '/ar/shop' : '/shop', label: isArabic ? 'الإبداعات' : 'Créations' },
+    { href: isArabic ? '/ar/lip-gloss' : '/lip-gloss', label: isArabic ? 'ليب غلوس كوتور' : 'Lip Gloss' },
     { href: isArabic ? '/ar/story' : '/story', label: isArabic ? 'عالم الدار' : 'La Maison' },
     { href: isArabic ? '/ar/contact' : '/contact', label: isArabic ? 'المشغل والتواصل' : 'Atelier & Contact' },
   ];

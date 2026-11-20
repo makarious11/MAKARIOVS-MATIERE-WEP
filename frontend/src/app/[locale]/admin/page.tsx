@@ -143,7 +143,7 @@ export default function AdminDashboardPage() {
     name_ar: '',
     slug: '',
     category_slug: 'parfums',
-    product_type: 'perfume' as 'perfume' | 'skincare' | 'makeup' | 'couture' | 'accessory' | 'coffret' | 'mist',
+    product_type: 'perfume' as 'perfume' | 'skincare' | 'makeup' | 'couture' | 'accessory' | 'coffret' | 'mist' | 'lipgloss',
     featured_on_home: true,
     home_order: 1,
     tagline_en: '',
@@ -1874,7 +1874,8 @@ export default function AdminDashboardPage() {
                         className="w-full p-2.5 rounded-xl border border-[#B08D57]/40 bg-white dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] cursor-pointer"
                       >
                         <option value="perfume">عطر (Perfume)</option>
-                        <option value="skincare">عناية بالبشرة والشفاه (Skincare / Lip Gloss)</option>
+                        <option value="lipgloss">ليب غلوس وكوتور الشفاه (Lip Gloss)</option>
+                        <option value="skincare">عناية بالبشرة والشفاه (Skincare)</option>
                         <option value="mist">بدي اسبلاش ومعطر شعر (Body Splash & Mist)</option>
                         <option value="coffret">صندوق استكشاف وهدايا (Discovery Coffret)</option>
                       </select>

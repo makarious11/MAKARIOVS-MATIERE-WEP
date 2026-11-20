@@ -3,6 +3,7 @@ import { getLocale } from 'next-intl/server';
 import { HeroSection } from '@/components/home/HeroSection';
 import { BrandStoryStrip } from '@/components/home/BrandStoryStrip';
 import { CollectionSection } from '@/components/home/CollectionSection';
+import { LipGlossHomeFeature } from '@/components/home/LipGlossHomeFeature';
 import { CraftSection } from '@/components/home/CraftSection';
 import { NotesExplorer } from '@/components/home/NotesExplorer';
 import { ReviewsMarquee } from '@/components/home/ReviewsMarquee';
@@ -28,6 +29,9 @@ export default async function HomePage() {
 
       {/* 3. The 4 Extraits Collection (--ink background) */}
       <CollectionSection isArabic={isArabic} />
+
+      {/* 3.5. Haute Cosmétique Lip Gloss 3D Showcase */}
+      <LipGlossHomeFeature isArabic={isArabic} />
 
       {/* 4. Signature Craft & Apothecary Atelier */}
       <CraftSection isArabic={isArabic} />
