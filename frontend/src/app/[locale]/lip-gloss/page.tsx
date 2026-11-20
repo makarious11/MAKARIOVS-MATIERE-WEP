@@ -343,12 +343,12 @@ export default function LipGlossCatalogPage({ params }: PageProps) {
                 >
                   <div className="space-y-4">
                     {/* Bottle preview */}
-                    <div className="relative h-64 w-full rounded-2xl overflow-hidden bg-gradient-to-b from-[#F7ECE7] to-white dark:from-[#21161A] dark:to-[#170F12] flex items-center justify-center p-4">
+                    <div className="relative h-64 w-full rounded-2xl overflow-hidden bg-gradient-to-b from-[#F7ECE7] to-white dark:from-[#21161A] dark:to-[#170F12] flex items-center justify-center">
                       <Image
                         src={s.image_bottle}
                         alt={isArabic ? s.name_ar : s.name_en}
                         fill
-                        className="object-contain p-2 hover:scale-105 transition-transform duration-500"
+                        className="object-cover hover:scale-105 transition-transform duration-500"
                       />
                       <span
                         className="absolute top-3 right-3 w-6 h-6 rounded-full border border-white/80 shadow-md"
