@@ -17,6 +17,8 @@ export async function POST(request: Request) {
       address,
       notes,
       items,
+      map_url,
+      map_coords,
       payment_method = 'cod',
       coupon_code,
       gift_box = false,
@@ -57,13 +59,15 @@ export async function POST(request: Request) {
       recalculatedSubtotal += price * qty;
       validatedItems.push({
         product_id: perfume ? perfume.id : (item.product_id || 1),
+        product_slug: perfume ? perfume.slug : (item.product_slug || 'la-fleur-du-nil'),
         variant_id: variant.id,
-        name_en: perfume ? perfume.name_en : (item.name_en || "L\u2019VENUS Creation"),
+        name_en: perfume ? perfume.name_en : (item.name_en || "L'VENUS Creation"),
         name_ar: perfume ? perfume.name_ar : (item.name_ar || 'إبداع لوفينوس'),
         size_ml: variant.size_ml,
         price,
         quantity: qty,
         subtotal: price * qty,
+        image: perfume?.images?.bottle || perfume?.images?.hero || '/images/products/la-fleur-du-nil-bottle.jpg',
       });
     }
 
@@ -129,12 +133,26 @@ export async function POST(request: Request) {
     };
 
     // Format for MaisonOrder display
+    const computedMapUrl = map_url || (address ? ("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(String(address).trim() + ', ' + (govData ? govData.name_en : 'Cairo') + ', Egypt')) : undefined);
+
     const maisonOrder: MaisonOrder = {
       id: orderNumber,
       customer: String(name).trim(),
       phone: String(phone).trim(),
-      gov: `${govData ? govData.name_ar : 'القاهرة'} — ${city || address}`,
-      items: validatedItems.map((i) => `${i.name_ar || i.name_en} (${i.size_ml}ml)`).join(', '),
+      gov: (govData ? govData.name_ar : 'القاهرة') + ' — ' + (city || address),
+      items: validatedItems.map((i) => (i.name_ar || i.name_en) + ' (' + i.size_ml + 'ml)').join(', '),
+      items_detail: validatedItems.map((i) => ({
+        product_id: i.product_id,
+        product_slug: i.product_slug,
+        name_en: i.name_en,
+        name_ar: i.name_ar,
+        size_ml: i.size_ml,
+        price: i.price,
+        quantity: i.quantity,
+        image: i.image,
+      })),
+      map_url: computedMapUrl,
+      map_coords: map_coords || undefined,
       total,
       payment: payment_method === 'cod' ? 'COD' : 'Card',
       status: 'Processing',

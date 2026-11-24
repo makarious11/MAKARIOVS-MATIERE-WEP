@@ -5,12 +5,26 @@
 
 import { normalizePhone } from './patronAuth';
 
+export interface MaisonOrderItem {
+  product_id?: number;
+  product_slug?: string;
+  name_en: string;
+  name_ar?: string;
+  size_ml: number;
+  price: number;
+  quantity: number;
+  image?: string;
+}
+
 export interface MaisonOrder {
   id: string; // e.g. "LV-849201"
   customer: string;
   phone: string;
   gov: string;
   items: string;
+  items_detail?: MaisonOrderItem[];
+  map_url?: string;
+  map_coords?: { lat: number; lng: number };
   total: number;
   payment: string;
   status: 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';

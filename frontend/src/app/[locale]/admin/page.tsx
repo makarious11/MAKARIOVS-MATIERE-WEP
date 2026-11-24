@@ -1560,7 +1560,23 @@ export default function AdminDashboardPage() {
                               )}
                             </div>
                           </td>
-                          <td className="py-4 px-4 text-[#3A332D] dark:text-[#FDFBF7]/80">{o.gov}</td>
+                          <td className="py-4 px-4 text-[#3A332D] dark:text-[#FDFBF7]/80">
+                            <div className="flex items-center gap-1.5">
+                              <span>{o.gov}</span>
+                              {(o.map_url || o.map_coords || o.gov) && (
+                                <a
+                                  href={o.map_url || (o.map_coords ? `https://www.google.com/maps?q=${o.map_coords.lat},${o.map_coords.lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.gov + ', Egypt')}`)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="p-1 rounded-full text-[#6B1D2F] dark:text-[#DFCA9B] hover:bg-[#6B1D2F] hover:text-white transition-all shrink-0 cursor-pointer"
+                                  title={isArabic ? 'فتح موقع هذا العميل على الخريطة' : 'Open in Maps'}
+                                >
+                                  <MapPin size={13} />
+                                </a>
+                              )}
+                            </div>
+                          </td>
                           <td className="py-4 px-4 text-[#3A332D] dark:text-[#FDFBF7]/70 max-w-xs truncate">{o.items}</td>
                           <td className="py-4 px-4 font-mono font-bold text-[#14110F] dark:text-[#FDFBF7]">
                             {o.total.toLocaleString()} EGP
@@ -2866,27 +2882,127 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
                 <div className="sm:col-span-2">
-                  <span className="text-stone-400 block text-[10px]">{isArabic ? 'عنوان الشحن والمحافظة' : 'Delivery Address'}</span>
-                  <span className="font-medium text-[#14110F] dark:text-[#FDFBF7]">{selectedOrder.gov}</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-stone-400 block text-[10px]">{isArabic ? 'عنوان الشحن وموقع الاستلام' : 'Delivery Address & Location'}</span>
+                    {/* Direct Map Button (Requested by user: تظهر عندي أيقونة أدوس عليها يجيبلي الموقع على طول) */}
+                    {(selectedOrder.map_url || selectedOrder.map_coords || selectedOrder.gov) && (
+                      <a
+                        href={selectedOrder.map_url || (selectedOrder.map_coords ? `https://www.google.com/maps?q=${selectedOrder.map_coords.lat},${selectedOrder.map_coords.lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedOrder.gov + ', Egypt')}`)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#6B1D2F] hover:bg-[#8A1D2E] text-white text-[11px] font-medium shadow-sm transition-all hover:scale-105 cursor-pointer"
+                        title={isArabic ? 'فتح موقع العميل مباشرة على خرائط جوجل' : 'Open Location on Google Maps'}
+                      >
+                        <MapPin size={13} className="text-[#DFCA9B]" />
+                        <span>{isArabic ? 'فتح موقع العميل على الخريطة (Google Maps)' : 'Open in Maps'}</span>
+                        <ExternalLink size={11} />
+                      </a>
+                    )}
+                  </div>
+                  <span className="font-medium text-[#14110F] dark:text-[#FDFBF7] block mt-1">{selectedOrder.gov}</span>
+                  {selectedOrder.map_coords && (
+                    <span className="text-[10px] text-[#8C6E3D] dark:text-[#DFCA9B] font-mono block mt-0.5">
+                      GPS: {selectedOrder.map_coords.lat.toFixed(5)}, {selectedOrder.map_coords.lng.toFixed(5)}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Items Ordered */}
+            {/* Items Ordered with Photos and Clickable Product Links (Requested by user) */}
             <div className="space-y-2">
               <span className="text-[11px] uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B] font-semibold block">
-                {isArabic ? 'المنتجات المطلوبة في هذا الأوردر' : 'Ordered Items'}
+                {isArabic ? 'المنتجات المطلوبة في هذا الأوردر' : 'Ordered Creations'}
               </span>
-              <div className="p-4 rounded-2xl bg-white dark:bg-[#1A1412] border border-[#B08D57]/30 space-y-2">
-                <div className="flex items-start gap-3">
-                  <Package className="text-[#6B1D2F] dark:text-[#DFCA9B] shrink-0 mt-0.5" size={18} />
-                  <div>
-                    <p className="font-medium text-xs sm:text-sm text-[#14110F] dark:text-[#FDFBF7] leading-relaxed">
-                      {selectedOrder.items}
-                    </p>
+
+              {selectedOrder.items_detail && selectedOrder.items_detail.length > 0 ? (
+                <div className="space-y-2.5">
+                  {selectedOrder.items_detail.map((item, idx) => {
+                    // Find product matching item in catalog
+                    const matchedProd = products.find(
+                      (p) => p.id === item.product_id || p.slug === item.product_slug
+                    );
+                    const prodSlug = item.product_slug || matchedProd?.slug || 'la-fleur-du-nil';
+                    const prodImage = item.image || matchedProd?.images?.bottle || matchedProd?.images?.hero || '/images/products/la-fleur-du-nil-bottle.jpg';
+                    const prodHref = isArabic ? `/ar/product/${prodSlug}` : `/product/${prodSlug}`;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="p-3 rounded-2xl bg-white dark:bg-[#1A1412] border border-[#B08D57]/30 flex items-center justify-between gap-3 shadow-sm hover:border-[#6B1D2F] transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Product Image */}
+                          <div className="w-14 h-14 rounded-xl bg-[#F1EADA] dark:bg-[#14100E] border border-[#B08D57]/25 overflow-hidden shrink-0 relative">
+                            <Image
+                              src={prodImage}
+                              alt={item.name_en || 'Product'}
+                              fill
+                              className="object-cover"
+                              onError={(e: any) => {
+                                e.target.src = '/images/products/la-fleur-du-nil-bottle.jpg';
+                              }}
+                            />
+                          </div>
+
+                          {/* Product Details & Clickable Link */}
+                          <div>
+                            <Link
+                              href={prodHref}
+                              target="_blank"
+                              className="font-bold text-xs sm:text-sm text-[#14110F] dark:text-[#FDFBF7] hover:text-[#6B1D2F] dark:hover:text-[#DFCA9B] flex items-center gap-1.5 transition-colors group"
+                              title={isArabic ? 'انقر لفتح صفحة المنتج في المتجر' : 'View product page on website'}
+                            >
+                              <span>{isArabic ? item.name_ar || item.name_en : item.name_en}</span>
+                              <ExternalLink size={12} className="opacity-60 group-hover:opacity-100 transition-opacity" />
+                            </Link>
+
+                            <div className="flex items-center gap-2 mt-1 text-[11px] text-stone-500">
+                              <span className="font-mono bg-[#F1EADA]/80 dark:bg-[#1C1613] px-2 py-0.5 rounded-full border border-[#B08D57]/20">
+                                {item.size_ml} ml
+                              </span>
+                              <span>× {item.quantity} قطعة</span>
+                              <span className="font-semibold text-[#6B1D2F] dark:text-[#DFCA9B] font-mono">
+                                {(item.price * item.quantity).toLocaleString()} EGP
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* View Product Button */}
+                        <Link
+                          href={prodHref}
+                          target="_blank"
+                          className="px-3 py-1.5 rounded-full border border-[#B08D57]/40 text-[#6B1D2F] dark:text-[#DFCA9B] hover:bg-[#6B1D2F] hover:text-white transition-all text-[11px] font-medium shrink-0 flex items-center gap-1"
+                        >
+                          <span>{isArabic ? 'معاينة المنتج' : 'View'}</span>
+                          <ArrowUpRight size={12} />
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Fallback if older baseline order without items_detail */
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#1A1412] border border-[#B08D57]/30 space-y-2">
+                  <div className="flex items-start gap-3">
+                    <Package className="text-[#6B1D2F] dark:text-[#DFCA9B] shrink-0 mt-0.5" size={18} />
+                    <div className="space-y-1">
+                      <p className="font-medium text-xs sm:text-sm text-[#14110F] dark:text-[#FDFBF7] leading-relaxed">
+                        {selectedOrder.items}
+                      </p>
+                      <Link
+                        href={isArabic ? '/ar/shop' : '/shop'}
+                        target="_blank"
+                        className="text-[11px] text-[#B08D57] hover:underline flex items-center gap-1 font-medium"
+                      >
+                        <span>{isArabic ? 'فتح الكتالوج في المتجر' : 'Browse Boutique'}</span>
+                        <ExternalLink size={11} />
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Financial & Status Summary */}

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { ArrowRight, ArrowLeft, ShieldCheck, MapPin, Navigation, ExternalLink } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { CheckoutProgress } from '@/components/checkout/CheckoutProgress';
 import { GovernorateSelect, EGYPT_GOVERNORATES, GovernorateOption } from '@/components/checkout/GovernorateSelect';
@@ -29,6 +29,9 @@ export default function CheckoutPage() {
   const [city, setCity] = useState('');
   const [streetAddress, setStreetAddress] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
+  const [mapLocation, setMapLocation] = useState<{ lat: number; lng: number; address?: string } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationSuccess, setLocationSuccess] = useState(false);
 
   // Field validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -53,6 +56,39 @@ export default function CheckoutPage() {
     const cleaned = num.replace(/[\s-]/g, '');
     const egRegex = /^(\+20|0020|0)?1[0125][0-9]{8}$/;
     return egRegex.test(cleaned);
+  };
+
+  // Egyptian GPS Geolocation & Map Picker
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert('خدمة تحديد الموقع الجغرافي غير مدعومة في متصفحك.');
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setMapLocation({ lat, lng });
+        setLocationSuccess(true);
+        setIsLocating(false);
+
+        // Try reverse geocoding via OpenStreetMap Nominatim
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ar`);
+          const data = await res.json();
+          if (data && data.display_name) {
+            setStreetAddress(data.display_name);
+            setMapLocation({ lat, lng, address: data.display_name });
+          }
+        } catch {}
+      },
+      (err) => {
+        setIsLocating(false);
+        alert('تعذر تحديد موقعك بدقة، يمكنك كتابة العنوان يدوياً بالتفصيل أو السماح للمتصفح بالوصول للموقع.');
+      },
+      { enableHighAccuracy: true, timeout: 12000 }
+    );
   };
 
   const validateStep1 = (): boolean => {
@@ -136,6 +172,18 @@ export default function CheckoutPage() {
         status: 'Processing',
         date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
         is_new: true,
+          items_detail: items.map((i) => ({
+            product_id: i.product.id,
+            product_slug: i.product.slug,
+            name_en: i.product.name_en,
+            name_ar: i.product.name_ar,
+            size_ml: i.variant.size_ml,
+            price: i.variant.price,
+            quantity: i.quantity,
+            image: (i.product as any).images?.bottle || (i.product as any).images?.hero || (Array.isArray(i.product.images) ? i.product.images[0]?.url : undefined) || '/images/products/la-fleur-du-nil-bottle.jpg',
+          })),
+          map_coords: mapLocation ? { lat: mapLocation.lat, lng: mapLocation.lng } : undefined,
+          map_url: mapLocation ? `https://www.google.com/maps?q=${mapLocation.lat},${mapLocation.lng}` : undefined,
       };
 
       saveNewOrderToStorage(newMaisonOrder);
@@ -160,6 +208,8 @@ export default function CheckoutPage() {
           address: streetAddress,
           notes: orderNotes,
           payment_method: paymentMethod,
+            map_coords: mapLocation ? { lat: mapLocation.lat, lng: mapLocation.lng } : undefined,
+            map_url: mapLocation ? `https://www.google.com/maps?q=${mapLocation.lat},${mapLocation.lng}` : undefined,
           coupon_code: coupon?.code,
           items: items.map((i) => ({
             product_id: i.product.id,
@@ -306,10 +356,59 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Street Address */}
-                  <div className="sm:col-span-2 space-y-1.5">
-                    <label className="block font-display text-xs uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
-                      Detailed Street Address & Building *
-                    </label>
+                  <div className="sm:col-span-2 space-y-2">
+                    {/* Map & GPS Auto-Locate Option */}
+                    <div className="p-3.5 rounded-2xl bg-[#F1EADA]/70 dark:bg-[#1C1613] border border-[#B08D57]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-[#6B1D2F] text-white flex items-center justify-center shrink-0 shadow-sm">
+                          <MapPin size={15} />
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold text-[#14110F] dark:text-[#FDFBF7] block">
+                            تحديد موقع الاستلام على الخريطة (GPS)
+                          </span>
+                          <span className="text-[11px] text-[#8C6E3D] dark:text-[#DFCA9B]/80 block">
+                            {locationSuccess
+                              ? '✓ تم تحديد إحداثيات موقعك بدقة وسيتوجه المندوب إليك مباشرة'
+                              : 'بنقرة واحدة يتم التقاط موقعك الجغرافي لتسهيل وصول المندوب'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <button
+                          type="button"
+                          onClick={handleGetLocation}
+                          disabled={isLocating}
+                          className="w-full sm:w-auto px-4 py-2 rounded-full bg-[#6B1D2F] hover:bg-[#8A1D2E] text-white text-xs font-medium transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-50"
+                        >
+                          <Navigation size={13} className={isLocating ? 'animate-spin' : ''} />
+                          <span>{isLocating ? 'جاري تحديد موقعك...' : locationSuccess ? 'تحديث موقعي' : 'حدد موقعي على الخريطة'}</span>
+                        </button>
+
+                        {mapLocation && (
+                          <a
+                            href={`https://www.google.com/maps?q=${mapLocation.lat},${mapLocation.lng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-2 rounded-full border border-[#B08D57]/40 text-xs text-[#8C6E3D] dark:text-[#DFCA9B] hover:bg-[#B08D57]/20 flex items-center gap-1 shrink-0"
+                            title="معاينة الموقع على Google Maps"
+                          >
+                            <span>عرض</span>
+                            <ExternalLink size={12} />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <label className="block font-display text-xs uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
+                        Detailed Street Address & Building *
+                      </label>
+                      <span className="text-[10px] text-[#8C6E3D] dark:text-[#DFCA9B]/70 font-mono">
+                        (أو اكتب العنوان يدوياً بالتفصيل)
+                      </span>
+                    </div>
                     <input
                       type="text"
                       value={streetAddress}
