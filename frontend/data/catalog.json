@@ -469,117 +469,8 @@
     ],
     "accent_gradient": "from-[#EAE2D7] via-[#D8C7B4] to-[#BFA992]",
     "featured_on_home": true,
-    "home_order": 4
-  },
-  {
-    "id": 5,
-    "slug": "creme-sublime-alexandrie",
-    "category_slug": "soin",
-    "product_type": "skincare",
-    "name_en": "Crème Sublime aux Roses d’Alexandrie",
-    "name_ar": "كريم الورد السكندري الفائق",
-    "tagline_en": "Restorative cellular cream infused with cold-distilled Damask roses",
-    "tagline_ar": "كريم نباتي فائق الترميم بماء الورد الدمشقي السكندري المعصور على البارد",
-    "story_en": "The inaugural skincare creation from L’VENUS. Hand-crafted in small porcelain batches, combining pure Alexandrian Damask rose hydrosol with cold-pressed desert jojoba, squalane, and revitalizing mineral peptides. Restores radiance, firm elasticity, and velvet softness to fatigued skin.",
-    "story_ar": "أولى إبداعات العناية الفائقة من دار لوفينوس. مصاغ في دفعات خزفية محدودة من ماء الورد السكندري النقي وزيت بذور الجوجوبا الصحراوية والببتيدات الحيوية، ليعيد النضارة والمرونة الفائقة والملمس الحريري للبشرة.",
-    "details_en": "Formulated with 98.4% natural botanical actives. Enriched with natural hyaluronic acid, cold-pressed seed oils, and royal Egyptian rose water. Dermatologically tested for all skin types including sensitive.",
-    "details_ar": "تركيبة نباتية نقية بنسبة ٩٨.٤٪. غنية بحمض الهيالورونيك الطبيعي والزيوت النباتية المعصورة على البارد وماء الورد الملكي. ملائم لجميع أنواع البشرة حتى الحساسة.",
-    "ingredients_text_en": "Rosa Damascena Distillate, Desert Jojoba Seed Oil, Olive Squalane, Marine Collagen Peptides, Niacinamide, Shea Butter Extract, Vitamin E.",
-    "ingredients_text_ar": "خلاصة ماء الورد الدمشقي، زيت بذور الجوجوبا الصحراوي، سكوالين الزيتون، ببتيدات الكولاجين البحري، نياسيناميد، فيتامين هـ.",
-    "family": "botanical",
-    "family_en": "Botanical Skincare",
-    "family_ar": "عناية نباتية نشطة",
-    "concentration": "Cellular Botanical Formula",
-    "gender_vibe": "Unisex",
-    "longevity": 8,
-    "sillage": 5,
-    "intensity": 7,
-    "top_notes_en": [
-      "Fresh Alexandrian Rose",
-      "Sweet Almond",
-      "Bitter Orange Flower"
-    ],
-    "top_notes_ar": [
-      "ورد سكندري طازج",
-      "لوز حلو",
-      "زهر البرتقال المر"
-    ],
-    "heart_notes_en": [
-      "Hyaluronic Acid Peptides",
-      "Camelina Oil",
-      "Centella Asiatica"
-    ],
-    "heart_notes_ar": [
-      "ببتيدات الهيالورونيك",
-      "زيت الكاميلينا",
-      "نبات السنتيللا"
-    ],
-    "base_notes_en": [
-      "Desert Jojoba",
-      "Plant Squalane",
-      "Pure Shea"
-    ],
-    "base_notes_ar": [
-      "جوجوبا صحراوية",
-      "سكوالين نباتي",
-      "شيا نقية"
-    ],
-    "callout_top": {
-      "en": "Active Formula — Cold-Distilled Alexandrian Rose",
-      "ar": "التركيبة الفعالة — ماء الورد السكندري"
-    },
-    "callout_cap": {
-      "en": "Lacquered Porcelain Jar with Gold Seal",
-      "ar": "عبوة خزفية مطلية بختم الذهب"
-    },
-    "callout_seal": {
-      "en": "Burgundy Wax Stamp of Quality",
-      "ar": "ختم الجودة العنابي الفاخر"
-    },
-    "variants": [
-      {
-        "id": 501,
-        "name_en": "50 ml Jar",
-        "name_ar": "عبوة ٥٠ مل",
-        "size_ml": 50,
-        "price": 3400,
-        "compare_at_price": 3900,
-        "sku": "LV-SK-50",
-        "stock": 20,
-        "is_default": true
-      },
-      {
-        "id": 502,
-        "name_en": "100 ml Luxury Jar",
-        "name_ar": "عبوة ١٠٠ مل فاخرة",
-        "size_ml": 100,
-        "price": 5800,
-        "compare_at_price": 6500,
-        "sku": "LV-SK-100",
-        "stock": 12,
-        "is_default": false
-      }
-    ],
-    "images": {
-      "hero": "/images/products/packaging-mockup.jpg",
-      "bottle": "/images/products/packaging-mockup.jpg",
-      "box": "/images/products/packaging-mockup.jpg",
-      "lifestyle": "/images/brand/NEW_brand-identity.png",
-      "texture": "/images/brand/NEW_brand-identity.png"
-    },
-    "reviews": [
-      {
-        "id": 5,
-        "name": "مها ع.",
-        "rating": 5,
-        "date": "2026-11-09",
-        "body_en": "The texture is pure silk. Leaves the skin hydrated and glowing without any greasy feeling. Smells like a royal garden.",
-        "body_ar": "الملمس حريري رائع ويترك البشرة نضرة ومشدودة برائحة ورد طبيعية تأسر القلب."
-      }
-    ],
-    "accent_gradient": "from-[#FDF3E7] via-[#F6DEBE] to-[#E0B888]",
-    "featured_on_home": true,
-    "home_order": 5
+    "home_order": 4,
+    "is_hidden": false
   },
   {
     "id": 6,
@@ -1177,6 +1068,7 @@
     ],
     "accent_gradient": "from-[#EEF5F6] via-[#DAEAED] to-[#B0D2D9]",
     "featured_on_home": true,
-    "home_order": 5
+    "home_order": 5,
+    "is_hidden": true
   }
 ]

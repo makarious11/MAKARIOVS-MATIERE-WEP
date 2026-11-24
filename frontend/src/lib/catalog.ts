@@ -1073,12 +1073,16 @@ export function deleteProductReview(slug: string, reviewId: number): PerfumeData
 // Backward-compatibility export
 export const PERFUMES = CANONICAL_PERFUMES;
 
-export function getPerfumeBySlug(slug: string): PerfumeData | undefined {
-  const catalog = typeof window !== 'undefined' ? getStoredCatalog() : CANONICAL_PERFUMES;
-  return catalog.find((p) => p.slug === slug);
+export function getPerfumeBySlug(slug: string, includeHidden: boolean = false): PerfumeData | undefined {
+  const catalog = typeof window !== 'undefined' ? getStoredCatalog(includeHidden) : CANONICAL_PERFUMES;
+  const found = catalog.find((p) => p.slug === slug);
+  if (found && !includeHidden && found.is_hidden === true) {
+    return undefined;
+  }
+  return found;
 }
 
 export function getOtherPerfumes(currentSlug: string): PerfumeData[] {
-  const catalog = typeof window !== 'undefined' ? getStoredCatalog() : CANONICAL_PERFUMES;
-  return catalog.filter((p) => p.slug !== currentSlug);
+  const catalog = typeof window !== 'undefined' ? getStoredCatalog(false) : CANONICAL_PERFUMES.filter((p) => p.is_hidden !== true);
+  return catalog.filter((p) => p.slug !== currentSlug && p.is_hidden !== true);
 }

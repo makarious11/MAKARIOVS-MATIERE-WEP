@@ -8,8 +8,13 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const family = searchParams.get('family');
     const sort = searchParams.get('sort');
+    const includeHidden = searchParams.get('include_hidden') === 'true';
 
     let list = getServerCatalog();
+
+    if (!includeHidden) {
+      list = list.filter((p) => p.is_hidden !== true);
+    }
 
     if (family && family !== 'all') {
       list = list.filter((p) => p.family && p.family.toLowerCase() === family.toLowerCase());

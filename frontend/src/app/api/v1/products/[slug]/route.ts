@@ -9,9 +9,12 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
+    const { searchParams } = new URL(request.url);
+    const includeHidden = searchParams.get('include_hidden') === 'true';
+
     const perfume = getServerProductBySlug(slug);
 
-    if (!perfume) {
+    if (!perfume || (!includeHidden && perfume.is_hidden === true)) {
       return NextResponse.json(
         { message: 'Perfume not found in the royal apothecary' },
         { status: 404 }

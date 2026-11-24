@@ -177,6 +177,14 @@ export default function AdminDashboardPage() {
         is_default: true,
       },
     ] as ProductVariant[],
+    longevity: 9,
+    sillage: 8,
+    top_notes_ar: 'برغموت صقلي، زهر البرتقال',
+    top_notes_en: 'Sicilian Bergamot, Orange Blossom',
+    heart_notes_ar: 'ياسمين سامباك مصري، فاونيا بيضاء',
+    heart_notes_en: 'Egyptian Sambac Jasmine, White Peony',
+    base_notes_ar: 'صندل ميسور، مسك حريري، عنبر',
+    base_notes_en: 'Mysore Sandalwood, Cashmere Musk',
     reviews: [] as Array<{
       id: number;
       name: string;
@@ -213,6 +221,8 @@ export default function AdminDashboardPage() {
   const [patronSearch, setPatronSearch] = useState('');
   const [patronsTrigger, setPatronsTrigger] = useState(0);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<MaisonOrder | null>(null);
+  const [selectedPatron, setSelectedPatron] = useState<any | null>(null);
   const [latestToast, setLatestToast] = useState<MaisonOrder | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
@@ -390,6 +400,14 @@ export default function AdminDashboardPage() {
           is_default: true,
         },
       ],
+      longevity: 9,
+      sillage: 8,
+      top_notes_ar: 'برغموت صقلي، زهر البرتقال',
+      top_notes_en: 'Sicilian Bergamot, Orange Blossom',
+      heart_notes_ar: 'ياسمين مصري نقي، ورد دمشقي',
+      heart_notes_en: 'Egyptian Sambac Jasmine, Damask Rose',
+      base_notes_ar: 'صندل ميسور، عنبر ذهبي، مسك',
+      base_notes_en: 'Mysore Sandalwood, Golden Ambergris',
       reviews: [],
     });
     setIsProductModalOpen(true);
@@ -437,6 +455,14 @@ export default function AdminDashboardPage() {
           is_default: true,
         },
       ],
+      longevity: product.longevity || 9,
+      sillage: product.sillage || 8,
+      top_notes_ar: Array.isArray(product.top_notes_ar) ? product.top_notes_ar.join(', ') : (product.top_notes_ar || ''),
+      top_notes_en: Array.isArray(product.top_notes_en) ? product.top_notes_en.join(', ') : (product.top_notes_en || ''),
+      heart_notes_ar: Array.isArray(product.heart_notes_ar) ? product.heart_notes_ar.join(', ') : (product.heart_notes_ar || ''),
+      heart_notes_en: Array.isArray(product.heart_notes_en) ? product.heart_notes_en.join(', ') : (product.heart_notes_en || ''),
+      base_notes_ar: Array.isArray(product.base_notes_ar) ? product.base_notes_ar.join(', ') : (product.base_notes_ar || ''),
+      base_notes_en: Array.isArray(product.base_notes_en) ? product.base_notes_en.join(', ') : (product.base_notes_en || ''),
       reviews: product.reviews?.length > 0 ? JSON.parse(JSON.stringify(product.reviews)) : [],
     });
     setIsProductModalOpen(true);
@@ -476,15 +502,15 @@ export default function AdminDashboardPage() {
       family_ar: productForm.family_ar,
       concentration: productForm.concentration,
       gender_vibe: productForm.gender_vibe,
-      longevity: 9,
-      sillage: 8,
-      intensity: 8,
-      top_notes_en: ['Botanical Essences'],
-      top_notes_ar: ['خلاصات نباتية نقية'],
-      heart_notes_en: ['Active Complex'],
-      heart_notes_ar: ['توليفة مركزة'],
-      base_notes_en: ['Velvet Base'],
-      base_notes_ar: ['قاعدة مخملية ناعمة'],
+      longevity: Number(productForm.longevity) || 9,
+      sillage: Number(productForm.sillage) || 8,
+      intensity: Number(productForm.longevity) || 9,
+      top_notes_en: productForm.top_notes_en ? productForm.top_notes_en.split(',').map((s) => s.trim()).filter(Boolean) : ['Botanical Essences'],
+      top_notes_ar: productForm.top_notes_ar ? productForm.top_notes_ar.split(',').map((s) => s.trim()).filter(Boolean) : ['مكونات نباتية نقية'],
+      heart_notes_en: productForm.heart_notes_en ? productForm.heart_notes_en.split(',').map((s) => s.trim()).filter(Boolean) : ['Floral Heart'],
+      heart_notes_ar: productForm.heart_notes_ar ? productForm.heart_notes_ar.split(',').map((s) => s.trim()).filter(Boolean) : ['قلب العطر الزهري'],
+      base_notes_en: productForm.base_notes_en ? productForm.base_notes_en.split(',').map((s) => s.trim()).filter(Boolean) : ['Velvet Base'],
+      base_notes_ar: productForm.base_notes_ar ? productForm.base_notes_ar.split(',').map((s) => s.trim()).filter(Boolean) : ['قاعدة العطر الفاخرة'],
       callout_top: { en: 'Hand-Selected Notes', ar: 'مكونات نقية منتقاة بعناية' },
       callout_cap: { en: 'Artisanal Presentation Cap', ar: 'غطاء فاخر مصقول' },
       callout_seal: { en: 'Burgundy Wax Stamp', ar: 'ختم الشمع البرغندي' },
@@ -1496,7 +1522,7 @@ export default function AdminDashboardPage() {
                       filteredOrders.map((o) => (
                         <tr
                           key={o.id}
-                          className={`transition-colors ${
+                          onClick={() => setSelectedOrder(o)} className={`cursor-pointer transition-colors ${
                             o.is_new
                               ? 'bg-[#B08D57]/15 dark:bg-[#B08D57]/20 border-l-4 border-l-[#B08D57]'
                               : 'hover:bg-[#F1EADA]/30 dark:hover:bg-[#1C1613]/50'
@@ -1647,9 +1673,14 @@ export default function AdminDashboardPage() {
                                 {patron.name?.charAt(0) || 'P'}
                               </div>
                               <div>
-                                <span className="font-semibold text-sm text-[#14110F] dark:text-[#FDFBF7] block">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPatron(patron)}
+                                  className="font-semibold text-sm text-[#14110F] dark:text-[#FDFBF7] block hover:text-[#6B1D2F] dark:hover:text-[#DFCA9B] underline decoration-[#B08D57]/40 hover:decoration-[#6B1D2F] text-left cursor-pointer transition-colors"
+                                  title={isArabic ? 'انقر لعرض سجل طلبات وتفاصيل العميل' : 'View customer history'}
+                                >
                                   {patron.name}
-                                </span>
+                                </button>
                                 <span className="text-[10px] text-[#8C6E3D] dark:text-[#DFCA9B]/70 font-mono">
                                   {isArabic ? `عضو منذ ${patron.registeredAt || '2026'}` : `Member since ${patron.registeredAt || '2026'}`}
                                 </span>
@@ -1676,10 +1707,16 @@ export default function AdminDashboardPage() {
                           </td>
 
                           <td className="py-4 px-4">
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-[#B08D57]/20 text-[#8C6E3D] dark:text-[#DFCA9B] font-bold">
-                              {patron.totalOrders} {isArabic ? 'طلبات' : 'orders'}
-                            </span>
-                          </td>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedPatron(patron)}
+                                className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-[#B08D57]/20 hover:bg-[#6B1D2F] text-[#8C6E3D] hover:text-white dark:text-[#DFCA9B] dark:hover:text-white font-bold cursor-pointer transition-colors flex items-center gap-1"
+                                title={isArabic ? 'عرض كافة طلبات هذا العميل' : 'View orders history'}
+                              >
+                                <span>{patron.totalOrders} {isArabic ? 'طلبات' : 'orders'}</span>
+                                <ExternalLink size={10} />
+                              </button>
+                            </td>
 
                           <td className="py-4 px-4 font-mono font-bold text-sm text-[#6B1D2F] dark:text-[#DFCA9B]">
                             {patron.totalSpent.toLocaleString()} EGP
@@ -1956,6 +1993,17 @@ export default function AdminDashboardPage() {
                 }`}
               >
                 {isArabic ? `التقييمات والكومنتات (${productForm.reviews.length})` : `Reviews & Comments (${productForm.reviews.length})`}
+              </button>
+                          <button
+                type="button"
+                onClick={() => setModalActiveTab('notes' as any)}
+                className={`px-4 py-1.5 rounded-full text-xs uppercase tracking-wider font-medium cursor-pointer ${
+                  (modalActiveTab as any) === 'notes'
+                    ? 'bg-[#6B1D2F] text-white'
+                    : 'bg-[#F1EADA] dark:bg-[#1C1613] text-[#8C6E3D] dark:text-[#DFCA9B]'
+                }`}
+              >
+                {isArabic ? 'النوتات والثبات والفوحان' : 'Notes & Performance'}
               </button>
             </div>
 
@@ -2433,6 +2481,170 @@ export default function AdminDashboardPage() {
                 </div>
               )}
 
+              {/* TAB: OLFACTORY NOTES & PERFORMANCE (Requested by user) */}
+              {(modalActiveTab as any) === 'notes' && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-[#F1EADA]/50 dark:bg-[#1C1613] border border-[#B08D57]/30 space-y-4">
+                    <div>
+                      <h4 className="font-semibold text-sm text-[#14110F] dark:text-[#FDFBF7]">
+                        {isArabic ? 'تقييم الأداء (الثبات والفوحان والتركيز)' : 'Performance Ratings (1 - 10)'}
+                      </h4>
+                      <p className="text-[11px] text-[#8C6E3D] dark:text-[#DFCA9B]/80">
+                        {isArabic
+                          ? 'حدد درجة ثبات العطر وقوة انتشاره وفوحانه لتظهر للعميل في شريط الأداء بصفحة المنتج'
+                          : 'Set longevity and sillage meters displayed on the product page'}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="p-3 rounded-xl bg-white dark:bg-[#14100E] border border-[#B08D57]/20">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-[11px] font-semibold text-[#14110F] dark:text-[#FDFBF7]">
+                            {isArabic ? 'درجة الثبات (Longevity):' : 'Longevity:'}
+                          </label>
+                          <span className="font-mono font-bold text-sm text-[#6B1D2F] dark:text-[#DFCA9B]">
+                            {productForm.longevity}/10
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={5}
+                          max={10}
+                          value={productForm.longevity}
+                          onChange={(e) => setProductForm({ ...productForm, longevity: Number(e.target.value) })}
+                          className="w-full accent-[#6B1D2F] cursor-pointer"
+                        />
+                        <div className="flex justify-between text-[10px] text-stone-400 mt-1">
+                          <span>5/10 (متوسط)</span>
+                          <span>8/10 (ثبات يوم كامل)</span>
+                          <span>10/10 (ثبات ملكي فائق)</span>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-white dark:bg-[#14100E] border border-[#B08D57]/20">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-[11px] font-semibold text-[#14110F] dark:text-[#FDFBF7]">
+                            {isArabic ? 'قوة الفوحان والانتشار (Sillage):' : 'Sillage:'}
+                          </label>
+                          <span className="font-mono font-bold text-sm text-[#6B1D2F] dark:text-[#DFCA9B]">
+                            {productForm.sillage}/10
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={5}
+                          max={10}
+                          value={productForm.sillage}
+                          onChange={(e) => setProductForm({ ...productForm, sillage: Number(e.target.value) })}
+                          className="w-full accent-[#6B1D2F] cursor-pointer"
+                        />
+                        <div className="flex justify-between text-[10px] text-stone-400 mt-1">
+                          <span>5/10 (هادئ وحميمي)</span>
+                          <span>8/10 (فوحان ملحوظ)</span>
+                          <span>10/10 (هالة عطرية طاغية)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notes Pyramid Inputs */}
+                  <div className="p-4 rounded-2xl bg-[#F1EADA]/50 dark:bg-[#1C1613] border border-[#B08D57]/30 space-y-4">
+                    <div>
+                      <h4 className="font-semibold text-sm text-[#14110F] dark:text-[#FDFBF7]">
+                        {isArabic ? 'الهرم العطري والنوتات (قمة، قلب، وقاعدة العطر)' : 'Olfactory Pyramid Notes'}
+                      </h4>
+                      <p className="text-[11px] text-[#8C6E3D] dark:text-[#DFCA9B]/80">
+                        {isArabic ? 'اكتب المكونات مفصولة بفواصل (مثال: برغموت، فانيليا، عنبر)' : 'Enter ingredients separated by commas'}
+                      </p>
+                    </div>
+
+                    {/* Top Notes */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-white dark:bg-[#14100E] border border-[#B08D57]/20">
+                      <div>
+                        <label className="block text-[10px] font-semibold uppercase text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                          قمة العطر - الافتتاحية (بالعربية)
+                        </label>
+                        <input
+                          type="text"
+                          value={productForm.top_notes_ar}
+                          onChange={(e) => setProductForm({ ...productForm, top_notes_ar: e.target.value })}
+                          className="w-full p-2 rounded-lg border border-[#B08D57]/30 bg-transparent text-[#14110F] dark:text-[#FDFBF7]"
+                          placeholder="مثال: برغموت صقلي، زهر البرتقال"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold uppercase text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                          Top Notes (English)
+                        </label>
+                        <input
+                          type="text"
+                          value={productForm.top_notes_en}
+                          onChange={(e) => setProductForm({ ...productForm, top_notes_en: e.target.value })}
+                          className="w-full p-2 rounded-lg border border-[#B08D57]/30 bg-transparent text-[#14110F] dark:text-[#FDFBF7]"
+                          placeholder="e.g. Sicilian Bergamot, Neroli"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Heart Notes */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-white dark:bg-[#14100E] border border-[#B08D57]/20">
+                      <div>
+                        <label className="block text-[10px] font-semibold uppercase text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                          قلب العطر (بالعربية)
+                        </label>
+                        <input
+                          type="text"
+                          value={productForm.heart_notes_ar}
+                          onChange={(e) => setProductForm({ ...productForm, heart_notes_ar: e.target.value })}
+                          className="w-full p-2 rounded-lg border border-[#B08D57]/30 bg-transparent text-[#14110F] dark:text-[#FDFBF7]"
+                          placeholder="مثال: ياسمين سامباك، ورد دمشقي"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold uppercase text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                          Heart Notes (English)
+                        </label>
+                        <input
+                          type="text"
+                          value={productForm.heart_notes_en}
+                          onChange={(e) => setProductForm({ ...productForm, heart_notes_en: e.target.value })}
+                          className="w-full p-2 rounded-lg border border-[#B08D57]/30 bg-transparent text-[#14110F] dark:text-[#FDFBF7]"
+                          placeholder="e.g. Sambac Jasmine, Damask Rose"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Base Notes */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-white dark:bg-[#14100E] border border-[#B08D57]/20">
+                      <div>
+                        <label className="block text-[10px] font-semibold uppercase text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                          قاعدة العطر والارتكاز (بالعربية)
+                        </label>
+                        <input
+                          type="text"
+                          value={productForm.base_notes_ar}
+                          onChange={(e) => setProductForm({ ...productForm, base_notes_ar: e.target.value })}
+                          className="w-full p-2 rounded-lg border border-[#B08D57]/30 bg-transparent text-[#14110F] dark:text-[#FDFBF7]"
+                          placeholder="مثال: خشب الصندل، عنبر، مسك نباتي"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold uppercase text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                          Base Notes (English)
+                        </label>
+                        <input
+                          type="text"
+                          value={productForm.base_notes_en}
+                          onChange={(e) => setProductForm({ ...productForm, base_notes_en: e.target.value })}
+                          className="w-full p-2 rounded-lg border border-[#B08D57]/30 bg-transparent text-[#14110F] dark:text-[#FDFBF7]"
+                          placeholder="e.g. Sandalwood, Golden Ambergris, Musk"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Modal Action Buttons */}
               <div className="pt-4 flex items-center justify-end gap-3 border-t border-[#B08D57]/20">
                 <button
@@ -2595,6 +2807,311 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       )}
+      {/* MODAL: ORDER DETAILS (Requested by user: عند النقر على الأوردر تفتح تفاصيله والمنتجات المطلوبة) */}
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#FDFBF7] dark:bg-[#14100E] text-[#14110F] dark:text-[#FDFBF7] rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-5 border border-[#B08D57]/40 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[#B08D57]/20 pb-4">
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-[#B08D57] font-semibold block">
+                  {isArabic ? 'تفاصيل الطلب والمنتجات' : 'Order Specification'}
+                </span>
+                <h3 className="font-serif text-2xl text-[#6B1D2F] dark:text-[#DFCA9B] flex items-center gap-2 mt-1">
+                  <span>{selectedOrder.id}</span>
+                  {selectedOrder.is_new && (
+                    <span className="px-2 py-0.5 rounded-full bg-[#6B1D2F] text-white text-[10px] font-bold uppercase animate-pulse">
+                      NEW
+                    </span>
+                  )}
+                </h3>
+                <span className="text-xs text-stone-500 font-mono mt-0.5 block">{selectedOrder.date}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedOrder(null)}
+                className="p-2 rounded-full border border-[#B08D57]/30 text-stone-500 hover:text-black dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Customer Information Card */}
+            <div className="p-4 rounded-2xl bg-[#F1EADA]/50 dark:bg-[#1C1613] border border-[#B08D57]/25 space-y-2">
+              <span className="text-[11px] uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B] font-semibold block">
+                {isArabic ? 'بيانات العميل والتوصيل' : 'Customer & Shipping'}
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-stone-400 block text-[10px]">{isArabic ? 'اسم العميل' : 'Customer Name'}</span>
+                  <span className="font-bold text-[#14110F] dark:text-[#FDFBF7] text-sm">{selectedOrder.customer}</span>
+                </div>
+                <div>
+                  <span className="text-stone-400 block text-[10px]">{isArabic ? 'رقم الهاتف' : 'Phone'}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-semibold">{selectedOrder.phone}</span>
+                    {selectedOrder.phone && (
+                      <a
+                        href={`https://wa.me/20${normalizePhone(selectedOrder.phone).replace(/^0/, '')}?text=${encodeURIComponent(
+                          `مرحباً ${selectedOrder.customer}، نتواصل معك بخصوص طلبك رقم ${selectedOrder.id} من دار لوفينوس.`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                        title="مراسلة واتساب"
+                      >
+                        <MessageCircle size={12} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="text-stone-400 block text-[10px]">{isArabic ? 'عنوان الشحن والمحافظة' : 'Delivery Address'}</span>
+                  <span className="font-medium text-[#14110F] dark:text-[#FDFBF7]">{selectedOrder.gov}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Items Ordered */}
+            <div className="space-y-2">
+              <span className="text-[11px] uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B] font-semibold block">
+                {isArabic ? 'المنتجات المطلوبة في هذا الأوردر' : 'Ordered Items'}
+              </span>
+              <div className="p-4 rounded-2xl bg-white dark:bg-[#1A1412] border border-[#B08D57]/30 space-y-2">
+                <div className="flex items-start gap-3">
+                  <Package className="text-[#6B1D2F] dark:text-[#DFCA9B] shrink-0 mt-0.5" size={18} />
+                  <div>
+                    <p className="font-medium text-xs sm:text-sm text-[#14110F] dark:text-[#FDFBF7] leading-relaxed">
+                      {selectedOrder.items}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Financial & Status Summary */}
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="p-3.5 rounded-2xl bg-[#F1EADA]/60 dark:bg-[#1C1613] border border-[#B08D57]/25">
+                <span className="text-[10px] uppercase tracking-wider text-stone-400 block">
+                  {isArabic ? 'طريقة الدفع' : 'Payment Method'}
+                </span>
+                <span className="font-bold text-xs sm:text-sm text-[#14110F] dark:text-[#FDFBF7] block mt-0.5">
+                  {selectedOrder.payment === 'COD' ? (isArabic ? 'دفع عند الاستلام (COD)' : 'Cash on Delivery') : (isArabic ? 'بطاقة بنكية إلكترونية' : 'Online Card')}
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-[#6B1D2F]/10 dark:bg-[#6B1D2F]/20 border border-[#6B1D2F]/30">
+                <span className="text-[10px] uppercase tracking-wider text-[#6B1D2F] dark:text-[#DFCA9B] block font-semibold">
+                  {isArabic ? 'إجمالي الأوردر' : 'Total Amount'}
+                </span>
+                <span className="font-serif font-bold text-base sm:text-lg text-[#6B1D2F] dark:text-[#DFCA9B] block mt-0.5">
+                  {selectedOrder.total.toLocaleString()} EGP
+                </span>
+              </div>
+            </div>
+
+            {/* Change Status & Action Buttons */}
+            <div className="pt-4 border-t border-[#B08D57]/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <span className="text-xs text-stone-500">{isArabic ? 'تغيير الحالة:' : 'Status:'}</span>
+                <select
+                  value={selectedOrder.status}
+                  onChange={(e) => {
+                    const newStatus = e.target.value;
+                    handleUpdateOrderStatus(selectedOrder.id, newStatus);
+                    setSelectedOrder({ ...selectedOrder, status: newStatus as any });
+                  }}
+                  className="bg-[#F1EADA] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/40 rounded-full text-xs px-3 py-1.5 cursor-pointer focus:outline-none"
+                >
+                  <option value="Processing">Processing (قيد التجهيز)</option>
+                  <option value="Shipped">Shipped (تم الشحن)</option>
+                  <option value="Delivered">Delivered (تم التوصيل)</option>
+                  <option value="Cancelled">Cancelled (ملغي)</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <Link
+                  href={isArabic ? `/ar/orders/${selectedOrder.id}` : `/orders/${selectedOrder.id}`}
+                  target="_blank"
+                  className="px-4 py-2 rounded-full border border-[#B08D57]/40 text-xs font-medium hover:bg-[#F1EADA] dark:hover:bg-[#1C1613] transition-colors flex items-center gap-1.5"
+                >
+                  <span>{isArabic ? 'صفحة التتبع المباشر' : 'Live Tracking'}</span>
+                  <ExternalLink size={12} />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrder(null)}
+                  className="px-5 py-2 rounded-full bg-[#6B1D2F] hover:bg-[#8A1D2E] text-white text-xs uppercase tracking-wider font-medium cursor-pointer transition-colors shadow-sm"
+                >
+                  {isArabic ? 'إغلاق' : 'Close'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: PATRON ORDER HISTORY (Requested by user: لما ادوس على عميل يجيبلي كل الطلبات وقيمتها وكل تفاصيله) */}
+      {selectedPatron && (() => {
+        // Find all orders placed by this customer (by matching phone or name)
+        const patronNormPhone = selectedPatron.phone ? normalizePhone(selectedPatron.phone) : '';
+        const patronOrders = orders.filter((o) => {
+          if (patronNormPhone && o.phone) {
+            return normalizePhone(o.phone) === patronNormPhone;
+          }
+          return o.customer.toLowerCase().trim() === selectedPatron.name.toLowerCase().trim();
+        });
+
+        const totalLifetimeSpent = patronOrders.reduce((sum, o) => sum + (o.total || 0), 0) || selectedPatron.totalSpent || 0;
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-[#FDFBF7] dark:bg-[#14100E] text-[#14110F] dark:text-[#FDFBF7] rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-5 border border-[#B08D57]/40 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-[#B08D57]/20 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-[#6B1D2F] text-[#DFCA9B] font-serif font-bold text-lg flex items-center justify-center border border-[#B08D57]/40 shadow-md">
+                    {selectedPatron.name?.charAt(0) || 'P'}
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase tracking-widest text-[#B08D57] font-semibold block">
+                      {isArabic ? 'ملف وسجل طلبات العميل' : 'Patron Profile & Orders History'}
+                    </span>
+                    <h3 className="font-serif text-2xl text-[#14110F] dark:text-[#FDFBF7] mt-0.5">
+                      {selectedPatron.name}
+                    </h3>
+                    <span className="text-[11px] text-stone-500 font-mono">
+                      {isArabic ? `عضو مسجل منذ ${selectedPatron.registeredAt || '2026'}` : `Member since ${selectedPatron.registeredAt || '2026'}`}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPatron(null)}
+                  className="p-2 rounded-full border border-[#B08D57]/30 text-stone-500 hover:text-black dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Patron Info & Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3.5 rounded-2xl bg-[#F1EADA]/60 dark:bg-[#1C1613] border border-[#B08D57]/25">
+                  <span className="text-[10px] uppercase tracking-wider text-stone-400 block">{isArabic ? 'بيانات الاتصال' : 'Contact'}</span>
+                  <span className="font-mono font-bold text-xs block text-[#14110F] dark:text-[#FDFBF7] mt-1">{selectedPatron.phone || '—'}</span>
+                  {selectedPatron.email && (
+                    <span className="text-[11px] text-stone-500 block truncate mt-0.5">{selectedPatron.email}</span>
+                  )}
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-[#F1EADA]/60 dark:bg-[#1C1613] border border-[#B08D57]/25">
+                  <span className="text-[10px] uppercase tracking-wider text-stone-400 block">{isArabic ? 'العنوان والمحافظة' : 'Address'}</span>
+                  <span className="font-bold text-xs block text-[#14110F] dark:text-[#FDFBF7] mt-1">{selectedPatron.governorate || 'Cairo'}</span>
+                  <span className="text-[11px] text-stone-500 block truncate mt-0.5">{selectedPatron.address || '—'}</span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-[#6B1D2F]/10 dark:bg-[#6B1D2F]/20 border border-[#6B1D2F]/30">
+                  <span className="text-[10px] uppercase tracking-wider text-[#6B1D2F] dark:text-[#DFCA9B] font-semibold block">
+                    {isArabic ? 'إجمالي المشتريات (Lifetime)' : 'Lifetime Value'}
+                  </span>
+                  <span className="font-serif font-bold text-base text-[#6B1D2F] dark:text-[#DFCA9B] block mt-1">
+                    {totalLifetimeSpent.toLocaleString()} EGP
+                  </span>
+                  <span className="text-[10px] text-stone-400 block mt-0.5 font-mono">
+                    {patronOrders.length} {isArabic ? 'طلبات سابقة' : 'Total Orders'}
+                  </span>
+                </div>
+              </div>
+
+              {/* All Orders Table for this Patron */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-xs uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B]">
+                    {isArabic ? `سجل كافة الطلبات السابقة (${patronOrders.length}):` : `Order History (${patronOrders.length}):`}
+                  </h4>
+                  {selectedPatron.phone && (
+                    <a
+                      href={`https://wa.me/20${normalizePhone(selectedPatron.phone).replace(/^0/, '')}?text=${encodeURIComponent(
+                        `مرحباً ${selectedPatron.name}، نتواصل معك من دار لوفينوس للعطور والمستحضرات الفاخرة.`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-medium transition-colors shadow-sm"
+                    >
+                      <MessageCircle size={12} />
+                      <span>{isArabic ? 'مراسلة واتساب مباشرة' : 'WhatsApp'}</span>
+                    </a>
+                  )}
+                </div>
+
+                {patronOrders.length === 0 ? (
+                  <div className="p-6 text-center rounded-2xl bg-[#F1EADA]/30 dark:bg-[#1C1613]/40 border border-[#B08D57]/20 text-xs text-stone-400">
+                    {isArabic ? 'لا توجد طلبات مسجلة لهذا العميل حتى الآن' : 'No previous orders found for this patron'}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {patronOrders.map((ord) => (
+                      <div
+                        key={ord.id}
+                        onClick={() => {
+                          setSelectedOrder(ord);
+                        }}
+                        className="p-3.5 rounded-2xl bg-white dark:bg-[#1A1412] border border-[#B08D57]/25 hover:border-[#6B1D2F] dark:hover:border-[#DFCA9B] transition-all cursor-pointer shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-xs text-[#6B1D2F] dark:text-[#DFCA9B]">
+                              {ord.id}
+                            </span>
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase ${
+                                ord.status === 'Delivered'
+                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                  : ord.status === 'Shipped'
+                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
+                                  : ord.status === 'Cancelled'
+                                  ? 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300'
+                                  : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                              }`}
+                            >
+                              {ord.status}
+                            </span>
+                            <span className="text-[10px] text-stone-400 font-mono">{ord.date}</span>
+                          </div>
+                          <p className="text-xs text-[#14110F] dark:text-[#FDFBF7] font-medium leading-snug">
+                            {ord.items}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+                          <span className="font-mono font-bold text-sm text-[#14110F] dark:text-[#FDFBF7]">
+                            {ord.total.toLocaleString()} EGP
+                          </span>
+                          <span className="text-[10px] uppercase tracking-wider text-[#B08D57] font-semibold underline">
+                            {isArabic ? 'تفاصيل الأوردر ←' : 'Details →'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Close Button */}
+              <div className="pt-4 border-t border-[#B08D57]/20 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setSelectedPatron(null)}
+                  className="px-6 py-2 rounded-full bg-[#6B1D2F] hover:bg-[#8A1D2E] text-white text-xs uppercase tracking-wider font-medium cursor-pointer transition-colors shadow-sm"
+                >
+                  {isArabic ? 'إغلاق' : 'Close'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

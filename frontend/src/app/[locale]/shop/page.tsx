@@ -83,6 +83,7 @@ export default function LocalizedShopPage({ params }: PageProps) {
   ];
 
   const filtered = products
+    .filter((p) => p.is_hidden !== true)
     .filter((p) => {
       if (activeFilter === 'all') return true;
       if (activeFilter === 'parfums') return p.category_slug === 'parfums' || p.product_type === 'perfume' || !p.product_type;

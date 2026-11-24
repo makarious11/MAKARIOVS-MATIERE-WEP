@@ -72,9 +72,19 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
     // Fetch live product data & reviews from server database
     fetch(`/api/v1/products/${slug}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 404) {
+          // Product is hidden or deleted
+          return null;
+        }
+        return res.json();
+      })
       .then((json) => {
+        if (!json) return;
         if (json?.data) {
+          if (json.data.is_hidden === true) {
+            return;
+          }
           setPerfume(json.data);
           if (json.data.images?.bottle) setSelectedImage(json.data.images.bottle);
         }
