@@ -33,6 +33,7 @@ const CATEGORIES_FILE = () => path.join(getDataDir(), 'categories.json');
 const ORDERS_FILE = () => path.join(getDataDir(), 'orders.json');
 const PATRONS_FILE = () => path.join(getDataDir(), 'patrons.json');
 const REVIEWS_FILE = () => path.join(getDataDir(), 'reviews.json');
+const COUPONS_FILE = () => path.join(getDataDir(), 'coupons.json');
 
 // --- Helper Functions ---
 function readJsonFile<T>(filePath: string, fallback: T): T {
@@ -257,4 +258,130 @@ export function deleteServerCategory(slug: string): MaisonCategory[] {
   const updated = current.filter((c) => c.slug !== slug && c.id !== slug);
   writeJsonFile(CATEGORIES_FILE(), updated);
   return updated;
+}
+
+// ==========================================
+// 5. Coupons & Promo Codes Persistence
+// ==========================================
+export interface ServerCoupon {
+  id: number;
+  code: string;
+  type: 'percent' | 'fixed';
+  value: number;
+  min_order: number;
+  max_uses: number | null;
+  used_count: number;
+  is_active: boolean;
+  description?: string;
+  created_at: string;
+}
+
+export const INITIAL_COUPONS: ServerCoupon[] = [
+  {
+    id: 1,
+    code: 'MAKARIOVS10',
+    type: 'percent',
+    value: 10,
+    min_order: 1000,
+    max_uses: 500,
+    used_count: 14,
+    is_active: true,
+    description: 'خصم 10% ترحيبي لرواد الدار الجدد',
+    created_at: '2026-11-01',
+  },
+  {
+    id: 2,
+    code: 'MAISON20',
+    type: 'percent',
+    value: 20,
+    min_order: 3000,
+    max_uses: 200,
+    used_count: 8,
+    is_active: true,
+    description: 'خصم 20% للطلبات الملكية فوق 3000 جنيه',
+    created_at: '2026-11-10',
+  },
+  {
+    id: 3,
+    code: 'EXTRAIT500',
+    type: 'fixed',
+    value: 500,
+    min_order: 4000,
+    max_uses: 100,
+    used_count: 22,
+    is_active: true,
+    description: 'خصم فوري 500 جنيه على طلبات المجموعات والعطور',
+    created_at: '2026-11-15',
+  },
+  {
+    id: 4,
+    code: 'LVENUS10',
+    type: 'percent',
+    value: 10,
+    min_order: 500,
+    max_uses: 1000,
+    used_count: 5,
+    is_active: true,
+    description: 'كود امتياز لوفينوس الرسمي',
+    created_at: '2026-11-20',
+  },
+];
+
+export function getServerCoupons(): ServerCoupon[] {
+  return readJsonFile<ServerCoupon[]>(COUPONS_FILE(), INITIAL_COUPONS);
+}
+
+export function saveServerCoupon(coupon: Partial<ServerCoupon> & { code: string }): ServerCoupon[] {
+  const current = getServerCoupons();
+  const upperCode = coupon.code.trim().toUpperCase();
+  const existingIdx = current.findIndex(
+    (c) => (coupon.id && c.id === coupon.id) || c.code.toUpperCase() === upperCode
+  );
+
+  let updated: ServerCoupon[];
+  if (existingIdx >= 0) {
+    updated = [...current];
+    updated[existingIdx] = {
+      ...updated[existingIdx],
+      ...coupon,
+      code: upperCode,
+      value: Number(coupon.value) || 10,
+      min_order: Number(coupon.min_order) || 0,
+      is_active: coupon.is_active !== false,
+    };
+  } else {
+    const newCoupon: ServerCoupon = {
+      id: coupon.id || Date.now(),
+      code: upperCode,
+      type: coupon.type || 'percent',
+      value: Number(coupon.value) || 10,
+      min_order: Number(coupon.min_order) || 0,
+      max_uses: coupon.max_uses ? Number(coupon.max_uses) : null,
+      used_count: Number(coupon.used_count) || 0,
+      is_active: coupon.is_active !== false,
+      description: coupon.description || '',
+      created_at: new Date().toISOString().split('T')[0],
+    };
+    updated = [newCoupon, ...current];
+  }
+
+  writeJsonFile(COUPONS_FILE(), updated);
+  return updated;
+}
+
+export function deleteServerCoupon(id: number): ServerCoupon[] {
+  const current = getServerCoupons();
+  const updated = current.filter((c) => c.id !== id);
+  writeJsonFile(COUPONS_FILE(), updated);
+  return updated;
+}
+
+export function incrementServerCouponUsage(code: string): void {
+  const current = getServerCoupons();
+  const upper = code.trim().toUpperCase();
+  const idx = current.findIndex((c) => c.code.toUpperCase() === upper);
+  if (idx >= 0) {
+    current[idx].used_count = (current[idx].used_count || 0) + 1;
+    writeJsonFile(COUPONS_FILE(), current);
+  }
 }

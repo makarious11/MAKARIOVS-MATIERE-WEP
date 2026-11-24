@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
+import { getServerCoupons } from '@/lib/serverDb';
 
-const VALID_COUPONS = [
-  { id: 1, code: 'MAKARIOVS10', type: 'percent', value: 10, min_order: 1000 },
-  { id: 2, code: 'MAISON20', type: 'percent', value: 20, min_order: 3000 },
-  { id: 3, code: 'EXTRAIT500', type: 'fixed', value: 500, min_order: 4000 },
-];
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
@@ -13,12 +10,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Coupon code is required' }, { status: 400 });
     }
 
-    const found = VALID_COUPONS.find((c) => c.code.toUpperCase() === code.trim().toUpperCase());
+    const coupons = getServerCoupons();
+    const cleanCode = code.trim().toUpperCase();
+
+    const found = coupons.find((c) => c.code.toUpperCase() === cleanCode);
+
     if (!found) {
-      return NextResponse.json({ message: 'Invalid or expired coupon code' }, { status: 404 });
+      return NextResponse.json({ message: 'Invalid coupon code' }, { status: 404 });
     }
 
-    if (subtotal < found.min_order) {
+    if (!found.is_active) {
+      return NextResponse.json({ message: 'This coupon code has expired or is inactive' }, { status: 422 });
+    }
+
+    if (found.max_uses && found.used_count >= found.max_uses) {
+      return NextResponse.json({ message: 'This coupon code has reached its maximum usage limit' }, { status: 422 });
+    }
+
+    if (subtotal < (found.min_order || 0)) {
       return NextResponse.json(
         { message: `Coupon requires minimum order of ${found.min_order} EGP` },
         { status: 422 }
@@ -39,4 +48,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'Failed to process coupon' }, { status: 500 });
   }
 }
-

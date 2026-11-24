@@ -124,7 +124,7 @@ export default function AdminDashboardPage() {
     setPasscode('');
   };
 
-  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'orders' | 'patrons' | 'overview'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'orders' | 'patrons' | 'coupons' | 'overview'>('products');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -220,6 +220,30 @@ export default function AdminDashboardPage() {
   const [orderSearch, setOrderSearch] = useState('');
   const [patronSearch, setPatronSearch] = useState('');
   const [patronsTrigger, setPatronsTrigger] = useState(0);
+  // Coupons State (Dynamic Management)
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [couponSearch, setCouponSearch] = useState('');
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [editingCouponId, setEditingCouponId] = useState<number | null>(null);
+  const [couponForm, setCouponForm] = useState({
+    code: '',
+    type: 'percent' as 'percent' | 'fixed',
+    value: 10,
+    min_order: 1000,
+    max_uses: '' as number | string,
+    is_active: true,
+    description: '',
+  });
+
+  const refreshCoupons = async () => {
+    try {
+      const res = await fetch('/api/v1/coupons');
+      const json = await res.json();
+      if (json?.data) {
+        setCoupons(json.data);
+      }
+    } catch {}
+  };
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<MaisonOrder | null>(null);
   const [selectedPatron, setSelectedPatron] = useState<any | null>(null);
@@ -294,6 +318,7 @@ export default function AdminDashboardPage() {
     setProducts(getStoredCatalog(true));
     setCategories(getStoredCategories());
     refreshOrders();
+    refreshCoupons();
 
     // 1. Sync server catalog to keep products & reviews updated
     fetch('/api/v1/products')
@@ -667,6 +692,96 @@ export default function AdminDashboardPage() {
   };
 
   // Reviews inside Modal
+  // Coupon Handlers
+  const openAddCouponModal = () => {
+    setEditingCouponId(null);
+    setCouponForm({
+      code: '',
+      type: 'percent',
+      value: 10,
+      min_order: 1000,
+      max_uses: '',
+      is_active: true,
+      description: '',
+    });
+    setIsCouponModalOpen(true);
+  };
+
+  const openEditCouponModal = (c: any) => {
+    setEditingCouponId(c.id);
+    setCouponForm({
+      code: c.code,
+      type: c.type || 'percent',
+      value: c.value,
+      min_order: c.min_order || 0,
+      max_uses: c.max_uses || '',
+      is_active: c.is_active !== false,
+      description: c.description || '',
+    });
+    setIsCouponModalOpen(true);
+  };
+
+  const handleCouponFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!couponForm.code.trim()) {
+      alert(isArabic ? 'يرجى كتابة كود الخصم' : 'Coupon code is required');
+      return;
+    }
+
+    const payload = {
+      id: editingCouponId || Date.now(),
+      code: couponForm.code.trim().toUpperCase(),
+      type: couponForm.type,
+      value: Number(couponForm.value) || 10,
+      min_order: Number(couponForm.min_order) || 0,
+      max_uses: couponForm.max_uses ? Number(couponForm.max_uses) : null,
+      is_active: couponForm.is_active,
+      description: couponForm.description.trim(),
+    };
+
+    try {
+      const res = await fetch('/api/v1/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (json?.coupons) {
+        setCoupons(json.coupons);
+      } else {
+        refreshCoupons();
+      }
+      setIsCouponModalOpen(false);
+    } catch {
+      alert(isArabic ? 'حدث خطأ أثناء حفظ الكوبون' : 'Failed to save coupon');
+    }
+  };
+
+  const handleToggleCouponActive = async (c: any) => {
+    const updated = { ...c, is_active: !c.is_active };
+    try {
+      const res = await fetch('/api/v1/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+      const json = await res.json();
+      if (json?.coupons) setCoupons(json.coupons);
+      else refreshCoupons();
+    } catch {}
+  };
+
+  const handleDeleteCoupon = async (id: number) => {
+    if (confirm(isArabic ? 'هل أنت متأكد من حذف كود الخصم هذا؟' : 'Are you sure you want to delete this coupon?')) {
+      try {
+        const res = await fetch(`/api/v1/coupons?id=${id}`, { method: 'DELETE' });
+        const json = await res.json();
+        if (json?.coupons) setCoupons(json.coupons);
+        else refreshCoupons();
+      } catch {}
+    }
+  };
+
   const handleAddReview = () => {
     if (!newReviewAuthor.trim() || !newReviewText.trim()) return;
     const newRev = {
@@ -1138,6 +1253,19 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
+              onClick={() => setActiveTab('coupons')}
+              className={`px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                activeTab === 'coupons'
+                  ? 'bg-[#14110F] dark:bg-[#6B1D2F] text-[#FDFBF7] shadow-sm'
+                  : 'text-[#14110F]/70 dark:text-[#FDFBF7]/70 hover:text-[#14110F] dark:hover:text-[#FDFBF7] hover:bg-[#F1EADA] dark:hover:bg-[#1A1412]'
+              }`}
+            >
+              <Tag size={15} />
+              <span>{isArabic ? 'أكواد الخصم والبروموكود' : 'Coupons & Promos'}</span>
+              <span className="text-[10px] opacity-70">({coupons.length})</span>
+            </button>
+
+            <button
             onClick={() => setActiveTab('overview')}
             className={`px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
               activeTab === 'overview'
@@ -1765,8 +1893,141 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* TAB 5: FINANCIAL INSIGHTS & REAL STATS (Accurate Real Math) */}
-        {activeTab === 'overview' && (
+        {/* TAB: COUPONS & PROMO CODES MANAGEMENT (Requested by user) */}
+          {activeTab === 'coupons' && (
+            <div className="space-y-6">
+              {/* Header and Add Button */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#F1EADA]/60 dark:bg-[#161210] p-4 rounded-2xl border border-[#B08D57]/25 dark:border-[#B08D57]/30">
+                <div className="relative w-full sm:w-80">
+                  <Search size={16} className={`absolute top-1/2 -translate-y-1/2 ${isArabic ? 'right-3' : 'left-3'} text-[#B08D57]`} />
+                  <input
+                    type="text"
+                    placeholder={isArabic ? 'بحث بكود الخصم أو الوصف...' : 'Search coupons by code...'}
+                    value={couponSearch}
+                    onChange={(e) => setCouponSearch(e.target.value)}
+                    className={`w-full py-2 ${isArabic ? 'pr-9 pl-3' : 'pl-9 pr-3'} rounded-full bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/30 text-xs focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57]`}
+                  />
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                  <span className="text-xs text-[#8C6E3D] dark:text-[#DFCA9B]">
+                    {coupons.length} {isArabic ? 'كوبونات نشطة ومحفوظة' : 'Coupons in System'}
+                  </span>
+                  <button
+                    onClick={openAddCouponModal}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#6B1D2F] hover:bg-[#8A1D2E] text-[#FDFBF7] transition-all text-xs uppercase tracking-wider font-medium shadow-sm cursor-pointer"
+                  >
+                    <Plus size={14} />
+                    <span>{isArabic ? 'إضافة كود خصم جديد' : 'New Promo Code'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Coupons Table */}
+              <div className="bg-[#FDFBF7] dark:bg-[#14100E] rounded-3xl border border-[#B08D57]/25 dark:border-[#B08D57]/30 overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-[#F1EADA]/70 dark:bg-[#1C1613] border-b border-[#B08D57]/20 dark:border-[#B08D57]/30 text-[#8C6E3D] dark:text-[#DFCA9B] uppercase tracking-wider font-display">
+                        <th className="py-4 px-6">{isArabic ? 'كود الخصم (Code)' : 'Coupon Code'}</th>
+                        <th className="py-4 px-4">{isArabic ? 'نوع وقيمة الخصم' : 'Discount Value'}</th>
+                        <th className="py-4 px-4">{isArabic ? 'الحد الأدنى للطلب' : 'Min Order'}</th>
+                        <th className="py-4 px-4">{isArabic ? 'مرات الاستخدام' : 'Usage / Limit'}</th>
+                        <th className="py-4 px-4">{isArabic ? 'الحالة' : 'Status'}</th>
+                        <th className="py-4 px-6 text-right">{isArabic ? 'الإجراءات' : 'Actions'}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#B08D57]/15 dark:divide-[#B08D57]/20">
+                      {coupons.filter((c) => !couponSearch || c.code.toLowerCase().includes(couponSearch.toLowerCase()) || (c.description && c.description.toLowerCase().includes(couponSearch.toLowerCase()))).length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-12 text-center text-xs text-[#8C6E3D] dark:text-[#DFCA9B]/70">
+                            {isArabic ? 'لا توجد أكواد خصم مطابقة للبحث' : 'No coupons match your search'}
+                          </td>
+                        </tr>
+                      ) : (
+                        coupons
+                          .filter((c) => !couponSearch || c.code.toLowerCase().includes(couponSearch.toLowerCase()) || (c.description && c.description.toLowerCase().includes(couponSearch.toLowerCase())))
+                          .map((c) => (
+                            <tr key={c.id} className="hover:bg-[#F1EADA]/30 dark:hover:bg-[#1C1613]/50 transition-colors">
+                              <td className="py-4 px-6">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-8 h-8 rounded-full bg-[#6B1D2F]/10 dark:bg-[#6B1D2F]/20 text-[#6B1D2F] dark:text-[#DFCA9B] flex items-center justify-center shrink-0 border border-[#B08D57]/30">
+                                    <Tag size={14} />
+                                  </div>
+                                  <div>
+                                    <span className="font-mono font-bold text-sm tracking-wider text-[#6B1D2F] dark:text-[#DFCA9B] block">
+                                      {c.code}
+                                    </span>
+                                    {c.description && (
+                                      <span className="text-[11px] text-stone-500 block truncate max-w-xs">
+                                        {c.description}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+
+                              <td className="py-4 px-4">
+                                <span className="font-bold text-sm text-[#14110F] dark:text-[#FDFBF7]">
+                                  {c.type === 'percent' ? `${c.value}% خصم` : `${c.value.toLocaleString()} ج.م خصم ثابت`}
+                                </span>
+                              </td>
+
+                              <td className="py-4 px-4 font-mono text-[#3A332D] dark:text-[#FDFBF7]/80">
+                                {c.min_order > 0 ? `${c.min_order.toLocaleString()} EGP` : (isArabic ? 'بدون حد أدنى' : 'No Minimum')}
+                              </td>
+
+                              <td className="py-4 px-4 font-mono">
+                                <span className="px-2 py-0.5 rounded-full bg-[#B08D57]/20 text-[#8C6E3D] dark:text-[#DFCA9B] text-[10px] font-bold">
+                                  {c.used_count || 0} {c.max_uses ? `/ ${c.max_uses}` : ''} {isArabic ? 'مرة' : 'used'}
+                                </span>
+                              </td>
+
+                              <td className="py-4 px-4">
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleCouponActive(c)}
+                                  className={`px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wider font-semibold cursor-pointer transition-all ${
+                                    c.is_active
+                                      ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                                      : 'bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-300 dark:border-stone-700'
+                                  }`}
+                                  title={isArabic ? 'انقر لتفعيل أو تعطيل الكود' : 'Toggle active'}
+                                >
+                                  {c.is_active ? (isArabic ? 'مُفعّل' : 'Active') : (isArabic ? 'معطّل' : 'Disabled')}
+                                </button>
+                              </td>
+
+                              <td className="py-4 px-6 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    onClick={() => openEditCouponModal(c)}
+                                    title={isArabic ? 'تعديل الكود' : 'Edit Coupon'}
+                                    className="p-2 rounded-full border border-[#B08D57]/30 text-[#14110F] dark:text-[#FDFBF7] hover:border-[#6B1D2F] hover:bg-[#6B1D2F] hover:text-[#FDFBF7] transition-all cursor-pointer"
+                                  >
+                                    <Edit2 size={13} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteCoupon(c.id)}
+                                    title={isArabic ? 'حذف الكود' : 'Delete Coupon'}
+                                    className="p-2 rounded-full border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: FINANCIAL INSIGHTS & REAL STATS */}
+          {activeTab === 'overview' && (
           <div className="space-y-8">
             {/* Top Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -3228,6 +3489,155 @@ export default function AdminDashboardPage() {
           </div>
         );
       })()}
+      {/* MODAL: ADD / EDIT COUPON */}
+      {isCouponModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#FDFBF7] dark:bg-[#14100E] text-[#14110F] dark:text-[#FDFBF7] rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-5 border border-[#B08D57]/40 shadow-2xl relative">
+            <div className="flex items-center justify-between border-b border-[#B08D57]/20 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-[#6B1D2F] text-white flex items-center justify-center shrink-0">
+                  <Tag size={16} />
+                </div>
+                <h3 className="font-serif text-xl sm:text-2xl text-[#14110F] dark:text-[#FDFBF7]">
+                  {editingCouponId
+                    ? (isArabic ? 'تعديل كود الخصم' : 'Edit Coupon Code')
+                    : (isArabic ? 'إضافة كود خصم جديد' : 'Create New Promo Code')}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCouponModalOpen(false)}
+                className="p-2 rounded-full border border-[#B08D57]/30 text-stone-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCouponFormSubmit} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                    كود الخصم (Coupon Code) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={couponForm.code}
+                    onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
+                    placeholder="مثال: SUMMER25"
+                    className="w-full p-2.5 rounded-xl border border-[#B08D57]/40 bg-white dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] font-mono font-bold tracking-wider"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                    نوع الخصم (Type)
+                  </label>
+                  <select
+                    value={couponForm.type}
+                    onChange={(e) => setCouponForm({ ...couponForm, type: e.target.value as any })}
+                    className="w-full p-2.5 rounded-xl border border-[#B08D57]/40 bg-white dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] cursor-pointer"
+                  >
+                    <option value="percent">نسبة مئوية % (Percentage)</option>
+                    <option value="fixed">مبلغ مالي ثابت ج.م (Fixed Amount)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                    قيمة الخصم ({couponForm.type === 'percent' ? '%' : 'جنيه'}) *
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    required
+                    value={couponForm.value}
+                    onChange={(e) => setCouponForm({ ...couponForm, value: Number(e.target.value) })}
+                    className="w-full p-2.5 rounded-xl border border-[#B08D57]/40 bg-white dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                    الحد الأدنى للأوردر (جنيه)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={couponForm.min_order}
+                    onChange={(e) => setCouponForm({ ...couponForm, min_order: Number(e.target.value) })}
+                    placeholder="مثال: 1000"
+                    className="w-full p-2.5 rounded-xl border border-[#B08D57]/40 bg-white dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                    أقصى عدد مرات استخدام (اختياري)
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={couponForm.max_uses}
+                    onChange={(e) => setCouponForm({ ...couponForm, max_uses: e.target.value })}
+                    placeholder="اتركه فارغاً لعدد غير محدود"
+                    className="w-full p-2.5 rounded-xl border border-[#B08D57]/40 bg-white dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] font-mono"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#F1EADA]/50 dark:bg-[#1C1613] border border-[#B08D57]/30 self-end">
+                  <span className="font-semibold text-xs text-[#14110F] dark:text-[#FDFBF7]">
+                    {isArabic ? 'تفعيل الكود فوراً' : 'Active Immediately'}
+                  </span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={couponForm.is_active}
+                      onChange={(e) => setCouponForm({ ...couponForm, is_active: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6B1D2F]"></div>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                  وصف الكود أو المناسبة (Description)
+                </label>
+                <input
+                  type="text"
+                  value={couponForm.description}
+                  onChange={(e) => setCouponForm({ ...couponForm, description: e.target.value })}
+                  placeholder="مثال: خصم الجمعة البيضاء لعملاء الدار"
+                  className="w-full p-2.5 rounded-xl border border-[#B08D57]/40 bg-white dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7]"
+                />
+              </div>
+
+              <div className="pt-4 flex items-center justify-end gap-3 border-t border-[#B08D57]/20">
+                <button
+                  type="button"
+                  onClick={() => setIsCouponModalOpen(false)}
+                  className="px-5 py-2.5 rounded-full border border-[#B08D57]/40 text-[#14110F] dark:text-[#FDFBF7] uppercase tracking-wider text-xs hover:bg-[#F1EADA] dark:hover:bg-[#1C1613] cursor-pointer"
+                >
+                  {isArabic ? 'إلغاء' : 'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-full bg-[#6B1D2F] text-[#FDFBF7] uppercase tracking-wider text-xs hover:bg-[#8A1D2E] transition-all shadow-md font-medium cursor-pointer"
+                >
+                  {isArabic ? 'حفظ وتفعيل الكود' : 'Save & Publish'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

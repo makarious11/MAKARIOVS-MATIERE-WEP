@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerCatalog, getServerOrders, saveServerOrder, updateServerOrderStatus, deleteServerOrder, saveServerPatron } from '@/lib/serverDb';
+import { getServerCatalog, getServerOrders, saveServerOrder, updateServerOrderStatus, deleteServerOrder, saveServerPatron, getServerCoupons, incrementServerCouponUsage } from '@/lib/serverDb';
 import { EGYPT_GOVERNORATES } from '@/lib/governorates';
 import { MaisonOrder } from '@/lib/orders';
 
@@ -84,13 +84,29 @@ export async function POST(request: Request) {
     // Gift box fee
     const giftFee = gift_box ? 150 : 0;
 
-    // Coupon discount calculation
+    // Coupon discount calculation (Dynamic from server database)
     let discount = 0;
     if (coupon_code && typeof coupon_code === 'string') {
-      const codeUpper = coupon_code.toUpperCase();
-      if (codeUpper === 'LVENUS10' || codeUpper === 'VENUS10' || codeUpper === 'MAKARIOVS10') discount = (recalculatedSubtotal * 10) / 100;
-      else if (codeUpper === 'MAISON20') discount = (recalculatedSubtotal * 20) / 100;
-      else if (codeUpper === 'EXTRAIT500') discount = Math.min(500, recalculatedSubtotal);
+      const codeUpper = coupon_code.trim().toUpperCase();
+      const serverCoupons = getServerCoupons();
+      const matchingCoupon = serverCoupons.find((c) => c.code.toUpperCase() === codeUpper && c.is_active);
+
+      if (matchingCoupon && recalculatedSubtotal >= (matchingCoupon.min_order || 0)) {
+        if (matchingCoupon.type === 'percent') {
+          discount = (recalculatedSubtotal * matchingCoupon.value) / 100;
+        } else {
+          discount = Math.min(matchingCoupon.value, recalculatedSubtotal);
+        }
+        // Increment usage count for this coupon
+        try {
+          incrementServerCouponUsage(matchingCoupon.code);
+        } catch {}
+      } else {
+        // Fallback for legacy hardcoded coupons
+        if (codeUpper === 'LVENUS10' || codeUpper === 'VENUS10' || codeUpper === 'MAKARIOVS10') discount = (recalculatedSubtotal * 10) / 100;
+        else if (codeUpper === 'MAISON20') discount = (recalculatedSubtotal * 20) / 100;
+        else if (codeUpper === 'EXTRAIT500') discount = Math.min(500, recalculatedSubtotal);
+      }
     }
 
     const total = recalculatedSubtotal + shippingFee + giftFee - discount;
