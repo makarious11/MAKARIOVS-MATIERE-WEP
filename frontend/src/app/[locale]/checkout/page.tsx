@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { ArrowRight, ArrowLeft, ShieldCheck, MapPin, Navigation, ExternalLink } from 'lucide-react';
+import { Price } from '@/components/ui/Price';
 import { useCartStore } from '@/store/cartStore';
 import { CheckoutProgress } from '@/components/checkout/CheckoutProgress';
 import { GovernorateSelect, EGYPT_GOVERNORATES, GovernorateOption } from '@/components/checkout/GovernorateSelect';
@@ -14,6 +15,8 @@ import { getCurrentPatron, registerPatron } from '@/lib/patronAuth';
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const isArabic = Boolean(pathname?.startsWith('/ar'));
   const { items, subtotal, discount, coupon, clearCart } = useCartStore();
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -95,17 +98,25 @@ export default function CheckoutPage() {
     const newErrors: Record<string, string> = {};
 
     if (!fullName.trim() || fullName.trim().length < 3) {
-      newErrors.fullName = 'Please enter your full name (minimum 3 characters)';
+      newErrors.fullName = isArabic
+        ? 'يرجى إدخال الاسم بالكامل (٣ أحرف على الأقل)'
+        : 'Please enter your full name (minimum 3 characters)';
     }
 
     if (!phone.trim()) {
-      newErrors.phone = 'Phone number is required for courier delivery';
+      newErrors.phone = isArabic
+        ? 'رقم الموبايل مطلوب لتأكيد التوصيل مع المندوب'
+        : 'Phone number is required for courier delivery';
     } else if (!validatePhone(phone)) {
-      newErrors.phone = 'Please enter a valid Egyptian mobile number (e.g. 01012345678)';
+      newErrors.phone = isArabic
+        ? 'يرجى إدخال رقم موبايل مصري صحيح (مثال: 01210593766)'
+        : 'Please enter a valid Egyptian mobile number (e.g. 01210593766)';
     }
 
     if (!streetAddress.trim() || streetAddress.trim().length < 5) {
-      newErrors.streetAddress = 'Please enter your street address and building number';
+      newErrors.streetAddress = isArabic
+        ? 'يرجى كتابة العنوان بالتفصيل (اسم الشارع ورقم العقار)'
+        : 'Please enter your street address and building number';
     }
 
     setErrors(newErrors);
@@ -221,12 +232,12 @@ export default function CheckoutPage() {
       }).catch((err) => console.warn('Order API sync notice:', err));
 
       // 7. Route to success page with live tracking link
-      router.push(`/orders/success?number=${orderNumber}`);
+      router.push(isArabic ? `/ar/orders/success?number=${orderNumber}` : `/orders/success?number=${orderNumber}`);
     } catch (err: any) {
       console.error('Order creation error:', err);
       const fallbackNumber = `LV-${Math.floor(100000 + Math.random() * 900000)}`;
       clearCart();
-      router.push(`/orders/success?number=${fallbackNumber}`);
+      router.push(isArabic ? `/ar/orders/success?number=${fallbackNumber}` : `/orders/success?number=${fallbackNumber}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -234,37 +245,37 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#0D0A08] text-[#14110F] dark:text-[#FDFBF7] pt-36 pb-24 flex flex-col items-center justify-center px-4 text-center transition-colors duration-300">
+      <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#0D0A08] text-[#14110F] dark:text-[#FDFBF7] pt-36 pb-24 flex flex-col items-center justify-center px-4 text-center transition-colors duration-200">
         <h1 className="font-display text-2xl uppercase tracking-widest text-[#14110F] dark:text-[#FDFBF7]">
-          Your bag is empty
+          {isArabic ? 'حقيبة التسوق فارغة' : 'Your bag is empty'}
         </h1>
         <button
-          onClick={() => router.push('/shop')}
+          onClick={() => router.push(isArabic ? '/ar/shop' : '/shop')}
           className="mt-6 px-8 py-3 rounded-full bg-[#14110F] dark:bg-[#6B1D2F] text-[#FDFBF7] font-display text-xs uppercase tracking-widest cursor-pointer hover:bg-[#6B1D2F] dark:hover:bg-[#8A1D2E] transition-colors"
         >
-          Return to Shop
+          {isArabic ? 'العودة إلى المتجر' : 'Return to Shop'}
         </button>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen bg-[#FDFBF7] dark:bg-[#0D0A08] text-[#14110F] dark:text-[#FDFBF7] pt-32 pb-24 transition-colors duration-300">
+    <div className="relative min-h-screen bg-[#FDFBF7] dark:bg-[#0D0A08] text-[#14110F] dark:text-[#FDFBF7] pt-32 pb-24 transition-colors duration-200">
       <BotanicalPattern opacity={0.04} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Title & Progress Header */}
         <div className="text-center max-w-xl mx-auto mb-8 space-y-2">
           <span className="font-display text-xs tracking-widest3 uppercase text-[#B08D57]">
-            Maison de Parfum — Le Caire · Paris
+            {isArabic ? 'دار العطور الفاخرة — القاهرة · باريس' : 'Maison de Parfum — Le Caire · Paris'}
           </span>
           <h1 className="font-display text-3xl sm:text-4xl uppercase tracking-widest text-[#14110F] dark:text-[#FDFBF7]">
-            Secure Checkout
+            {isArabic ? 'إتمام الطلب الآمن' : 'Secure Checkout'}
           </h1>
         </div>
 
         {/* 3-Step Animated Progress Bar */}
-        <CheckoutProgress currentStep={currentStep} />
+        <CheckoutProgress currentStep={currentStep} isArabic={isArabic} />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mt-8">
           {/* Main Form Steps Column */}
@@ -276,10 +287,12 @@ export default function CheckoutPage() {
               <div className="space-y-6">
                 <div className="border-b border-[#B08D57]/30 pb-4">
                   <h2 className="font-display text-lg uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
-                    1. Patron Contact & Egyptian Delivery Address
+                    {isArabic ? '١. بيانات التواصل وعنوان الاستلام' : '1. Patron Contact & Egyptian Delivery Address'}
                   </h2>
                   <p className="font-body text-xs text-[#3A332D]/70 dark:text-[#DFCA9B]/80 mt-1">
-                    Please provide your contact details for delivery confirmation and tracking.
+                    {isArabic
+                      ? 'يرجى إدخال بياناتك بدقة لتأكيد الشحن ومتابعة مسار الطلب.'
+                      : 'Please provide your contact details for delivery confirmation and tracking.'}
                   </p>
                 </div>
 
@@ -287,13 +300,13 @@ export default function CheckoutPage() {
                   {/* Full Name */}
                   <div className="sm:col-span-2 space-y-1.5">
                     <label className="block font-display text-xs uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
-                      Full Name *
+                      {isArabic ? 'الاسم بالكامل *' : 'Full Name *'}
                     </label>
                     <input
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. Makarious Boutros"
+                      placeholder={isArabic ? 'مثال: مكاريوس بطرس' : 'e.g. Makarious Boutros'}
                       className={`w-full p-3.5 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border font-body text-xs focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57] ${
                         errors.fullName ? 'border-red-500' : 'border-[#B08D57]/40'
                       }`}
@@ -304,13 +317,14 @@ export default function CheckoutPage() {
                   {/* Phone */}
                   <div className="space-y-1.5">
                     <label className="block font-display text-xs uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
-                      Egyptian Mobile Number *
+                      {isArabic ? 'رقم الموبايل المصري *' : 'Egyptian Mobile Number *'}
                     </label>
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="01012345678"
+                      placeholder="01210593766"
+                      dir="ltr"
                       className={`w-full p-3.5 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border font-body text-xs focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57] ${
                         errors.phone ? 'border-red-500' : 'border-[#B08D57]/40'
                       }`}
@@ -321,7 +335,7 @@ export default function CheckoutPage() {
                   {/* Email */}
                   <div className="space-y-1.5">
                     <label className="block font-display text-xs uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
-                      Email Address (Optional)
+                      {isArabic ? 'البريد الإلكتروني (اختياري)' : 'Email Address (Optional)'}
                     </label>
                     <input
                       type="email"
@@ -338,19 +352,20 @@ export default function CheckoutPage() {
                     <GovernorateSelect
                       value={selectedGov.value}
                       onChange={(gov) => setSelectedGov(gov)}
+                      isArabic={isArabic}
                     />
                   </div>
 
                   {/* City / District */}
                   <div className="space-y-1.5">
                     <label className="block font-display text-xs uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
-                      City / District
+                      {isArabic ? 'المدينة / الحي' : 'City / District'}
                     </label>
                     <input
                       type="text"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      placeholder="e.g. Zamalek / New Cairo"
+                      placeholder={isArabic ? 'مثال: الزمالك / التجمع الخامس' : 'e.g. Zamalek / New Cairo'}
                       className="w-full p-3.5 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/40 font-body text-xs focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57]"
                     />
                   </div>
@@ -403,17 +418,17 @@ export default function CheckoutPage() {
 
                     <div className="flex items-center justify-between">
                       <label className="block font-display text-xs uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
-                        Detailed Street Address & Building *
+                        {isArabic ? 'العنوان بالتفصيل ورقم العقار *' : 'Detailed Street Address & Building *'}
                       </label>
-                      <span className="text-[10px] text-[#8C6E3D] dark:text-[#DFCA9B]/70 font-mono">
-                        (أو اكتب العنوان يدوياً بالتفصيل)
+                      <span className="text-[10px] text-[#8C6E3D] dark:text-[#DFCA9B]/70">
+                        {isArabic ? '(أو اكتب العنوان يدوياً بالتفصيل)' : '(or enter street address manually)'}
                       </span>
                     </div>
                     <input
                       type="text"
                       value={streetAddress}
                       onChange={(e) => setStreetAddress(e.target.value)}
-                      placeholder="Building, Street, Floor, Apartment number..."
+                      placeholder={isArabic ? 'اسم الشارع، رقم العمارة، الدور، الشقة...' : 'Building, Street, Floor, Apartment number...'}
                       className={`w-full p-3.5 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border font-body text-xs focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57] ${
                         errors.streetAddress ? 'border-red-500' : 'border-[#B08D57]/40'
                       }`}
@@ -426,13 +441,13 @@ export default function CheckoutPage() {
                   {/* Special Courier Notes */}
                   <div className="sm:col-span-2 space-y-1.5">
                     <label className="block font-display text-xs uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
-                      Delivery Instructions for Courier (Optional)
+                      {isArabic ? 'ملاحظات إضافية لمندوب التوصيل (اختياري)' : 'Delivery Instructions for Courier (Optional)'}
                     </label>
                     <textarea
                       rows={2}
                       value={orderNotes}
                       onChange={(e) => setOrderNotes(e.target.value)}
-                      placeholder="Any landmark, preferred calling time, or instructions..."
+                      placeholder={isArabic ? 'علامة مميزة، موعد مناسب للاتصال، أو أي تعليمات...' : 'Any landmark, preferred calling time, or instructions...'}
                       className="w-full p-3 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/40 font-body text-xs focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57]"
                     />
                   </div>
@@ -444,8 +459,8 @@ export default function CheckoutPage() {
                     onClick={handleNextStep}
                     className="px-8 py-4 rounded-full bg-[#14110F] dark:bg-[#6B1D2F] hover:bg-[#6B1D2F] dark:hover:bg-[#8A1D2E] text-[#FDFBF7] font-display text-xs uppercase tracking-widest3 flex items-center gap-2 transition-colors shadow-md cursor-pointer"
                   >
-                    <span>Continue to Payment</span>
-                    <ArrowRight size={14} />
+                    <span>{isArabic ? 'المتابعة لاختيار الدفع' : 'Continue to Payment'}</span>
+                    <ArrowRight size={14} className={isArabic ? 'rotate-180' : ''} />
                   </button>
                 </div>
               </div>
@@ -458,16 +473,19 @@ export default function CheckoutPage() {
               <div className="space-y-6">
                 <div className="border-b border-[#B08D57]/30 pb-4">
                   <h2 className="font-display text-lg uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
-                    2. Select Payment Sanctuary
+                    {isArabic ? '٢. اختيار وسيلة الدفع الآمنة' : '2. Select Payment Sanctuary'}
                   </h2>
                   <p className="font-body text-xs text-[#3A332D]/70 dark:text-[#DFCA9B]/80 mt-1">
-                    Choose between physical payment upon arrival or secure card processing via Paymob.
+                    {isArabic
+                      ? 'اختر بين الدفع نقداً عند الاستلام، أو التحويل الفوري عبر InstaPay / فودافون كاش، أو البطاقة البنكية.'
+                      : 'Choose between physical payment upon arrival or secure card processing via Paymob.'}
                   </p>
                 </div>
 
                 <PaymentMethodSelector
                   method={paymentMethod}
                   onChange={(m) => setPaymentMethod(m)}
+                  isArabic={isArabic}
                 />
 
                 <div className="pt-4 flex items-center justify-between">
@@ -476,8 +494,8 @@ export default function CheckoutPage() {
                     onClick={handlePrevStep}
                     className="px-6 py-3.5 rounded-full border border-[#14110F]/30 dark:border-[#B08D57]/40 text-[#14110F] dark:text-[#FDFBF7] hover:text-[#6B1D2F] dark:hover:text-[#DFCA9B] font-display text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-colors"
                   >
-                    <ArrowLeft size={14} />
-                    <span>Back to Shipping</span>
+                    <ArrowLeft size={14} className={isArabic ? 'rotate-180' : ''} />
+                    <span>{isArabic ? 'العودة لبيانات الشحن' : 'Back to Shipping'}</span>
                   </button>
 
                   <button
@@ -485,8 +503,8 @@ export default function CheckoutPage() {
                     onClick={handleNextStep}
                     className="px-8 py-4 rounded-full bg-[#14110F] dark:bg-[#6B1D2F] hover:bg-[#6B1D2F] dark:hover:bg-[#8A1D2E] text-[#FDFBF7] font-display text-xs uppercase tracking-widest3 flex items-center gap-2 transition-colors shadow-md cursor-pointer font-medium"
                   >
-                    <span>Review Order</span>
-                    <ArrowRight size={14} />
+                    <span>{isArabic ? 'مراجعة الطلب' : 'Review Order'}</span>
+                    <ArrowRight size={14} className={isArabic ? 'rotate-180' : ''} />
                   </button>
                 </div>
               </div>
@@ -499,10 +517,12 @@ export default function CheckoutPage() {
               <div className="space-y-6">
                 <div className="border-b border-[#B08D57]/30 pb-4">
                   <h2 className="font-display text-lg uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
-                    3. Final Review & Confirmation
+                    {isArabic ? '٣. المراجعة النهائية وتأكيد الطلب' : '3. Final Review & Confirmation'}
                   </h2>
                   <p className="font-body text-xs text-[#3A332D]/70 dark:text-[#DFCA9B]/80 mt-1">
-                    Please verify your bespoke order details before we begin sealing your vessel.
+                    {isArabic
+                      ? 'يرجى مراجعة كافة تفاصيل طلبك قبل تجهيزه وختمه بالشمع الملكي.'
+                      : 'Please verify your bespoke order details before we begin sealing your vessel.'}
                   </p>
                 </div>
 
@@ -510,44 +530,46 @@ export default function CheckoutPage() {
                 <div className="p-5 rounded-2xl bg-[#FDFBF7] dark:bg-[#1C1613] border border-[#B08D57]/30 space-y-3 text-xs">
                   <div className="flex justify-between border-b border-[#B08D57]/20 pb-2">
                     <span className="font-display uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B]">
-                      Patron
+                      {isArabic ? 'اسم العميل' : 'Patron'}
                     </span>
                     <span className="font-bold text-[#14110F] dark:text-[#FDFBF7]">{fullName}</span>
                   </div>
                   <div className="flex justify-between border-b border-[#B08D57]/20 pb-2">
                     <span className="font-display uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B]">
-                      Delivery Mobile
+                      {isArabic ? 'رقم الموبايل' : 'Delivery Mobile'}
                     </span>
-                    <span className="text-[#14110F] dark:text-[#FDFBF7]">{phone}</span>
+                    <span dir="ltr" className="ltr-isolate text-[#14110F] dark:text-[#FDFBF7]">{phone}</span>
                   </div>
                   <div className="flex justify-between border-b border-[#B08D57]/20 pb-2">
                     <span className="font-display uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B]">
-                      Governorate & City
+                      {isArabic ? 'المحافظة والمدينة' : 'Governorate & City'}
                     </span>
                     <span className="text-[#14110F] dark:text-[#FDFBF7]">
-                      {selectedGov.name_en} ({city || selectedGov.name_en})
+                      {isArabic
+                        ? `${selectedGov.name_ar}${city ? ` (${city})` : ''}`
+                        : `${selectedGov.name_en} (${city || selectedGov.name_en})`}
                     </span>
                   </div>
                   <div className="flex justify-between border-b border-[#B08D57]/20 pb-2">
                     <span className="font-display uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B]">
-                      Address
+                      {isArabic ? 'العنوان بالتفصيل' : 'Address'}
                     </span>
-                    <span className="text-[#14110F] dark:text-[#FDFBF7] max-w-xs text-right truncate">
+                    <span className="text-[#14110F] dark:text-[#FDFBF7] max-w-xs text-end truncate">
                       {streetAddress}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-display uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B]">
-                      Payment Method
+                      {isArabic ? 'وسيلة الدفع' : 'Payment Method'}
                     </span>
                     <span className="font-semibold uppercase tracking-wider text-[#6B1D2F] dark:text-[#DFCA9B]">
                       {paymentMethod === 'cod'
-                        ? 'Cash on Delivery (Egypt)'
+                        ? isArabic ? 'الدفع عند الاستلام (مصر)' : 'Cash on Delivery (Egypt)'
                         : paymentMethod === 'instapay'
-                        ? 'InstaPay Instant Transfer'
+                        ? isArabic ? 'تحويل انستاباي الفوري' : 'InstaPay Instant Transfer'
                         : paymentMethod === 'vodafone_cash'
-                        ? 'Vodafone Cash / Mobile Wallet'
-                        : 'Credit / Debit Card (Paymob)'}
+                        ? isArabic ? 'فودافون كاش / المحافظ الإلكترونية' : 'Vodafone Cash / Mobile Wallet'
+                        : isArabic ? 'البطاقة الائتمانية (Paymob)' : 'Credit / Debit Card (Paymob)'}
                     </span>
                   </div>
                 </div>
@@ -565,8 +587,8 @@ export default function CheckoutPage() {
                     disabled={isSubmitting}
                     className="px-6 py-3.5 rounded-full border border-[#14110F]/30 dark:border-[#B08D57]/40 text-[#14110F] dark:text-[#FDFBF7] hover:text-[#6B1D2F] dark:hover:text-[#DFCA9B] font-display text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-colors"
                   >
-                    <ArrowLeft size={14} />
-                    <span>Back</span>
+                    <ArrowLeft size={14} className={isArabic ? 'rotate-180' : ''} />
+                    <span>{isArabic ? 'رجوع' : 'Back'}</span>
                   </button>
 
                   <button
@@ -576,10 +598,13 @@ export default function CheckoutPage() {
                     className="px-10 py-4.5 rounded-full bg-[#14110F] dark:bg-[#6B1D2F] hover:bg-[#6B1D2F] dark:hover:bg-[#8A1D2E] text-[#FDFBF7] font-display text-xs uppercase tracking-widest3 flex items-center gap-3 transition-all duration-400 shadow-xl disabled:opacity-50 border border-[#B08D57]/40 cursor-pointer font-medium"
                   >
                     {isSubmitting ? (
-                      <span>Sealing Order...</span>
+                      <span>{isArabic ? 'جاري تسجيل وختم الطلب...' : 'Sealing Order...'}</span>
                     ) : (
                       <>
-                        <span>Place Order — {new Intl.NumberFormat('en-US').format(orderTotal)} EGP</span>
+                        <span>
+                          {isArabic ? 'تأكيد الطلب — ' : 'Place Order — '}
+                          <Price amount={orderTotal} />
+                        </span>
                         <ShieldCheck size={16} />
                       </>
                     )}
@@ -598,6 +623,7 @@ export default function CheckoutPage() {
               discount={discount}
               total={orderTotal}
               coupon={coupon}
+              isArabic={isArabic}
             />
           </div>
         </div>

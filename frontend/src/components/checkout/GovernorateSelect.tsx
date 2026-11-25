@@ -34,7 +34,9 @@ export const GovernorateSelect: React.FC<GovernorateSelectProps> = ({
       >
         {EGYPT_GOVERNORATES.map((gov) => (
           <option key={gov.value} value={gov.value} className="dark:bg-[#1C1613] dark:text-[#FDFBF7]">
-            {isArabic ? gov.name_ar : gov.name_en} — {gov.fee} EGP ({gov.eta_days})
+            {isArabic
+              ? `${gov.name_ar} — ${gov.fee} ج.م (${gov.eta_days})`
+              : `${gov.name_en} — EGP ${gov.fee} (${gov.eta_days})`}
           </option>
         ))}
       </select>

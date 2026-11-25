@@ -27,7 +27,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
         <button
           type="button"
           onClick={() => onChange('cod')}
-          className={`p-5 rounded-2xl border text-left transition-all duration-300 flex flex-col justify-between space-y-3 cursor-pointer ${
+          className={`p-5 rounded-2xl border text-start transition-all duration-300 flex flex-col justify-between space-y-3 cursor-pointer ${
             method === 'cod'
               ? 'bg-[#14110F] dark:bg-[#1C1613] text-[#FDFBF7] border-[#B08D57] shadow-xl'
               : 'bg-[#F1EADA]/50 dark:bg-[#1A1512]/60 text-[#14110F] dark:text-[#FDFBF7] border-[#B08D57]/30 hover:border-[#6B1D2F]'
@@ -58,7 +58,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
         <button
           type="button"
           onClick={() => onChange('instapay')}
-          className={`p-5 rounded-2xl border text-left transition-all duration-300 flex flex-col justify-between space-y-3 cursor-pointer ${
+          className={`p-5 rounded-2xl border text-start transition-all duration-300 flex flex-col justify-between space-y-3 cursor-pointer ${
             method === 'instapay'
               ? 'bg-[#14110F] dark:bg-[#1C1613] text-[#FDFBF7] border-[#B08D57] shadow-xl'
               : 'bg-[#F1EADA]/50 dark:bg-[#1A1512]/60 text-[#14110F] dark:text-[#FDFBF7] border-[#B08D57]/30 hover:border-[#6B1D2F]'
@@ -89,7 +89,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
         <button
           type="button"
           onClick={() => onChange('vodafone_cash')}
-          className={`p-5 rounded-2xl border text-left transition-all duration-300 flex flex-col justify-between space-y-3 cursor-pointer ${
+          className={`p-5 rounded-2xl border text-start transition-all duration-300 flex flex-col justify-between space-y-3 cursor-pointer ${
             method === 'vodafone_cash'
               ? 'bg-[#14110F] dark:bg-[#1C1613] text-[#FDFBF7] border-[#B08D57] shadow-xl'
               : 'bg-[#F1EADA]/50 dark:bg-[#1A1512]/60 text-[#14110F] dark:text-[#FDFBF7] border-[#B08D57]/30 hover:border-[#6B1D2F]'
@@ -120,7 +120,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
         <button
           type="button"
           onClick={() => onChange('card')}
-          className={`p-5 rounded-2xl border text-left transition-all duration-300 flex flex-col justify-between space-y-3 cursor-pointer ${
+          className={`p-5 rounded-2xl border text-start transition-all duration-300 flex flex-col justify-between space-y-3 cursor-pointer ${
             method === 'card'
               ? 'bg-[#14110F] dark:bg-[#1C1613] text-[#FDFBF7] border-[#B08D57] shadow-xl'
               : 'bg-[#F1EADA]/50 dark:bg-[#1A1512]/60 text-[#14110F] dark:text-[#FDFBF7] border-[#B08D57]/30 hover:border-[#6B1D2F]'
@@ -173,7 +173,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
             {isArabic ? 'بيانات المحفظة الإلكترونية' : 'Mobile Wallet Credentials'}
           </p>
           <div className="text-xs font-mono bg-black/10 dark:bg-black/30 p-2.5 rounded border border-[#B08D57]/20 flex items-center justify-between text-[#14110F] dark:text-[#FDFBF7]">
-            <span>{isArabic ? 'رقم المحفظة المعتمد:' : 'Official Wallet Number:'} <strong className="text-[#B08D57]">01000000000</strong></span>
+            <span>{isArabic ? 'رقم المحفظة المعتمد:' : 'Official Wallet Number:'} <strong dir="ltr" className="ltr-isolate text-[#B08D57]">01210593766</strong></span>
           </div>
           <p className="text-[11px] text-[#14110F]/70 dark:text-[#FDFBF7]/70">
             {isArabic

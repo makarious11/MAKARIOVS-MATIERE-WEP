@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { WaxSeal } from '@/components/ui/WaxSeal';
-import { NumberRoll } from '@/components/ui/NumberRoll';
+import { Price } from '@/components/ui/Price';
 import type { CartItem, Coupon } from '@/types';
 
 interface OrderSummaryProps {
@@ -54,11 +54,13 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
                 {isArabic ? item.product.name_ar : item.product.name_en}
               </h4>
               <p className="font-body text-[11px] text-[#8C6E3D] dark:text-[#DFCA9B]/80">
-                {item.variant.size_ml} ml × {item.quantity}
+                <span dir="ltr" className="ltr-isolate">
+                  {item.variant.size_ml} ml × {item.quantity}
+                </span>
               </p>
             </div>
             <span className="font-display text-xs font-semibold text-[#14110F] dark:text-[#FDFBF7]">
-              <NumberRoll value={item.variant.price * item.quantity} />
+              <Price amount={item.variant.price * item.quantity} />
             </span>
           </div>
         ))}
@@ -68,18 +70,18 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
       <div className="space-y-2 pt-4 border-t border-[#B08D57]/30 text-xs font-display">
         <div className="flex justify-between text-[#3A332D] dark:text-[#DFCA9B]">
           <span>{isArabic ? 'المجموع الفرعي' : 'Subtotal'}</span>
-          <NumberRoll value={subtotal} />
+          <Price amount={subtotal} />
         </div>
 
         <div className="flex justify-between text-[#3A332D] dark:text-[#DFCA9B]">
           <span>{isArabic ? 'الشحن والتوصيل' : 'Shipping'}</span>
-          <span>{shippingFee === 0 ? (isArabic ? 'مجاني' : 'Free') : <NumberRoll value={shippingFee} />}</span>
+          <span>{shippingFee === 0 ? (isArabic ? 'مجاني' : 'Free') : <Price amount={shippingFee} />}</span>
         </div>
 
         {giftBoxFee > 0 && (
           <div className="flex justify-between text-[#8C6E3D] dark:text-[#DFCA9B]">
             <span>{isArabic ? 'تغليف الهدايا الملكي' : 'Gift Presentation Box'}</span>
-            <NumberRoll value={giftBoxFee} />
+            <Price amount={giftBoxFee} />
           </div>
         )}
 
@@ -89,13 +91,13 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
               {isArabic ? 'الخصم' : 'Discount'}{' '}
               {coupon && `(${coupon.code})`}
             </span>
-            <span>-<NumberRoll value={discount} /></span>
+            <span>-<Price amount={discount} /></span>
           </div>
         )}
 
         <div className="flex justify-between items-baseline text-base font-bold text-[#14110F] dark:text-[#FDFBF7] pt-3 border-t border-[#B08D57]/30">
           <span className="uppercase tracking-widest">{isArabic ? 'الإجمالي' : 'Total'}</span>
-          <NumberRoll value={total} className="text-lg text-[#6B1D2F] dark:text-[#DFCA9B]" />
+          <Price amount={total} className="text-lg text-[#6B1D2F] dark:text-[#DFCA9B]" />
         </div>
       </div>
     </div>
