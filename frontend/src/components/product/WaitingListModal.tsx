@@ -128,7 +128,8 @@ export const WaitingListModal: React.FC<WaitingListModalProps> = ({
                       required
                       value={contact}
                       onChange={(e) => setContact(e.target.value)}
-                      placeholder="+20 100 000 0000"
+                      placeholder="0121 059 3766"
+                      dir="ltr"
                       className="w-full px-4 py-2.5 rounded-lg border border-[#B08D57]/30 bg-white/60 dark:bg-black/30 text-xs focus:outline-none focus:border-[#B08D57]"
                     />
                   </div>

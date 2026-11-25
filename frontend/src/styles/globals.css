@@ -18,22 +18,22 @@
   --color-gold-light: #C8A97A;
   --color-gold-dark: #8C6E3D;
 
-  --font-display: var(--font-cormorant), 'Playfair Display', Georgia, serif;
-  --font-script: var(--font-pinyon), cursive, serif;
-  --font-body: var(--font-eb-garamond), Georgia, serif;
-  --font-arabic: var(--font-amiri), serif;
-  --font-arabic-display: 'Noto Naskh Arabic', var(--font-amiri), serif;
-  --font-arabic-sans: var(--font-ibm-plex-arabic), system-ui, sans-serif;
+  --font-display: var(--font-cormorant), 'Playfair Display', Georgia, 'Cairo', 'IBM Plex Sans Arabic', 'Amiri', serif;
+  --font-script: var(--font-pinyon), 'Amiri', 'Cairo', cursive, serif;
+  --font-body: var(--font-eb-garamond), Georgia, 'Cairo', 'IBM Plex Sans Arabic', 'Amiri', serif;
+  --font-arabic: var(--font-amiri), 'Noto Naskh Arabic', 'Cairo', 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, serif;
+  --font-arabic-display: 'Noto Naskh Arabic', 'Cairo', var(--font-amiri), serif;
+  --font-arabic-sans: 'Cairo', var(--font-ibm-plex-arabic), 'Segoe UI', Tahoma, Arial, sans-serif;
 }
 
 /* ── Brand Custom Properties ─────────────────────────── */
 :root {
-  --font-cormorant: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-  --font-pinyon: 'Pinyon Script', cursive, serif;
-  --font-eb-garamond: 'EB Garamond', Georgia, serif;
-  --font-amiri: 'Amiri', serif;
-  --font-noto-naskh: 'Noto Naskh Arabic', 'Amiri', serif;
-  --font-ibm-plex-arabic: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-cormorant: 'Cormorant Garamond', 'Playfair Display', Georgia, 'Cairo', 'IBM Plex Sans Arabic', 'Amiri', serif;
+  --font-pinyon: 'Pinyon Script', 'Amiri', 'Cairo', cursive, serif;
+  --font-eb-garamond: 'EB Garamond', Georgia, 'Cairo', 'IBM Plex Sans Arabic', 'Amiri', serif;
+  --font-amiri: 'Amiri', 'Noto Naskh Arabic', 'Cairo', 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, serif;
+  --font-noto-naskh: 'Noto Naskh Arabic', 'Cairo', 'Amiri', 'Segoe UI', serif;
+  --font-ibm-plex-arabic: 'Cairo', 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;
 
   --color-paper: #FDFBF7;
   --color-paper2: #F1EADA;
@@ -70,7 +70,7 @@ html {
   scroll-padding-top: 80px;
   background-color: #FDFBF7;
   color: #14110F;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 html.dark {
@@ -81,12 +81,12 @@ html.dark {
 body {
   background-color: #FDFBF7;
   color: #14110F;
-  font-family: var(--font-eb-garamond), Georgia, serif;
+  font-family: var(--font-eb-garamond), Georgia, 'Cairo', 'IBM Plex Sans Arabic', 'Amiri', serif;
   min-height: 100vh;
   margin: 0;
   padding: 0;
   position: relative;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 html.dark body {
@@ -166,11 +166,13 @@ html.dark ::-webkit-scrollbar-thumb:hover {
   scrollbar-color: #B08D57 #FDFBF7;
 }
 
-/* ── RTL Support ─────────────────────────────────────────── */
-[dir="rtl"] {
+/* ── RTL Support & Unified Arabic Font Stack ───────────── */
+[dir="rtl"],
+html[lang="ar"] {
   direction: rtl;
   text-align: right;
-  font-family: var(--font-amiri), serif;
+  font-family: 'Cairo', 'IBM Plex Sans Arabic', 'Noto Naskh Arabic', 'Amiri', 'Segoe UI', Tahoma, Arial, sans-serif;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
 [dir="rtl"] .flip-rtl {
@@ -179,30 +181,64 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 
 [dir="rtl"] h1,
 [dir="rtl"] h2,
-[dir="rtl"] h3 {
-  font-family: 'Noto Naskh Arabic', 'Amiri', serif;
-  letter-spacing: 0.01em;
-  line-height: 1.4;
-}
-
+[dir="rtl"] h3,
 [dir="rtl"] h4,
 [dir="rtl"] h5,
 [dir="rtl"] h6 {
-  font-family: 'Noto Naskh Arabic', 'Amiri', serif;
+  font-family: 'Noto Naskh Arabic', 'Cairo', 'Amiri', 'IBM Plex Sans Arabic', 'Segoe UI', serif;
   letter-spacing: 0.01em;
+  line-height: 1.4;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
 [dir="rtl"] body,
-[dir="rtl"] p {
-  font-family: 'Amiri', serif;
-  font-size: 17px;
-  line-height: 1.8;
+[dir="rtl"] p,
+[dir="rtl"] span,
+[dir="rtl"] a,
+[dir="rtl"] label,
+[dir="rtl"] li,
+[dir="rtl"] td,
+[dir="rtl"] th {
+  font-family: 'Cairo', 'IBM Plex Sans Arabic', 'Amiri', 'Noto Naskh Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
-/* RTL font-display class: use Amiri with tight Arabic tracking */
-[dir="rtl"] .font-display {
-  font-family: var(--font-amiri);
+[dir="rtl"] p {
+  line-height: 1.85;
+}
+
+/* Interactive form controls, buttons, and placeholders must never fall back to broken system/Latin glyph fonts */
+[dir="rtl"] input,
+[dir="rtl"] textarea,
+[dir="rtl"] button,
+[dir="rtl"] select,
+[dir="rtl"] option,
+[dir="rtl"] optgroup {
+  font-family: 'Cairo', 'IBM Plex Sans Arabic', 'Noto Naskh Arabic', 'Segoe UI', Tahoma, Arial, sans-serif !important;
+  letter-spacing: normal !important;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+[dir="rtl"] ::placeholder,
+html[lang="ar"] ::placeholder {
+  font-family: 'Cairo', 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif !important;
+  letter-spacing: normal !important;
+}
+
+[dir="rtl"] .font-display,
+[dir="rtl"] .font-body,
+[dir="rtl"] .font-script,
+[dir="rtl"] .font-serif,
+[dir="rtl"] .font-sans {
+  font-family: 'Cairo', 'IBM Plex Sans Arabic', 'Noto Naskh Arabic', 'Amiri', 'Segoe UI', Tahoma, Arial, sans-serif;
   letter-spacing: 0.01em;
+}
+
+/* Isolated LTR spans for percentages, volumes (ml), phone numbers, and copyright inside RTL */
+.ltr-isolate {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
 }
 
 /* ── Arabic Font Utility ──────────────────────────────────── */

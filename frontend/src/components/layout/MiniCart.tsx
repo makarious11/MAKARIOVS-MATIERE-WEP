@@ -141,7 +141,9 @@ export const MiniCart: React.FC = () => {
                           {isArabic ? item.product.name_ar : item.product.name_en}
                         </h4>
                         <p className="font-body text-xs text-[#8C6E3D] dark:text-[#DFCA9B]">
-                          {item.variant.size_ml} ml — Extrait de Parfum
+                          <span dir="ltr" className="ltr-isolate">
+                            {item.variant.size_ml} ml — Extrait de Parfum
+                          </span>
                         </p>
                         <div className="font-display text-xs font-semibold text-[#14110F] dark:text-[#FDFBF7] mt-1">
                           <Price amount={item.variant.price * item.quantity} />

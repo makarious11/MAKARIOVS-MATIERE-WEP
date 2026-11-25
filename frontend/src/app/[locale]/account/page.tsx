@@ -348,7 +348,7 @@ export default function AccountPage() {
                       autoFocus
                       value={loginIdentifier}
                       onChange={(e) => setLoginIdentifier(e.target.value)}
-                      placeholder={isArabic ? '01012345678 أو patron@domain.com' : '01012345678 or patron@domain.com'}
+                      placeholder={isArabic ? '01210593766 أو name@lvenus.com' : '01210593766 or name@lvenus.com'}
                       className="w-full p-3.5 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/40 text-xs font-body focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57]"
                     />
                   </div>
@@ -460,7 +460,8 @@ export default function AccountPage() {
                       type="email"
                       value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
-                      placeholder="patron@domain.com"
+                      placeholder="name@lvenus.com"
+                      dir="ltr"
                       className="w-full p-3 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/40 text-xs font-body focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57]"
                     />
                   </div>

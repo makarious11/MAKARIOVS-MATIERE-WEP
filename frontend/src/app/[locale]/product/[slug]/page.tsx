@@ -56,6 +56,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   const [selectedImage, setSelectedImage] = useState<string>(perfume.images.bottle);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
     const sync = () => {
       const latest = getPerfumeBySlug(slug);
       if (latest) {
@@ -311,35 +314,52 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               />
             </div>
 
-            {/* Thumbnail switcher */}
-            <div className="grid grid-cols-4 gap-3 pt-2">
-              {[
+            {/* Thumbnail switcher (deduplicated so identical bottle/hero images never repeat) */}
+            {(() => {
+              const rawThumbs = [
                 { url: perfume.images.bottle, label: isArabic ? 'القارورة' : 'Bottle' },
                 { url: perfume.images.hero, label: isArabic ? 'الصورة الكلية' : 'Editorial' },
                 { url: perfume.images.box, label: isArabic ? 'الصندوق' : 'Coffret' },
                 { url: perfume.images.texture, label: isArabic ? 'الهوية' : 'Identity' },
-              ].map((img, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setSelectedImage(img.url)}
-                  className={`relative h-20 sm:h-24 rounded-xl overflow-hidden border-2 transition-all duration-300 cursor-pointer bg-white/50 dark:bg-[#161210] p-1 flex items-center justify-center group ${
-                    selectedImage === img.url
-                      ? 'border-[#B08D57] shadow-lg ring-2 ring-[#B08D57]/40 scale-105'
-                      : 'border-[#B08D57]/25 dark:border-[#B08D57]/30 opacity-70 hover:opacity-100 hover:border-[#B08D57]/60'
-                  }`}
-                >
-                  <img
-                    src={img.url}
-                    alt={img.label}
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <span className="absolute bottom-1 inset-x-0 text-[9px] font-display uppercase tracking-wider text-center bg-black/70 text-[#FDFBF7] py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {img.label}
-                  </span>
-                </button>
-              ))}
-            </div>
+              ];
+              const seen = new Set<string>();
+              const uniqueThumbs = rawThumbs.filter((img) => {
+                if (!img.url || seen.has(img.url)) return false;
+                seen.add(img.url);
+                return true;
+              });
+              const colsClass =
+                uniqueThumbs.length <= 2
+                  ? 'grid-cols-2 max-w-xs'
+                  : uniqueThumbs.length === 3
+                  ? 'grid-cols-3'
+                  : 'grid-cols-4';
+              return (
+                <div className={`grid ${colsClass} gap-3 pt-2`}>
+                  {uniqueThumbs.map((img, i) => (
+                    <button
+                      key={`${img.url}-${i}`}
+                      type="button"
+                      onClick={() => setSelectedImage(img.url)}
+                      className={`relative h-20 sm:h-24 rounded-xl overflow-hidden border-2 transition-all duration-300 cursor-pointer bg-white/50 dark:bg-[#161210] p-1 flex items-center justify-center group ${
+                        selectedImage === img.url
+                          ? 'border-[#B08D57] shadow-lg ring-2 ring-[#B08D57]/40 scale-105'
+                          : 'border-[#B08D57]/25 dark:border-[#B08D57]/30 opacity-70 hover:opacity-100 hover:border-[#B08D57]/60'
+                      }`}
+                    >
+                      <img
+                        src={img.url}
+                        alt={img.label}
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <span className="absolute bottom-1 inset-x-0 text-[9px] font-display uppercase tracking-wider text-center bg-black/70 text-[#FDFBF7] py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {img.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           {/* ======================================================== */}
@@ -390,10 +410,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
             </div>
 
             {/* SIZE SELECTOR WITH BOTTLE SILHOUETTES */}
-            <div className="space-y-3">
-              <span className="font-display text-xs tracking-widest uppercase text-[#14110F] dark:text-[#FDFBF7]">
-                {isArabic ? 'الحجم والتركيز' : 'Select Volume'}
-              </span>
+            <div>
               <SizeSelector
                 variants={perfume.variants}
                 selectedVariantId={selectedVariantId}

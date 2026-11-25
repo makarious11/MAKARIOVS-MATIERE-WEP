@@ -8,9 +8,10 @@ import { usePathname } from 'next/navigation';
 
 interface ThemeToggleProps {
   variant?: 'floating' | 'header';
+  darkSurface?: boolean;
 }
 
-export const ThemeToggle: React.FC<ThemeToggleProps> = ({ variant = 'floating' }) => {
+export const ThemeToggle: React.FC<ThemeToggleProps> = ({ variant = 'floating', darkSurface = false }) => {
   const { theme, toggleTheme, initTheme, isMounted } = useThemeStore();
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
@@ -30,8 +31,13 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ variant = 'floating' }
   if (variant === 'header') {
     return (
       <button
+        type="button"
         onClick={toggleTheme}
-        className="p-2 rounded-full transition-all duration-300 relative group cursor-pointer text-[#B08D57] hover:text-[#DFCA9B] hover:bg-[#B08D57]/10"
+        className={`p-2 rounded-full transition-colors duration-200 relative group cursor-pointer ${
+          darkSurface
+            ? 'text-[#DFCA9B] hover:text-[#FDFBF7] hover:bg-white/10'
+            : 'text-[#6B1D2F] dark:text-[#C8A97A] hover:text-[#14110F] dark:hover:text-[#FDFBF7] hover:bg-[#B08D57]/15'
+        }`}
         aria-label={isDark ? 'Switch to Day Mode' : 'Switch to Night Mode'}
         title={isDark ? (isArabic ? 'تفعيل الوضع النهاري' : 'Switch to Day Mode') : (isArabic ? 'تفعيل الوضع الليلي' : 'Switch to Night Mode')}
       >
@@ -42,9 +48,9 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ variant = 'floating' }
               initial={{ rotate: -90, opacity: 0, scale: 0.6 }}
               animate={{ rotate: 0, opacity: 1, scale: 1 }}
               exit={{ rotate: 90, opacity: 0, scale: 0.6 }}
-              transition={{ duration: 0.25 }}
+              transition={{ duration: 0.2 }}
             >
-              <Sun size={17} strokeWidth={1.5} className="text-[#C8A97A]" />
+              <Sun size={17} strokeWidth={1.6} className="text-[#DFCA9B]" />
             </motion.div>
           ) : (
             <motion.div
@@ -52,9 +58,9 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ variant = 'floating' }
               initial={{ rotate: 90, opacity: 0, scale: 0.6 }}
               animate={{ rotate: 0, opacity: 1, scale: 1 }}
               exit={{ rotate: -90, opacity: 0, scale: 0.6 }}
-              transition={{ duration: 0.25 }}
+              transition={{ duration: 0.2 }}
             >
-              <Moon size={17} strokeWidth={1.5} className="text-[#14110F] dark:text-[#C8A97A]" />
+              <Moon size={17} strokeWidth={1.6} className={darkSurface ? 'text-[#DFCA9B]' : 'text-[#14110F] dark:text-[#C8A97A]'} />
             </motion.div>
           )}
         </AnimatePresence>

@@ -151,13 +151,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ isArabic = false }) =>
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.3 }}
             style={{
-              fontFamily: isArabic ? "'Noto Naskh Arabic', serif" : "'Cormorant Garamond', 'Playfair Display', serif",
-              fontSize: 'clamp(80px, 14vw, 180px)',
-              lineHeight: 0.9,
-              color: 'transparent',
-              WebkitTextStroke: '1.5px rgba(176,141,87,0.65)',
-              letterSpacing: isArabic ? '0.04em' : '0.15em',
-              fontWeight: 300,
+              fontFamily: isArabic ? "'Noto Naskh Arabic', 'Cairo', serif" : "'Cormorant Garamond', 'Playfair Display', serif",
+              fontSize: 'clamp(72px, 13vw, 175px)',
+              lineHeight: isArabic ? 1.1 : 0.9,
+              color: isArabic ? 'rgba(176,141,87,0.34)' : 'transparent',
+              WebkitTextStroke: isArabic ? 'none' : '1.5px rgba(176,141,87,0.65)',
+              letterSpacing: isArabic ? '0.02em' : '0.15em',
+              fontWeight: isArabic ? 500 : 300,
               textTransform: 'uppercase',
             }}
           >
@@ -170,7 +170,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ isArabic = false }) =>
           style={{ x: bottleX, y: bottleY }}
           animate={{ y: [-5, 6, -5] }}
           transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-          className="relative z-20 w-72 md:w-96 lg:w-[420px] aspect-[3/4] flex items-center justify-center"
+          className="relative z-20 w-72 sm:w-80 md:w-96 lg:w-[420px] min-h-[390px] sm:min-h-[470px] flex items-center justify-center py-6"
         >
           {/* Arch-shaped warm dark pedestal frame */}
           <div
@@ -251,14 +251,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ isArabic = false }) =>
               </div>
 
               {/* Maison Heritage Line */}
-              <div className="mt-5 sm:mt-6 flex flex-col items-center space-y-1">
-                <span className="font-display text-[11px] sm:text-xs tracking-[0.35em] uppercase text-[#B08D57] font-semibold">
+              <div className="mt-4 sm:mt-5 flex flex-col items-center space-y-1 px-2">
+                <span className="font-display text-[11px] sm:text-xs tracking-[0.2em] uppercase text-[#B08D57] font-semibold">
                   {isArabic ? 'دار العطور الفاخرة' : 'MAISON DE PARFUM'}
                 </span>
-                <div className="flex items-center gap-2 text-[9px] sm:text-[10px] tracking-[0.3em] uppercase text-[#FDFBF7]/70 font-light">
-                  <span>LE CAIRE</span>
+                <div className="flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase text-[#FDFBF7]/75 font-light">
+                  <span>{isArabic ? 'القاهرة' : 'LE CAIRE'}</span>
                   <span className="w-1 h-1 rounded-full bg-[#B08D57]" />
-                  <span>PARIS</span>
+                  <span>{isArabic ? 'باريس' : 'PARIS'}</span>
                 </div>
               </div>
             </div>

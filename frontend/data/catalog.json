@@ -555,11 +555,11 @@
       }
     ],
     "images": {
-      "hero": "/images/products/packaging-mockup.jpg",
-      "bottle": "/images/products/packaging-mockup.jpg",
+      "hero": "/images/products/coffret-decouverte-box.jpg",
+      "bottle": "/images/products/coffret-decouverte-box.jpg",
       "box": "/images/products/packaging-mockup.jpg",
       "lifestyle": "/images/brand/NEW_brand-identity.png",
-      "texture": "/images/brand/NEW_brand-identity.png"
+      "texture": "/images/brand/brand-identity.jpg"
     },
     "reviews": [
       {
@@ -973,9 +973,9 @@
     "category_slug": "brume",
     "product_type": "mist",
     "name_en": "Brume Botanique d’Alexandrie — Body Splash & Mist",
-    "name_ar": "رذاذ الإسكندرية النباتي — بدي اسبلاش ومعطر شعر",
+    "name_ar": "رذاذ الإسكندرية النباتي — عطر الجسم والشعر",
     "tagline_en": "Refreshing fine mist body splash & hair veil with Mediterranean neroli and sheer white musk",
-    "tagline_ar": "بدي اسبلاش ومعطر شعر أرستقراطي بنفحات زهر البرتقال والنيرولي والمسك الأبيض النقي",
+    "tagline_ar": "رذاذ عطري أرستقراطي للجسم والشعر بنفحات زهر البرتقال والنيرولي والمسك الأبيض النقي",
     "story_en": "Engineered for full-body immersion and hair conditioning. Cold-infused with Mediterranean neroli blossoms, zesty green bergamot, aloe vera hydration, and airy silk musks. A featherweight, alcohol-tempered mist that surrounds the wearer in an aura of crisp coastal majesty.",
     "story_ar": "صُمم خصيصاً لرذاذ الجسم والشعر ليمنحك هالة من الانتعاش الأرستقراطي الراقي. يمزج بين زهر البرتقال المتوسطي ونيرولي الإسكندرية والبرغموت المنعش مع ماء الصبار المرطب والمسك الحريري، ليدوم شذاه طوال اليوم دون أن يثقل الشعر أو يجفف البشرة.",
     "family": "floral",
@@ -1042,11 +1042,11 @@
       }
     ],
     "images": {
-      "hero": "/images/products/la-fleur-du-nil-bottle.jpg",
-      "bottle": "/images/products/la-fleur-du-nil-bottle.jpg",
+      "hero": "/images/products/brume-botanique-bottle.jpg",
+      "bottle": "/images/products/brume-botanique-bottle.jpg",
       "box": "/images/products/packaging-mockup.jpg",
       "lifestyle": "/images/brand/NEW_brand-identity.png",
-      "texture": "/images/brand/NEW_brand-identity.png"
+      "texture": "/images/brand/brand-identity.jpg"
     },
     "reviews": [
       {

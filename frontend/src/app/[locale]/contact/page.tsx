@@ -36,25 +36,25 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#FDFBF7] dark:bg-[#0D0A08] text-[#14110F] dark:text-[#FDFBF7] pt-32 pb-24 transition-colors duration-300">
+    <div className="relative min-h-screen bg-[#FDFBF7] dark:bg-[#0D0A08] text-[#14110F] dark:text-[#FDFBF7] pt-32 pb-24 transition-colors duration-200">
       <BotanicalPattern opacity={0.04} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-xl mx-auto mb-16 space-y-2">
-          <span className="font-display text-xs tracking-widest3 uppercase text-[#B08D57] dark:text-[#DFCA9B]">
+          <span className="font-display text-xs tracking-widest3 uppercase text-[#B08D57] dark:text-[#DFCA9B] transition-colors duration-200">
             {isArabic ? 'الكونسيرج الخاص والاستفسارات' : 'Private Concierge & Inquiries'}
           </span>
-          <h1 className="font-display text-3xl sm:text-5xl uppercase tracking-widest text-[#14110F] dark:text-[#FDFBF7]">
+          <h1 className="font-display text-3xl sm:text-5xl uppercase tracking-widest text-[#14110F] dark:text-[#FDFBF7] transition-colors duration-200">
             {isArabic ? 'تواصل مع الأتيليه' : 'Contact The Atelier'}
           </h1>
-          <p className="font-script text-xl text-[#8C6E3D] dark:text-[#DFCA9B] italic">
+          <p className="font-script text-xl text-[#8C6E3D] dark:text-[#DFCA9B] italic transition-colors duration-200">
             {isArabic ? 'مراسلة خاصة مع الخيميائي وصانع العطور' : 'Correspond with the Master Alchemist'}
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           {/* Left Column: Form */}
-          <div className="lg:col-span-7 p-8 sm:p-10 rounded-3xl bg-[#F1EADA]/60 dark:bg-[#161210] border border-[#B08D57]/40 shadow-sm transition-colors">
+          <div className="lg:col-span-7 p-8 sm:p-10 rounded-3xl bg-[#F1EADA]/60 dark:bg-[#161210] border border-[#B08D57]/40 shadow-sm transition-colors duration-200">
             {submitted ? (
               <div className="py-12 flex flex-col items-center text-center space-y-6">
                 <WaxSeal size={80} animateStamp />
@@ -100,8 +100,9 @@ export default function ContactPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="patron@domain.com"
-                      className="w-full p-3.5 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/30 text-xs font-body focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57]"
+                      placeholder="name@lvenus.com"
+                      dir="ltr"
+                      className="w-full p-3.5 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/30 text-xs font-body focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57] transition-colors duration-200"
                     />
                   </div>
                 </div>
@@ -115,8 +116,9 @@ export default function ContactPage() {
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+20 100 000 0000"
-                      className="w-full p-3.5 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/30 text-xs font-body focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57]"
+                      placeholder="0121 059 3766"
+                      dir="ltr"
+                      className="w-full p-3.5 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/30 text-xs font-body focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57] transition-colors duration-200"
                     />
                   </div>
 
@@ -203,8 +205,23 @@ export default function ContactPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                  <Phone size={16} className="text-[#8C6E3D] dark:text-[#B08D57] flex-shrink-0" />
+                  <a
+                    href="https://wa.me/201210593766"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    dir="ltr"
+                    className="hover:text-[#6B1D2F] dark:hover:text-[#DFCA9B] transition-colors font-medium ltr-isolate"
+                  >
+                    +20 121 059 3766
+                  </a>
+                </div>
+
+                <div className="flex items-center gap-3">
                   <Mail size={16} className="text-[#8C6E3D] dark:text-[#B08D57] flex-shrink-0" />
-                  <span>concierge@makariovs.com</span>
+                  <a href="mailto:concierge@lvenus.com" dir="ltr" className="hover:text-[#6B1D2F] dark:hover:text-[#DFCA9B] transition-colors">
+                    concierge@lvenus.com
+                  </a>
                 </div>
               </div>
             </div>

@@ -8,6 +8,7 @@ import {
   LIP_GLOSS_SHADES,
   LipGloss3DBottle,
 } from '@/components/lipgloss/LipGloss3DBottle';
+import { Price } from '@/components/ui/Price';
 
 interface LipGlossHomeFeatureProps {
   isArabic?: boolean;
@@ -46,10 +47,19 @@ export const LipGlossHomeFeature: React.FC<LipGlossHomeFeatureProps> = ({
 
           <div className="space-y-3">
             <h2 className="font-display text-3xl sm:text-5xl uppercase tracking-wide text-[#2B171D] dark:text-[#FDFBF7] font-light">
-              THE SHADE{' '}
-              <span className="font-script lowercase text-4xl sm:text-6xl text-[#B67583] dark:text-[#E8A5B2] block sm:inline">
-                collection
-              </span>
+              {isArabic ? (
+                <>
+                  مجموعة الظلال{' '}
+                  <span className="text-[#B67583] dark:text-[#E8A5B2]">الملكية</span>
+                </>
+              ) : (
+                <>
+                  THE SHADE{' '}
+                  <span className="font-script lowercase text-4xl sm:text-6xl text-[#B67583] dark:text-[#E8A5B2] block sm:inline">
+                    collection
+                  </span>
+                </>
+              )}
             </h2>
             <p className="font-script text-xl sm:text-2xl text-[#8C4A5A] dark:text-[#DFCA9B] italic">
               {isArabic
@@ -118,7 +128,7 @@ export const LipGlossHomeFeature: React.FC<LipGlossHomeFeatureProps> = ({
             </Link>
 
             <span className="font-display text-lg font-semibold text-[#8C4A5A] dark:text-[#DFCA9B]">
-              750 EGP
+              <Price amount={750} />
             </span>
           </div>
         </div>

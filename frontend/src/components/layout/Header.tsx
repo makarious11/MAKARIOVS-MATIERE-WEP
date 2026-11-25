@@ -31,6 +31,10 @@ export const Header: React.FC = () => {
   if (isAdminRoute(pathname)) return null;
 
   const isArabic = pathname ? pathname.startsWith('/ar') : false;
+  // Only pages with a full-bleed dark hero banner use light transparent chrome before scrolling
+  const hasDarkHeroTop =
+    !pathname || pathname === '/' || pathname === '/ar' || pathname === '/shop' || pathname === '/ar/shop';
+  const useLightChrome = !isScrolled && hasDarkHeroTop;
 
   const changeLanguage = (newLocale: 'en' | 'ar') => {
     try {
@@ -62,79 +66,92 @@ export const Header: React.FC = () => {
 
   const navLinks = [
     { href: isArabic ? '/ar/shop' : '/shop', label: isArabic ? 'الإبداعات' : 'Créations' },
-    { href: isArabic ? '/ar/lip-gloss' : '/lip-gloss', label: isArabic ? 'ليب غلوس كوتور' : 'Lip Gloss' },
+    { href: isArabic ? '/ar/lip-gloss' : '/lip-gloss', label: isArabic ? 'كوتور الشفاه' : 'Lip Gloss' },
     { href: isArabic ? '/ar/story' : '/story', label: isArabic ? 'عالم الدار' : 'La Maison' },
-    { href: isArabic ? '/ar/contact' : '/contact', label: isArabic ? 'المشغل والتواصل' : 'Atelier & Contact' },
+    { href: isArabic ? '/ar/contact' : '/contact', label: isArabic ? 'تواصل معنا' : 'Atelier & Contact' },
   ];
 
   return (
     <>
       <header
-        className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          isScrolled
-            ? 'ios-glass border-b border-[#B08D57]/20 py-3 text-[#14110F] dark:text-[#FDFBF7]'
-            : 'bg-transparent py-4 sm:py-6 text-[#FDFBF7]'
+        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          useLightChrome
+            ? 'bg-gradient-to-b from-[#0D0A08]/80 via-[#0D0A08]/40 to-transparent py-3.5 sm:py-5 text-[#FDFBF7]'
+            : 'bg-[#FDFBF7]/95 dark:bg-[#0D0A08]/95 backdrop-blur-xl border-b border-[#B08D57]/25 shadow-[0_6px_28px_rgba(20,17,15,0.08)] py-2.5 sm:py-3 text-[#14110F] dark:text-[#FDFBF7]'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-2">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex md:grid md:grid-cols-12 items-center justify-between gap-2">
             {/* Left Nav (Desktop) / Hamburger (Mobile) */}
-            <div className="flex items-center gap-6 shrink-0 relative z-20">
+            <div className="flex items-center gap-3 md:col-span-5 shrink-0 relative z-20">
               <button
                 onClick={toggleMenu}
-                className={`md:hidden p-2 -ml-2 transition-colors cursor-pointer ${
-                  isScrolled ? 'text-[#14110F] dark:text-[#FDFBF7] hover:text-[#6B1D2F]' : 'text-[#FDFBF7] hover:text-[#B08D57]'
+                className={`md:hidden p-2 -ms-1 transition-colors cursor-pointer ${
+                  useLightChrome
+                    ? 'text-[#FDFBF7] hover:text-[#B08D57]'
+                    : 'text-[#14110F] dark:text-[#FDFBF7] hover:text-[#6B1D2F]'
                 }`}
                 aria-label="Toggle navigation menu"
               >
                 {isMenuOpen ? <X size={22} strokeWidth={1.25} /> : <Menu size={22} strokeWidth={1.25} />}
               </button>
 
-              <nav className="hidden md:flex items-center gap-8">
+              <nav className={`hidden md:flex items-center ${isArabic ? 'gap-5 lg:gap-6' : 'gap-5 lg:gap-7'}`}>
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`font-display uppercase text-xs tracking-[0.25em] transition-colors duration-300 relative group py-1 ${
-                      isScrolled
-                        ? 'text-[#14110F] dark:text-[#FDFBF7]/90 hover:text-[#6B1D2F] dark:hover:text-[#DFCA9B]'
-                        : 'text-[#FDFBF7]/80 hover:text-[#FDFBF7]'
+                    className={`font-display text-xs whitespace-nowrap transition-colors duration-200 relative group py-1 ${
+                      isArabic ? 'tracking-[0.02em] font-medium text-[13px]' : 'uppercase tracking-[0.2em]'
+                    } ${
+                      useLightChrome
+                        ? 'text-[#FDFBF7]/90 hover:text-[#DFCA9B]'
+                        : 'text-[#14110F]/85 dark:text-[#FDFBF7]/90 hover:text-[#6B1D2F] dark:hover:text-[#DFCA9B]'
                     }`}
                   >
                     {link.label}
-                    <span className="absolute -bottom-0.5 left-0 w-0 h-[1px] bg-[#B08D57] transition-all duration-300 group-hover:w-full" />
+                    <span className="absolute -bottom-0.5 inset-x-0 w-0 h-[1px] bg-[#B08D57] transition-all duration-300 group-hover:w-full" />
                   </Link>
                 ))}
               </nav>
             </div>
 
             {/* Center Brand Wordmark with VINUS_LOSO icon */}
-            <div className="flex-1 flex flex-col items-center justify-center text-center px-1 sm:px-4 min-w-0 relative z-10 pointer-events-auto">
+            <div className="flex-1 md:flex-none md:col-span-4 flex flex-col items-center justify-center text-center px-1 sm:px-2 min-w-0 relative z-10 pointer-events-auto">
               <Link href={isArabic ? '/ar' : '/'} className="group inline-flex flex-col items-center max-w-full">
-                <div className="flex items-center gap-2.5 sm:gap-3.5 mb-0.5">
+                <div className="flex items-center justify-center gap-2 sm:gap-2.5 mb-0.5">
                   <img
                     src="/brand/VINUS_LOSO.svg"
                     alt="L'VENUS"
-                    className={`w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 object-contain transition-all duration-500 drop-shadow-sm ${
-                      isScrolled ? 'brightness-0 dark:brightness-0 dark:invert' : 'brightness-0 invert'
+                    className={`w-7 h-7 sm:w-9 sm:h-9 object-contain shrink-0 transition-all duration-300 drop-shadow-sm ${
+                      useLightChrome ? 'brightness-0 invert' : 'brightness-0 dark:brightness-0 dark:invert'
                     }`}
                   />
                   <span
-                    className={`uppercase text-xl sm:text-2xl md:text-3xl tracking-[0.22em] sm:tracking-[0.28em] font-serif transition-colors truncate max-w-full font-normal ${
-                      isScrolled
-                        ? 'text-[#14110F] dark:text-[#FDFBF7] group-hover:text-[#6B1D2F] dark:group-hover:text-[#DFCA9B]'
-                        : 'text-[#FDFBF7] group-hover:text-[#B08D57]'
+                    className={`uppercase text-lg sm:text-xl md:text-2xl whitespace-nowrap transition-colors font-normal ${
+                      isArabic ? 'tracking-[0.02em]' : 'tracking-[0.22em] sm:tracking-[0.26em]'
+                    } ${
+                      useLightChrome
+                        ? 'text-[#FDFBF7] group-hover:text-[#B08D57]'
+                        : 'text-[#14110F] dark:text-[#FDFBF7] group-hover:text-[#6B1D2F] dark:group-hover:text-[#DFCA9B]'
                     }`}
-                    style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+                    style={{
+                      fontFamily: isArabic
+                        ? "'Noto Naskh Arabic', 'Cairo', serif"
+                        : "'Cormorant Garamond', Georgia, serif",
+                    }}
                   >
                     {isArabic ? 'لوفينوس' : "L’VENUS"}
                   </span>
                 </div>
                 <span
-                  className={`text-[9px] sm:text-[11px] md:text-[12px] italic tracking-wider transition-colors block ${
-                    isScrolled ? 'text-[#8C6E3D] dark:text-[#DFCA9B]' : 'text-[#FDFBF7]/80'
+                  className={`hidden sm:block text-[10px] md:text-[11px] whitespace-nowrap leading-tight transition-colors ${
+                    useLightChrome ? 'text-[#DFCA9B]' : 'text-[#8C6E3D] dark:text-[#DFCA9B]'
                   }`}
-                  style={{ fontFamily: isArabic ? "'Amiri', serif" : "'Pinyon Script', cursive" }}
+                  style={{
+                    fontFamily: isArabic ? "'Amiri', 'Cairo', serif" : "'Pinyon Script', cursive",
+                    fontStyle: isArabic ? 'normal' : 'italic',
+                  }}
                 >
                   {isArabic ? 'خلاصة العطر — بإتقان مكاريوس' : 'Extrait de Parfum — Crafted by Makarious'}
                 </span>
@@ -142,41 +159,42 @@ export const Header: React.FC = () => {
             </div>
 
             {/* Right Action Icons: Currency, Theme, Language, Account, Cart */}
-            <div className="flex items-center gap-2 sm:gap-4 md:gap-5 shrink-0 relative z-20">
+            <div className="flex items-center justify-end gap-1.5 sm:gap-3 md:col-span-3 shrink-0 relative z-20">
               {/* Currency Selector */}
               <div className="hidden sm:block">
-                <CurrencySelector />
+                <CurrencySelector darkSurface={useLightChrome} />
               </div>
 
               {/* Theme Toggle (Header Mode) */}
-              <ThemeToggle variant="header" />
+              <ThemeToggle variant="header" darkSurface={useLightChrome} />
 
-              {/* Language Switcher (Desktop) */}
+              {/* Language Switcher — always visible & clearly labeled (AR / EN) */}
               <button
                 type="button"
                 onClick={() => changeLanguage(isArabic ? 'en' : 'ar')}
-                className={`hidden md:flex items-center gap-1.5 text-xs font-display uppercase tracking-widest transition-colors py-1 cursor-pointer ${
-                  isScrolled
-                    ? 'text-[#14110F]/70 dark:text-[#FDFBF7]/80 hover:text-[#6B1D2F] dark:hover:text-[#DFCA9B]'
-                    : 'text-[#FDFBF7]/80 hover:text-[#B08D57]'
+                className={`flex items-center gap-1 px-2 py-1 rounded-full border text-[11px] font-display uppercase tracking-wider transition-colors cursor-pointer shrink-0 ${
+                  useLightChrome
+                    ? 'border-[#B08D57]/50 text-[#FDFBF7] hover:border-[#DFCA9B] hover:text-[#DFCA9B]'
+                    : 'border-[#B08D57]/35 text-[#14110F] dark:text-[#FDFBF7] hover:border-[#6B1D2F] dark:hover:border-[#DFCA9B]'
                 }`}
-                aria-label="Switch language"
+                aria-label={isArabic ? 'Switch to English' : 'التحويل للعربية'}
+                title={isArabic ? 'Switch to English' : 'التحويل للعربية'}
               >
-                <Globe size={14} strokeWidth={1.25} />
-                <span>{isArabic ? 'EN' : 'العربية'}</span>
+                <Globe size={13} strokeWidth={1.5} className="text-[#B08D57]" />
+                <span className="font-semibold">{isArabic ? 'EN' : 'AR'}</span>
               </button>
 
               {/* Account Link */}
               <Link
                 href={isArabic ? '/ar/account' : '/account'}
                 className={`p-1.5 transition-colors cursor-pointer ${
-                  isScrolled
-                    ? 'text-[#14110F]/80 dark:text-[#FDFBF7]/80 hover:text-[#6B1D2F] dark:hover:text-[#DFCA9B]'
-                    : 'text-[#FDFBF7]/80 hover:text-[#B08D57]'
+                  useLightChrome
+                    ? 'text-[#FDFBF7]/90 hover:text-[#DFCA9B]'
+                    : 'text-[#14110F]/85 dark:text-[#FDFBF7]/85 hover:text-[#6B1D2F] dark:hover:text-[#DFCA9B]'
                 }`}
                 aria-label="Customer account"
               >
-                <User size={19} strokeWidth={1.25} />
+                <User size={19} strokeWidth={1.35} />
               </Link>
 
               {/* Cart Drawer Trigger */}
@@ -184,13 +202,13 @@ export const Header: React.FC = () => {
                 type="button"
                 onClick={openCart}
                 className={`relative p-1.5 transition-colors cursor-pointer ${
-                  isScrolled
-                    ? 'text-[#14110F]/80 dark:text-[#FDFBF7]/80 hover:text-[#6B1D2F] dark:hover:text-[#DFCA9B]'
-                    : 'text-[#FDFBF7]/80 hover:text-[#B08D57]'
+                  useLightChrome
+                    ? 'text-[#FDFBF7]/90 hover:text-[#DFCA9B]'
+                    : 'text-[#14110F]/85 dark:text-[#FDFBF7]/85 hover:text-[#6B1D2F] dark:hover:text-[#DFCA9B]'
                 }`}
                 aria-label={`View cart with ${itemCount} items`}
               >
-                <ShoppingBag size={19} strokeWidth={1.25} />
+                <ShoppingBag size={19} strokeWidth={1.35} />
                 {itemCount > 0 && (
                   <motion.span
                     initial={{ scale: 0 }}
@@ -205,18 +223,6 @@ export const Header: React.FC = () => {
           </div>
         </div>
       </header>
-
-      {/* Floating Bottom Language Switcher */}
-      <div className={`fixed bottom-6 ${isArabic ? 'left-6' : 'right-6'} z-40 hidden sm:block`}>
-        <button
-          type="button"
-          onClick={() => changeLanguage(isArabic ? 'en' : 'ar')}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-full ios-glass-pill-dark hover:bg-[#6B1D2F] text-[#FDFBF7] border border-[#B08D57]/40 shadow-2xl transition-all duration-300 cursor-pointer group text-xs font-display tracking-widest uppercase hover:scale-105"
-        >
-          <Globe size={14} className="text-[#B08D57] group-hover:text-[#FDFBF7] transition-colors" />
-          <span>{isArabic ? 'Switch to English' : 'التحويل للعربية'}</span>
-        </button>
-      </div>
 
       {/* Fullscreen Mobile Luxury Salon Menu */}
       <AnimatePresence>
@@ -309,8 +315,8 @@ export const Header: React.FC = () => {
                 >
                   {isArabic ? 'English' : 'العربية'}
                 </button>
-                <CurrencySelector />
-                <ThemeToggle variant="header" />
+                <CurrencySelector darkSurface />
+                <ThemeToggle variant="header" darkSurface />
               </div>
 
               <WaxSeal size={48} rotating />

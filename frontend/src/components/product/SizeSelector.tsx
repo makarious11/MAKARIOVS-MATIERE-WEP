@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Price } from '@/components/ui/Price';
 
 interface VariantItem {
   id: number;
@@ -37,8 +38,8 @@ export const SizeSelector: React.FC<SizeSelectorProps> = ({
         <span className="font-display text-xs tracking-widest uppercase text-[#14110F] dark:text-[#FDFBF7]">
           {isArabic ? 'الحجم والتركيز' : 'Size Selection'}
         </span>
-        <span className="font-body text-xs text-[#8C6E3D] dark:text-[#DFCA9B]/80 italic">
-          Extrait de Parfum (32–38%)
+        <span dir="ltr" className="ltr-isolate font-body text-xs text-[#8C6E3D] dark:text-[#DFCA9B]/80 italic">
+          Extrait de Parfum (32%–38%)
         </span>
       </div>
 
@@ -119,12 +120,12 @@ export const SizeSelector: React.FC<SizeSelectorProps> = ({
               </div>
 
               {/* Volume & Price */}
-              <div className={items.length === 1 ? 'text-right' : 'text-center'}>
-                <span className="font-display text-sm uppercase tracking-wider block font-semibold">
+              <div className={items.length === 1 ? 'text-end' : 'text-center'}>
+                <span dir="ltr" className="ltr-isolate font-display text-sm uppercase tracking-wider block font-semibold">
                   {v.size_ml} ml
                 </span>
                 <span className={`text-[11px] block mt-0.5 ${isSelected ? 'text-[#B08D57]' : 'text-[#8C6E3D]'}`}>
-                  {v.price.toLocaleString()} EGP
+                  <Price amount={v.price} />
                 </span>
               </div>
             </button>

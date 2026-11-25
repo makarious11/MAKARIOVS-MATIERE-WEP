@@ -4,7 +4,6 @@ import { ReactNode, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Lenis from 'lenis';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { WhatsAppConcierge } from '@/components/ui/WhatsAppConcierge';
 import { isAdminRoute } from '@/lib/constants';
 
@@ -52,17 +51,27 @@ export default function Providers({ children }: { children: ReactNode }) {
       requestAnimationFrame(raf);
     }
 
-    requestAnimationFrame(raf);
+    const rafId = requestAnimationFrame(raf);
 
     return () => {
+      cancelAnimationFrame(rafId);
       lenis.destroy();
+      lenisRef.current = null;
     };
   }, []);
+
+  // Reset scroll position to the top on route navigation (prevents product/detail pages opening mid-scroll under Lenis)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(0, { immediate: true });
+    }
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {!onAdmin && <ThemeToggle variant="floating" />}
       {!onAdmin && <WhatsAppConcierge />}
     </QueryClientProvider>
   );

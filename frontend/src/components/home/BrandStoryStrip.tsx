@@ -27,16 +27,16 @@ export const BrandStoryStrip: React.FC<BrandStoryStripProps> = ({ isArabic = fal
             className="hidden lg:flex lg:col-span-2 flex-col items-center justify-center border-r border-[#B08D57]/20 pr-6"
           >
             <div className="relative w-full aspect-[1/3] max-h-[380px] flex flex-col items-center justify-between">
-              <span className="text-[10px] tracking-[0.3em] uppercase text-[#B08D57] -rotate-90 origin-center whitespace-nowrap mb-6">
-                EST. LE CAIRE · PARIS
+              <span className="text-[10px] tracking-[0.2em] uppercase text-[#B08D57] -rotate-90 origin-center whitespace-nowrap mb-6">
+                {isArabic ? 'تأسست في القاهرة · باريس' : 'EST. LE CAIRE · PARIS'}
               </span>
               <img
                 src="/brand/Side_profile.svg"
                 alt="Classical Torso & Laurel Accent"
                 className="w-28 h-auto object-contain opacity-75 dark:opacity-90 dark:brightness-0 dark:invert drop-shadow-sm select-none"
               />
-              <span className="text-[10px] tracking-[0.3em] uppercase text-[#B08D57] rotate-90 origin-center whitespace-nowrap mt-6">
-                L’VENUS MAISON
+              <span className="text-[10px] tracking-[0.2em] uppercase text-[#B08D57] rotate-90 origin-center whitespace-nowrap mt-6">
+                {isArabic ? 'دار لوفينوس' : 'L’VENUS MAISON'}
               </span>
             </div>
           </motion.div>
@@ -76,26 +76,35 @@ export const BrandStoryStrip: React.FC<BrandStoryStripProps> = ({ isArabic = fal
                 fontSize: isArabic ? '18px' : '17px',
               }}
             >
-              <p className="relative">
-                {/* Drop-cap L */}
-                <span
-                  className={`${isArabic ? 'float-right pl-4 pr-1' : 'float-left pr-4 pl-1'} text-6xl sm:text-7xl leading-none text-[#6B1D2F] select-none`}
-                  style={{
-                    fontFamily: isArabic ? "'Noto Naskh Arabic', serif" : "'Cormorant Garamond', serif",
-                    fontWeight: 300,
-                  }}
-                >
-                  {isArabic ? 'لـ' : 'L'}
-                </span>
-                {isArabic
-                  ? '’VENUS (لوفينوس) تأسست برؤية معمارية وفنية صاغها مكاريوس، تجمع بين نقاء المواد الطبيعية النادرة وأصالة الحرفة اليدوية في القاهرة، مع دقة وأناقة التصميم الباريسي الرفيع. نؤمن بأن الفخامة الحقيقية ليست مجرد موضة عابرة، بل هي فن ابتكار قطع راقية تخلّد حضور صاحبها وترافقه عبر الزمن.'
-                  : '’VENUS is an independent luxury Maison founded in Cairo by Makarious. Built upon a profound dialogue between the rare natural flora of Egypt and the exacting architectural discipline of Parisian luxury houses, we craft objects of timeless presence, unhurried distinction, and uncompromising beauty.'}
-              </p>
+              {isArabic ? (
+                <p>
+                  دار لوفينوس (L’VENUS) تأسست برؤية معمارية وفنية صاغها مكاريوس، تجمع بين نقاء المواد الطبيعية النادرة وأصالة الحرفة اليدوية في القاهرة، مع دقة وأناقة التصميم الباريسي الرفيع. نؤمن بأن الفخامة الحقيقية ليست مجرد موضة عابرة، بل هي فن ابتكار قطع راقية تخلّد حضور صاحبها وترافقه عبر الزمن.
+                </p>
+              ) : (
+                <p className="relative">
+                  {/* Drop-cap L (Latin typography only — omitted in Arabic cursive script) */}
+                  <span
+                    className="float-left pr-4 pl-1 text-6xl sm:text-7xl leading-none text-[#6B1D2F] select-none"
+                    style={{
+                      fontFamily: "'Cormorant Garamond', serif",
+                      fontWeight: 300,
+                    }}
+                  >
+                    L
+                  </span>
+                  ’VENUS is an independent luxury Maison founded in Cairo by Makarious. Built upon a profound dialogue between the rare natural flora of Egypt and the exacting architectural discipline of Parisian luxury houses, we craft objects of timeless presence, unhurried distinction, and uncompromising beauty.
+                </p>
+              )}
 
               <p>
-                {isArabic
-                  ? 'نستهل مسيرة الدار بفصلها الأول: مجموعة عطور استثنائية (Extraits de Parfum) تصاغ يدوياً في دفعات محدودة بتركيز نقي فائق الثبات يصل إلى ٣٨٪، لتتوج كل زجاجة بغطاء من خشب الجوز المحفور يدوياً وتُختم بشمع الختم العنابي الإمبراطوري لوجه فينوس، كرمز أصيل للإتقان والتميز.'
-                  : 'We open the Maison’s lineage with Chapter I: a curated collection of rare Extraits de Parfum. Each creation is formulated with an exceptional concentration of 32% to 38% pure oil, hand-poured in numbered editions, crowned with hand-carved walnut, and sealed with our signature burgundy wax relief of Venus.'}
+                {isArabic ? (
+                  <>
+                    نستهل مسيرة الدار بفصلها الأول: مجموعة عطور استثنائية بتركيز نقي فائق الثبات يتراوح بين{' '}
+                    <span dir="ltr" className="ltr-isolate font-semibold">32%–38%</span>، تصاغ يدوياً في دفعات محدودة لتتوج كل زجاجة بغطاء من خشب الجوز المحفور يدوياً وتُختم بشمع الختم العنابي الإمبراطوري لوجه فينوس.
+                  </>
+                ) : (
+                  'We open the Maison’s lineage with Chapter I: a curated collection of rare Extraits de Parfum. Each creation is formulated with an exceptional concentration of 32% to 38% pure oil, hand-poured in numbered editions, crowned with hand-carved walnut, and sealed with our signature burgundy wax relief of Venus.'
+                )}
               </p>
             </div>
 
@@ -136,9 +145,11 @@ export const BrandStoryStrip: React.FC<BrandStoryStripProps> = ({ isArabic = fal
               <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-[#14110F]/85 via-[#14110F]/40 to-transparent flex items-center justify-between text-[#FDFBF7]">
                 <div>
                   <span className="font-display text-xs tracking-widest uppercase block text-[#B08D57]">
-                    L’VENUS COFFRET
+                    {isArabic ? 'صندوق لوفينوس الفاخر' : 'L’VENUS COFFRET'}
                   </span>
-                  <span className="text-sm font-serif">Hand-Crafted Presentation Box</span>
+                  <span className="text-sm font-serif">
+                    {isArabic ? 'علبة تقديم مصنوعة يدوياً' : 'Hand-Crafted Presentation Box'}
+                  </span>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-[#6B1D2F] border border-[#B08D57]/40 flex items-center justify-center">
                   <img src="/brand/VINUS_LOSO.svg" alt="" className="w-5 h-5 brightness-0 invert" />

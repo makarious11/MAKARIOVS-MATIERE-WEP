@@ -58,16 +58,16 @@ export default function StoryPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           {/* Vertical Classical Torso & Laurel Accent */}
           <div className="hidden lg:flex lg:col-span-3 flex-col items-center justify-center p-6 border-r border-[#B08D57]/20 sticky top-36">
-            <span className="text-[10px] tracking-[0.3em] uppercase text-[#B08D57] -rotate-90 origin-center whitespace-nowrap mb-8 font-medium">
-              MAISON L’VENUS ARCHIVE
+            <span className="text-[10px] tracking-[0.2em] uppercase text-[#B08D57] -rotate-90 origin-center whitespace-nowrap mb-8 font-medium">
+              {isArabic ? 'أرشيف دار لوفينوس' : 'MAISON L’VENUS ARCHIVE'}
             </span>
             <img
               src="/brand/Side_profile.svg"
               alt="Venus Torso & Laurel"
               className="w-32 h-auto object-contain opacity-85 dark:opacity-90 dark:brightness-0 dark:invert select-none my-4 drop-shadow-sm"
             />
-            <span className="text-[10px] tracking-[0.3em] uppercase text-[#B08D57] rotate-90 origin-center whitespace-nowrap mt-8 font-medium">
-              LE CAIRE · PARIS
+            <span className="text-[10px] tracking-[0.2em] uppercase text-[#B08D57] rotate-90 origin-center whitespace-nowrap mt-8 font-medium">
+              {isArabic ? 'القاهرة · باريس' : 'LE CAIRE · PARIS'}
             </span>
             <div className="mt-10">
               <WaxSeal size={52} rotating />
@@ -78,16 +78,13 @@ export default function StoryPage() {
           <div
             className="lg:col-span-9 prose prose-lg max-w-none text-[#3A332D] dark:text-[#C8C0B7] leading-relaxed space-y-7"
             style={{
-              fontFamily: isArabic ? "'Amiri', serif" : "'EB Garamond', Georgia, serif",
-              fontSize: isArabic ? '19px' : '18px',
+              fontFamily: isArabic ? "'Cairo', 'Amiri', serif" : "'EB Garamond', Georgia, serif",
+              fontSize: isArabic ? '18px' : '18px',
             }}
           >
             {isArabic ? (
               <>
                 <p className="text-xl sm:text-2xl font-light text-[#14110F] dark:text-[#FDFBF7] leading-relaxed">
-                  <span className="float-right text-7xl font-display font-light text-[#6B1D2F] dark:text-[#DFCA9B] leading-none pl-4 pt-1">
-                    لـ
-                  </span>
                   لوفينوس (L’VENUS) لم تولد كعلامة تجارية عابرة، ولم تُبنَ على أرقام أو صيحات مؤقتة. بدأت الدار في القاهرة كحلم فني عميق صاغه مكاريوس، يسعى لإحياء المعنى الحقيقي للفخامة المستدامة: الجمال الخالد، وندرة المكونات، وتقدير الحرفة اليدوية التي تتوارثها الأجيال.
                 </p>
 

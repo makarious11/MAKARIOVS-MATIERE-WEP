@@ -14,7 +14,7 @@ export const CraftSection: React.FC<CraftSectionProps> = ({ isArabic = false }) 
   const stats = [
     {
       icon: Droplets,
-      number: '32–38%',
+      number: '32%–38%',
       title: isArabic ? 'تركيز إكستري دو بارفان' : 'Extrait Concentration',
       description: isArabic
         ? 'أعلى نسبة تركيز زيوت عطرية نقية، تدوم لأيام مع فوحان نقي وهادئ لا يزول.'
@@ -79,7 +79,8 @@ export const CraftSection: React.FC<CraftSectionProps> = ({ isArabic = false }) 
                   <Icon size={24} strokeWidth={1.25} />
                 </div>
                 <span
-                  className="text-4xl sm:text-5xl font-light text-[#14110F] dark:text-[#FDFBF7]"
+                  dir="ltr"
+                  className="ltr-isolate text-4xl sm:text-5xl font-light text-[#14110F] dark:text-[#FDFBF7]"
                   style={{ fontFamily: "'Cormorant Garamond', serif" }}
                 >
                   {stat.number}
@@ -102,7 +103,7 @@ export const CraftSection: React.FC<CraftSectionProps> = ({ isArabic = false }) 
         </div>
 
         {/* Visual Atelier Banner */}
-        <div className="relative rounded-3xl overflow-hidden aspect-[16/7] border border-[#B08D57]/30 shadow-2xl bg-[#F1EADA]">
+        <div className="relative rounded-3xl overflow-hidden min-h-[260px] sm:aspect-[16/7] border border-[#B08D57]/30 shadow-2xl bg-[#F1EADA]">
           <Image
             src="/images/brand/NEW_brand-identity.png"
             alt="L’VENUS Atelier in Le Caire and Paris"
@@ -110,10 +111,10 @@ export const CraftSection: React.FC<CraftSectionProps> = ({ isArabic = false }) 
             className="object-cover"
             sizes="(max-width: 1280px) 100vw, 1200px"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#14110F]/85 via-[#14110F]/30 to-transparent flex items-end p-8 sm:p-12 text-[#FDFBF7]">
+          <div className="relative sm:absolute inset-0 min-h-[260px] bg-gradient-to-t from-[#14110F]/90 via-[#14110F]/40 to-transparent flex items-end p-6 sm:p-12 text-[#FDFBF7]">
             <div className="max-w-xl space-y-2">
-              <span className="font-display text-xs tracking-widest uppercase text-[#B08D57] font-semibold">
-                ATELIER LE CAIRE · PARIS
+              <span className="font-display text-xs tracking-widest uppercase text-[#B08D57] font-semibold block">
+                {isArabic ? 'أتيليه القاهرة · باريس' : 'ATELIER LE CAIRE · PARIS'}
               </span>
               <p className="text-xl sm:text-2xl font-serif font-light">
                 {isArabic

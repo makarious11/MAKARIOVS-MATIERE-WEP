@@ -24,7 +24,9 @@ export default function ReturnsPolicyPage() {
           </p>
           <h3 className="font-display uppercase text-sm text-[#14110F]">Damaged or Defective Consignments</h3>
           <p>
-            In the rare event of transit damage, notify our concierge within 48 hours of delivery at concierge@makariovs.com with photographic documentation. A courier will be dispatched to exchange your vessel immediately.
+            In the rare event of transit damage, notify our concierge within 48 hours of delivery at{' '}
+            <a href="mailto:concierge@lvenus.com" className="underline text-[#6B1D2F]">concierge@lvenus.com</a>{' '}
+            with photographic documentation. A courier will be dispatched to exchange your vessel immediately.
           </p>
         </div>
 

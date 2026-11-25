@@ -2940,7 +2940,7 @@ export default function AdminDashboardPage() {
                         <option value="perfume">عطر (Perfume)</option>
                         <option value="lipgloss">ليب غلوس وكوتور الشفاه (Lip Gloss)</option>
                         <option value="skincare">عناية بالبشرة والشفاه (Skincare)</option>
-                        <option value="mist">بدي اسبلاش ومعطر شعر (Body Splash & Mist)</option>
+                        <option value="mist">رذاذ الجسم والشعر (Body Splash & Mist)</option>
                         <option value="coffret">صندوق استكشاف وهدايا (Discovery Coffret)</option>
                       </select>
                     </div>

@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { ArrowUpRight, Sparkles, Layers, ArrowRight } from 'lucide-react';
 import { MAISON_CATEGORIES, getStoredCategories, MaisonCategory } from '@/lib/catalog';
 import { BotanicalPattern } from '@/components/ui/BotanicalPattern';
+import { Price } from '@/components/ui/Price';
 
 interface CollectionSectionProps {
   isArabic?: boolean;
@@ -47,7 +48,7 @@ export const CollectionSection: React.FC<CollectionSectionProps> = ({ isArabic =
       slug: 'parfums',
       title_ar: 'العطور الاستثنائية',
       title_en: 'Haute Parfumerie',
-      chapter_ar: 'الفصل الأول · مستخلصات عطرية بتركيز فائق',
+      chapter_ar: 'الفصل الأول · خلاصات عطرية بتركيز فائق',
       chapter_en: 'Chapitre I · Rare Extraits de Parfum (32% - 38%)',
       subtitle_ar: 'عطور الدار الأيقونية الأربعة بنقاء الزيوت الملكية',
       subtitle_en: 'The Sovereign Quad — Cairo Savoir-Faire with Parisian Mastery',
@@ -58,8 +59,7 @@ export const CollectionSection: React.FC<CollectionSectionProps> = ({ isArabic =
       image: '/images/products/la-fleur-du-nil-bottle.jpg',
       badge_ar: '٤ عطور نادرة',
       badge_en: '4 Signature Extraits',
-      price_from_ar: 'ابتداءً من ٢,٤٠٠ ج.م',
-      price_from_en: 'From 2,400 EGP',
+      price_from: 2350,
       highlights_ar: ['عود نقي', 'عنبر الإسكندرية', 'زهر النيل', 'خشب الأقصر'],
       highlights_en: ['Imperial Oud', 'Alexandrian Amber', 'Nile Bloom', 'Luxor Woods'],
       action_ar: 'استعراض العطور الفاخرة',
@@ -69,24 +69,23 @@ export const CollectionSection: React.FC<CollectionSectionProps> = ({ isArabic =
     {
       id: 'soin',
       slug: 'soin',
-      title_ar: 'كوتور الشفاه (Lip Gloss)',
+      title_ar: 'كوتور الشفاه',
       title_en: 'Élixir Lèvres & Lip Gloss',
-      chapter_ar: 'الفصل الثاني · إصدار الكوتور الجديد ثلاثي الأبعاد',
+      chapter_ar: 'الفصل الثاني · إكسير الشفاه الساتاني وتجربة ٣D',
       chapter_en: 'Chapitre II · Haute Cosmétique & 3D Interactive Studio',
-      subtitle_ar: 'مجموعة الظلال الثلاثية — بريق زجاجي غير لزج وترطيب عميق',
+      subtitle_ar: 'مجموعة الظلال الثلاثية — بريق زجاجي ناعم وترطيب عميق',
       subtitle_en: 'The Iconic 3-Shade Collection in Pure Crystal Flacons',
       description_ar:
-        'ثلاث درجات حصرية ومميزة (نود خوخي دافئ، وردي كوتور، وتوتي ملكي) في قوارير كريستالية فاخرة بلمعان زجاجي ممتلئ، مع إمكانية تجربة الزجاجة 3D التفاعلية.',
+        'ثلاث درجات حصرية مميزة (نود خوخي دافئ، وردي كوتور، وتوتي ملكي) في قوارير كريستالية فاخرة بلمعان زجاجي ممتلئ، مع تجربة استوديو الشفاه التفاعلي.',
       description_en:
         'Three bespoke shades (01 Nude Peach, 02 Dusty Rose, 03 Deep Berry) formulated with cold-distilled Damask petals and desert date seed oil.',
-      image: '/images/lipgloss/shade-collection-trio.jpg',
-      badge_ar: '٣ درجات كوتور + طقم ثلاثي',
+      image: '/images/lipgloss/lipgloss-trio-portrait.jpg',
+      badge_ar: '٣ درجات + طقم ثلاثي',
       badge_en: '3 Couture Shades + Trio Set',
-      price_from_ar: '٧٥٠ ج.م / للدرجة · ١,٨٥٠ ج.م / للطقم',
-      price_from_en: '750 EGP / shade · 1,850 EGP / Trio',
-      highlights_ar: ['٠١ نود خوخي', '٠٢ وردي كوتور', '٠٣ توتي ملكي', 'طقم ثلاثي'],
+      price_from: 750,
+      highlights_ar: ['٠١ نود خوخي', '٠٢ وردي كوتور', '٠٣ توتي ملكي', 'الطقم الثلاثي'],
       highlights_en: ['01 Nude Peach', '02 Dusty Rose', '03 Deep Berry', 'Trio Set'],
-      action_ar: 'دخول استوديو الشفاه 3D',
+      action_ar: 'دخول استوديو الشفاه التفاعلي',
       action_en: 'Enter 3D Lip Studio',
       href: isArabic ? '/ar/lip-gloss' : '/lip-gloss',
       isNew: true,
@@ -99,7 +98,7 @@ export const CollectionSection: React.FC<CollectionSectionProps> = ({ isArabic =
     {
       id: 'brume',
       slug: 'brume',
-      title_ar: 'بدي اسبلاش ومعطر الجسم والشعر',
+      title_ar: 'رذاذ الجسم والشعر الفاخر',
       title_en: 'Brume & Body Splash',
       chapter_ar: 'الفصل الثالث · رذاذ عطري ناعم وفواح',
       chapter_en: 'Chapitre III · Fine Refreshing Mists & Hair Veils',
@@ -109,38 +108,36 @@ export const CollectionSection: React.FC<CollectionSectionProps> = ({ isArabic =
         'رذاذ خفيف فاخر صُمم ليغمر الجسم والشعر بهالة منعشة من زهر البرتقال ونسمات البحر الأبيض المتوسط والمسك الأبيض النقي.',
       description_en:
         'Delicate, long-wearing body and hair mists blended with neroli, Mediterranean sea breeze, and sheer white musks.',
-      image: '/images/products/la-fleur-du-nil-bottle.jpg',
+      image: '/images/products/brume-botanique-bottle.jpg',
       badge_ar: 'رذاذ الجسم والشعر',
       badge_en: 'Body & Hair Splashes',
-      price_from_ar: 'ابتداءً من ٩٥٠ ج.م',
-      price_from_en: 'From 950 EGP',
+      price_from: 950,
       highlights_ar: ['نيرولي سكندري', 'مسك أبيض', 'ترطيب خفيف', 'ثبات منعش'],
       highlights_en: ['Alexandrian Neroli', 'White Musk', 'Hydrating Mist', 'Long-Lasting'],
-      action_ar: 'استعراض بدي اسبلاش',
+      action_ar: 'استعراض رذاذ الجسم والشعر',
       action_en: 'Explore Body Splash',
       href: isArabic ? '/ar/shop?category=brume' : '/shop?category=brume',
     },
     {
       id: 'coffrets',
       slug: 'coffrets',
-      title_ar: 'صناديق الاستكشاف والبوكسات الفاخرة',
+      title_ar: 'صناديق الاستكشاف والهدايا',
       title_en: 'Discovery Coffrets & Sets',
-      chapter_ar: 'الفصل الرابع · مجموعات الهدايا والاستكشاف الفاخرة',
+      chapter_ar: 'الفصل الرابع · مجموعات الهدايا والاستكشاف الملكية',
       chapter_en: 'Chapitre IV · Curated Discovery Sets & Travel Chests',
       subtitle_ar: 'صناديق ورنيشية راقية تضم قوارير مصغرة من أندر إبداعات الدار',
       subtitle_en: 'Lacquered Presentation Chests & Miniature Discovery Coffrets',
       description_ar:
-        'صناديق فاخرة تضم قوارير مصغرة ومجموعات مختارة من خلاصة إبداعات الدار لتجربة لا تُنسى ولإهداء راقٍ يليق بأرقى المناسبات.',
+        'صناديق هدايا فاخرة تضم قوارير مصغرة ومجموعات مختارة من خلاصة إبداعات الدار لتجربة لا تُنسى ولإهداء راقٍ يليق بأرقى المناسبات.',
       description_en:
         'Lacquered presentation chests featuring miniature vials of our canonical extraits and bespoke artisanal botanicals.',
-      image: '/images/products/packaging-mockup.jpg',
+      image: '/images/products/coffret-decouverte-box.jpg',
       badge_ar: 'صناديق وهدايا ملكية',
       badge_en: 'Royal Gift Chests',
-      price_from_ar: 'ابتداءً من ١,٨٥٠ ج.م',
-      price_from_en: 'From 1,850 EGP',
+      price_from: 950,
       highlights_ar: ['صندوق هدايا فاخر', 'مجموعة الاستكشاف', 'قوارير مصغرة'],
       highlights_en: ['Luxury Gift Chest', 'Discovery Vials', 'Travel Coffret'],
-      action_ar: 'استعراض الصناديق الفاخرة',
+      action_ar: 'استعراض صناديق الهدايا',
       action_en: 'Explore Coffrets',
       href: isArabic ? '/ar/shop?category=coffrets' : '/shop?category=coffrets',
     },
@@ -185,7 +182,7 @@ export const CollectionSection: React.FC<CollectionSectionProps> = ({ isArabic =
               className="text-lg sm:text-xl text-[#B08D57]"
               style={{ fontFamily: isArabic ? "'Amiri', serif" : "'Pinyon Script', cursive" }}
             >
-              {isArabic ? 'عطور استثنائية · كوتور الشفاه 3D · بدي اسبلاش · صناديق فاخرة' : 'Haute Parfumerie · Lip Gloss 3D · Body Splash · Coffrets'}
+              {isArabic ? 'عطور استثنائية · كوتور الشفاه · رذاذ الجسم · مجموعات الهدايا' : 'Haute Parfumerie · Lip Gloss 3D · Body Splash · Coffrets'}
             </p>
             <span className="font-display text-[11px] tracking-[0.2em] uppercase text-[#FDFBF7]/50 block">
               {isArabic ? 'اختر الصنف للدخول في تفاصيل الأنواع والألوان' : 'Select a line to explore creations and formulas'}
@@ -218,16 +215,14 @@ export const CollectionSection: React.FC<CollectionSectionProps> = ({ isArabic =
                 )}
               </div>
 
-              {/* Arch Backdrop Image Area */}
-              <div className="relative w-full h-80 sm:h-96 flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#201815] to-[#14100E]">
-                <div className="absolute inset-x-8 bottom-0 h-[88%] bg-[#1A1412] rounded-t-[160px] border border-[#B08D57]/25 transition-transform duration-700 group-hover:scale-105" />
-
-                <div className="relative z-10 w-full h-full flex items-center justify-center p-6">
+              {/* Arch Backdrop Image Area — full portrait fit matching the arch frame */}
+              <div className="relative w-full h-80 sm:h-96 flex items-end justify-center overflow-hidden bg-gradient-to-b from-[#201815] to-[#14100E] px-8 pt-6">
+                <div className="relative z-10 w-full max-w-[300px] h-full rounded-t-[160px] overflow-hidden border border-b-0 border-[#B08D57]/30 bg-[#1A1412] shadow-2xl">
                   <Image
                     src={cat.image}
                     alt={isArabic ? cat.title_ar : cat.title_en}
                     fill
-                    className="object-contain p-6 drop-shadow-[0_20px_35px_rgba(0,0,0,0.5)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
+                    className="object-cover object-center transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </div>
@@ -290,7 +285,7 @@ export const CollectionSection: React.FC<CollectionSectionProps> = ({ isArabic =
                 {/* Actions Bar */}
                 <div className="pt-4 border-t border-[#B08D57]/20 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <span className="text-xs font-display text-[#DFCA9B] font-semibold">
-                    {isArabic ? cat.price_from_ar : cat.price_from_en}
+                    {isArabic ? 'ابتداءً من' : 'From'} <Price amount={cat.price_from} />
                   </span>
 
                   <Link

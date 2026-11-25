@@ -45,7 +45,7 @@ export const MAISON_CATEGORIES: MaisonCategory[] = [
       'Cellular botanical treatments and hydrating lip elixirs formulated with cold-distilled Alexandrian Damask rose, desert date seed oil, and botanical squalane.',
     description_ar:
       'علاجات نباتية حيوية للبشرة وإكسيرات مغذية للشفاه مدعومة بماء الورد السكندري المقطر على البارد وزيت بذور بلح الصحراء والمعادن الطبيعية النقية.',
-    image_url: '/images/products/packaging-mockup.jpg',
+    image_url: '/images/lipgloss/lipgloss-trio-portrait.jpg',
     is_active: true,
     sort_order: 2,
   },
@@ -53,14 +53,14 @@ export const MAISON_CATEGORIES: MaisonCategory[] = [
     id: 'cat-brume',
     slug: 'brume',
     name_en: 'Brume & Body Splash',
-    name_ar: 'بدي اسبلاش ورذاذ الشعر',
+    name_ar: 'رذاذ الجسم والشعر الفاخر',
     tagline_en: 'Chapitre III — Refreshing Fine Mists & Hair Veils',
     tagline_ar: 'الفصل الثالث — رذاذ عطري فاخر ومنعش للجسم والشعر',
     description_en:
       'Delicate, long-wearing body splashes and hair mists blended with neroli, Mediterranean sea breeze, and sheer white musks.',
     description_ar:
       'رذاذ خفيف فاخر للجسم والشعر بنفحات النيرولي وزهر البرتقال والمسك الحريري لانتعاش ملكي يدوم طوال اليوم.',
-    image_url: '/images/products/la-fleur-du-nil-bottle.jpg',
+    image_url: '/images/products/brume-botanique-bottle.jpg',
     is_active: true,
     sort_order: 3,
   },
@@ -68,14 +68,14 @@ export const MAISON_CATEGORIES: MaisonCategory[] = [
     id: 'cat-coffrets',
     slug: 'coffrets',
     name_en: 'Discovery Sets & Coffrets',
-    name_ar: 'صناديق الاستكشاف الفاخرة',
+    name_ar: 'صناديق الاستكشاف والهدايا',
     tagline_en: 'Chapitre IV — Curated Discovery Sets & Travel Chests',
-    tagline_ar: 'الفصل الرابع — مجموعات الهدايا والاستكشاف الفاخرة',
+    tagline_ar: 'الفصل الرابع — مجموعات الهدايا والاستكشاف الملكية',
     description_en:
       'Lacquered presentation chests featuring miniature vials of our canonical extraits and artisanal botanicals.',
     description_ar:
       'صناديق ورنيشية أنيقة تضم قوارير مصغرة من خلاصة إبداعات الدار لتجربة عطرية لا تُنسى.',
-    image_url: '/images/products/packaging-mockup.jpg',
+    image_url: '/images/products/coffret-decouverte-box.jpg',
     is_active: true,
     sort_order: 4,
   },
@@ -449,11 +449,11 @@ export const CANONICAL_PERFUMES: PerfumeData[] = [
       { id: 502, name_en: '100 ml Luxury Jar', name_ar: 'عبوة ١٠٠ مل فاخرة', size_ml: 100, price: 5800, compare_at_price: 6500, sku: 'LV-SK-100', stock: 12, is_default: false },
     ],
     images: {
-      hero: '/images/products/packaging-mockup.jpg',
-      bottle: '/images/products/packaging-mockup.jpg',
+      hero: '/images/products/coffret-decouverte-box.jpg',
+      bottle: '/images/products/coffret-decouverte-box.jpg',
       box: '/images/products/packaging-mockup.jpg',
       lifestyle: '/images/brand/NEW_brand-identity.png',
-      texture: '/images/brand/NEW_brand-identity.png',
+      texture: '/images/brand/brand-identity.jpg',
     },
     reviews: [
       {
@@ -507,11 +507,11 @@ export const CANONICAL_PERFUMES: PerfumeData[] = [
       { id: 601, name_en: 'Discovery Set (4 × 5 ml)', name_ar: 'صندوق الاستكشاف (٤ × ٥ مل)', size_ml: 20, price: 950, compare_at_price: 1300, sku: 'LV-BOX-4X5', stock: 50, is_default: true },
     ],
     images: {
-      hero: '/images/products/packaging-mockup.jpg',
-      bottle: '/images/products/packaging-mockup.jpg',
+      hero: '/images/products/coffret-decouverte-box.jpg',
+      bottle: '/images/products/coffret-decouverte-box.jpg',
       box: '/images/products/packaging-mockup.jpg',
       lifestyle: '/images/brand/NEW_brand-identity.png',
-      texture: '/images/brand/NEW_brand-identity.png',
+      texture: '/images/brand/brand-identity.jpg',
     },
     reviews: [
       {
@@ -801,9 +801,9 @@ export const CANONICAL_PERFUMES: PerfumeData[] = [
     category_slug: 'brume',
     product_type: 'mist',
     name_en: 'Brume Botanique d’Alexandrie — Body Splash & Mist',
-    name_ar: 'رذاذ الإسكندرية النباتي — بدي اسبلاش ومعطر شعر',
+    name_ar: 'رذاذ الإسكندرية النباتي — عطر الجسم والشعر',
     tagline_en: 'Refreshing fine mist body splash & hair veil with Mediterranean neroli and sheer white musk',
-    tagline_ar: 'بدي اسبلاش ومعطر شعر أرستقراطي بنفحات زهر البرتقال والنيرولي والمسك الأبيض النقي',
+    tagline_ar: 'رذاذ عطري أرستقراطي للجسم والشعر بنفحات زهر البرتقال والنيرولي والمسك الأبيض النقي',
     story_en:
       'Engineered for full-body immersion and hair conditioning. Cold-infused with Mediterranean neroli blossoms, zesty green bergamot, aloe vera hydration, and airy silk musks. A featherweight, alcohol-tempered mist that surrounds the wearer in an aura of crisp coastal majesty.',
     story_ar:
@@ -839,11 +839,11 @@ export const CANONICAL_PERFUMES: PerfumeData[] = [
       },
     ],
     images: {
-      hero: '/images/products/la-fleur-du-nil-bottle.jpg',
-      bottle: '/images/products/la-fleur-du-nil-bottle.jpg',
+      hero: '/images/products/brume-botanique-bottle.jpg',
+      bottle: '/images/products/brume-botanique-bottle.jpg',
       box: '/images/products/packaging-mockup.jpg',
       lifestyle: '/images/brand/NEW_brand-identity.png',
-      texture: '/images/brand/NEW_brand-identity.png',
+      texture: '/images/brand/brand-identity.jpg',
     },
     reviews: [
       {

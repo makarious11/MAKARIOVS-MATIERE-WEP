@@ -235,8 +235,19 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Bottom Bar: Copyright & Location */}
-        <div className="flex flex-col sm:flex-row items-center justify-between pt-10 text-xs text-[#FDFBF7]/45 gap-4">
-          <p>© {new Date().getFullYear()} L’VENUS Maison de Parfum. All rights reserved.</p>
+        <div className="flex flex-col sm:flex-row items-center justify-between pt-10 pb-8 sm:pb-2 text-xs text-[#FDFBF7]/50 gap-4">
+          <p>
+            {isArabic ? (
+              <>
+                <span dir="ltr" className="ltr-isolate">© {new Date().getFullYear()}</span>{' '}
+                دار لوفينوس للعطور الفاخرة. جميع الحقوق محفوظة.
+              </>
+            ) : (
+              <span dir="ltr" className="ltr-isolate">
+                © {new Date().getFullYear()} L’VENUS Maison de Parfum. All rights reserved.
+              </span>
+            )}
+          </p>
 
           <div className="flex items-center gap-6">
             <button

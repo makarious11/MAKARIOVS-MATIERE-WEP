@@ -35,6 +35,7 @@ import { useCartStore } from '@/store/cartStore';
 import { useUIStore } from '@/store/uiStore';
 import { StarRating } from '@/components/ui/StarRating';
 import { WaxSeal } from '@/components/ui/WaxSeal';
+import { Price } from '@/components/ui/Price';
 
 interface PageProps {
   params: Promise<{ locale?: string }>;
@@ -170,12 +171,12 @@ export default function LipGlossCatalogPage({ params }: PageProps) {
       {/* ──────────────────────────────────────────────────────────
           1. IMMERSIVE HAUTE COSMÉTIQUE HERO WITH 3D INTERACTIVE BOTTLE
       ────────────────────────────────────────────────────────── */}
-      <section className="relative min-h-[94vh] lg:min-h-screen flex items-center justify-center pt-24 pb-16 px-4 sm:px-8 overflow-hidden">
-        {/* Soft Couture Atmosphere Background */}
+      <section className="relative min-h-[94vh] lg:min-h-screen flex items-center justify-center pt-28 pb-16 px-4 sm:px-8 overflow-hidden bg-[#FAF2ED] dark:bg-[#130E10] transition-colors duration-300">
+        {/* Soft Couture Atmosphere Glow */}
         <div
-          className="absolute inset-0 -z-10 transition-colors duration-1000"
+          className="absolute inset-0 -z-10 transition-all duration-1000 opacity-70 dark:opacity-35"
           style={{
-            background: `radial-gradient(120% 100% at 50% 20%, ${activeShade.hex}22 0%, #FAF2ED 50%, #F5EAE4 100%)`,
+            background: `radial-gradient(120% 100% at 50% 20%, ${activeShade.hex}28 0%, transparent 72%)`,
           }}
         />
 
@@ -206,10 +207,19 @@ export default function LipGlossCatalogPage({ params }: PageProps) {
               className="space-y-3"
             >
               <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-light tracking-wide uppercase leading-tight text-[#2B171D] dark:text-[#FDFBF7]">
-                THE SHADE{' '}
-                <span className="font-script lowercase text-4xl sm:text-6xl lg:text-7xl text-[#B67583] dark:text-[#E8A5B2] block sm:inline">
-                  collection
-                </span>
+                {isArabic ? (
+                  <>
+                    مجموعة الظلال{' '}
+                    <span className="text-[#B67583] dark:text-[#E8A5B2]">الملكية</span>
+                  </>
+                ) : (
+                  <>
+                    THE SHADE{' '}
+                    <span className="font-script lowercase text-4xl sm:text-6xl lg:text-7xl text-[#B67583] dark:text-[#E8A5B2] block sm:inline">
+                      collection
+                    </span>
+                  </>
+                )}
               </h1>
               <p className="font-script text-lg sm:text-2xl text-[#8C4A5A] dark:text-[#DFCA9B] italic">
                 {isArabic
@@ -273,9 +283,11 @@ export default function LipGlossCatalogPage({ params }: PageProps) {
             <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-4">
               <div className="flex items-baseline gap-2">
                 <span className="font-display text-3xl font-semibold text-[#2B171D] dark:text-[#FDFBF7]">
-                  750 EGP
+                  <Price amount={750} />
                 </span>
-                <span className="text-xs text-stone-400 line-through">950 EGP</span>
+                <span className="text-xs text-stone-400 line-through">
+                  <Price amount={950} />
+                </span>
               </div>
 
               <button
@@ -384,7 +396,7 @@ export default function LipGlossCatalogPage({ params }: PageProps) {
                   {/* Quick Acquire Button */}
                   <div className="pt-6 mt-4 border-t border-[#B08D57]/15 flex items-center justify-between gap-3">
                     <span className="font-display text-lg font-semibold text-[#2B171D] dark:text-[#FDFBF7]">
-                      750 EGP
+                      <Price amount={750} />
                     </span>
                     <button
                       type="button"
@@ -423,11 +435,17 @@ export default function LipGlossCatalogPage({ params }: PageProps) {
                 <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-4">
                   <div className="flex items-baseline gap-2">
                     <span className="font-display text-3xl font-bold text-[#8C4A5A] dark:text-[#DFCA9B]">
-                      1,850 EGP
+                      <Price amount={1850} />
                     </span>
-                    <span className="text-sm text-stone-500 line-through">2,250 EGP</span>
+                    <span className="text-sm text-stone-500 line-through">
+                      <Price amount={2250} />
+                    </span>
                     <span className="text-xs font-display px-2 py-0.5 rounded bg-green-800/10 text-green-700 dark:text-green-300">
-                      {isArabic ? 'وفر ٤٠٠ جنيه' : 'Save 400 EGP'}
+                      {isArabic ? (
+                        <>وفر <Price amount={400} /></>
+                      ) : (
+                        <>Save <Price amount={400} /></>
+                      )}
                     </span>
                   </div>
 
@@ -648,7 +666,7 @@ export default function LipGlossCatalogPage({ params }: PageProps) {
           {/* Add Review Form */}
           <div className="p-6 sm:p-8 rounded-3xl bg-white/80 dark:bg-stone-900/80 border border-[#B08D57]/30 space-y-4">
             <h4 className="font-display text-sm uppercase tracking-wider text-[#2B171D] dark:text-[#FDFBF7]">
-              {isArabic ? 'شاركينا انطباعك عن ليب غلوس لوفينوس' : 'Record Your Experience'}
+              {isArabic ? 'شاركينا انطباعك عن إكسير شفاه لوفينوس' : 'Record Your Experience'}
             </h4>
 
             {reviewSubmitted ? (
@@ -704,7 +722,7 @@ export default function LipGlossCatalogPage({ params }: PageProps) {
                   rows={3}
                   placeholder={
                     isArabic
-                      ? 'شاركينا رأيك في لمعان وثبات وترطيب الليب غلوس...'
+                      ? 'شاركينا رأيك في لمعان وثبات وترطيب إكسير الشفاه...'
                       : 'Share your impressions of the texture, radiance, and comfort...'
                   }
                   value={reviewComment}
@@ -731,7 +749,7 @@ export default function LipGlossCatalogPage({ params }: PageProps) {
       <section className="py-20 px-4 text-center border-t border-[#B08D57]/20 bg-[#F6ECE7] dark:bg-[#171013]">
         <div className="max-w-xl mx-auto space-y-4">
           <span className="font-display text-xs tracking-widest3 uppercase text-[#B08D57]">
-            Maison L’VENUS Haute Cosmétique
+            {isArabic ? 'كوتور الشفاه — دار لوفينوس' : 'Maison L’VENUS Haute Cosmétique'}
           </span>
           <h3 className="font-display text-2xl sm:text-3xl uppercase tracking-widest text-[#2B171D] dark:text-[#FDFBF7]">
             {isArabic ? 'استكشفي عطور الدار الملكية' : 'Harmonize With Haute Parfumerie'}

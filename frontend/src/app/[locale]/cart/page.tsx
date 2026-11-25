@@ -9,6 +9,7 @@ import { useCartStore } from '@/store/cartStore';
 import { WaxSeal } from '@/components/ui/WaxSeal';
 import { NumberRoll } from '@/components/ui/NumberRoll';
 import { BotanicalPattern } from '@/components/ui/BotanicalPattern';
+import { Price } from '@/components/ui/Price';
 
 export default function CartPage() {
   const pathname = usePathname();
@@ -108,11 +109,13 @@ export default function CartPage() {
                       {isArabic ? item.product.name_ar || item.product.name_en : item.product.name_en}
                     </h3>
                     <p className="font-script text-sm text-[#8C6E3D] dark:text-[#DFCA9B] italic">
-                      Extrait de Parfum — {item.variant.size_ml} ml
+                      <span dir="ltr" className="ltr-isolate">
+                        Extrait de Parfum — {item.variant.size_ml} ml
+                      </span>
                     </p>
-                    <p className="font-display text-sm font-semibold text-[#14110F] dark:text-[#FDFBF7] mt-1">
-                      <NumberRoll value={item.variant.price * item.quantity} />
-                    </p>
+                    <div className="font-display text-sm font-semibold text-[#14110F] dark:text-[#FDFBF7] mt-1">
+                      <Price amount={item.variant.price * item.quantity} />
+                    </div>
                   </div>
                 </div>
 

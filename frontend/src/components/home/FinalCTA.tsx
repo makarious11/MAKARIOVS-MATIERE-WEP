@@ -29,7 +29,7 @@ export const FinalCTA: React.FC<FinalCTAProps> = ({ isArabic = false }) => {
               {isArabic ? 'اختر عطرك النادر' : 'Acquire Your Extrait'}
             </h2>
             <p className="font-script text-xl sm:text-3xl text-[#6B1D2F] dark:text-[#DFCA9B] italic tracking-wide">
-              Extrait de Parfum — Crafted by Makarious
+              {isArabic ? 'خلاصة العطر — بإتقان مكاريوس' : 'Extrait de Parfum — Crafted by Makarious'}
             </p>
             <p className="font-body text-xs sm:text-sm text-[#3A332D]/80 dark:text-[#DFCA9B]/85 max-w-md mx-auto pt-2 leading-relaxed">
               {isArabic
@@ -46,8 +46,8 @@ export const FinalCTA: React.FC<FinalCTAProps> = ({ isArabic = false }) => {
             <ArrowRight size={14} className={isArabic ? 'rotate-180' : ''} />
           </Link>
 
-          <span className="text-[10px] tracking-[0.25em] uppercase text-[#3A332D]/60 dark:text-[#DFCA9B]/60 font-sans">
-            MAISON DE PARFUM — LE CAIRE · PARIS
+          <span className="text-[10px] tracking-[0.2em] uppercase text-[#3A332D]/60 dark:text-[#DFCA9B]/60 font-sans block">
+            {isArabic ? 'دار العطور الفاخرة — القاهرة · باريس' : 'MAISON DE PARFUM — LE CAIRE · PARIS'}
           </span>
         </div>
       </div>
