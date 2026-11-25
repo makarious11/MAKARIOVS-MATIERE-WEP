@@ -17,6 +17,9 @@ import {
   Truck,
   Tag,
   ShieldCheck,
+  Shield,
+  ShieldAlert,
+  Ban,
   Search,
   Plus,
   ArrowUpRight,
@@ -83,48 +86,101 @@ export default function AdminDashboardPage() {
   const pathname = usePathname();
   const isArabic = Boolean(pathname?.startsWith('/ar'));
 
-  // Security Authentication Gate
+  // Security Authentication Gate (Cryptographic HttpOnly Session via Server)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [authChecking, setAuthChecking] = useState<boolean>(true);
+  const [authSubmitting, setAuthSubmitting] = useState<boolean>(false);
   const [passcode, setPasscode] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Security Center State
+  const [securityData, setSecurityData] = useState<{
+    configured: boolean;
+    hasCustomRotatedKey: boolean;
+    sessionEpoch: number;
+    blockedIps: string[];
+    activeLockouts: Array<{ ip: string; attempts: number; unlocksInMinutes: number }>;
+    logs: Array<{
+      id: string;
+      timestamp: string;
+      severity: 'info' | 'warning' | 'critical';
+      event: string;
+      ip: string;
+      path: string;
+      details: string;
+    }>;
+  } | null>(null);
+  const [currentKeyInput, setCurrentKeyInput] = useState('');
+  const [newKeyInput, setNewKeyInput] = useState('');
+  const [confirmNewKeyInput, setConfirmNewKeyInput] = useState('');
+  const [keyChangeMsg, setKeyChangeMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const [ipBlockInput, setIpBlockInput] = useState('');
+
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const session = sessionStorage.getItem('lv_admin_session');
-      if (session === 'authorized') {
-        setIsAuthenticated(true);
-      }
-    }
+    let active = true;
+    fetch('/api/v1/admin/auth')
+      .then((res) => res.json())
+      .then((json) => {
+        if (!active) return;
+        setIsAuthenticated(Boolean(json?.authenticated));
+      })
+      .catch(() => {
+        if (active) setIsAuthenticated(false);
+      })
+      .finally(() => {
+        if (active) setAuthChecking(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanPass = passcode.trim();
-    if (
-      cleanPass === 'lvenus2026' ||
-      cleanPass === 'password' ||
-      cleanPass === 'admin' ||
-      cleanPass === 'makarious'
-    ) {
-      sessionStorage.setItem('lv_admin_session', 'authorized');
-      setIsAuthenticated(true);
-      setErrorMsg('');
-    } else {
+    if (authSubmitting) return;
+    setAuthSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      const res = await fetch('/api/v1/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passcode: passcode.trim() }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data?.authenticated) {
+        setErrorMsg(
+          isArabic
+            ? data?.message_ar || data?.message || 'مفتاح المرور غير صحيح — الوصول مقيد لمديري دار لوفينوس فقط'
+            : data?.message || 'Invalid Master Key — Access strictly restricted to Maison Directors'
+        );
+      } else {
+        setIsAuthenticated(true);
+        setPasscode('');
+        setErrorMsg('');
+      }
+    } catch {
       setErrorMsg(
-        isArabic
-          ? 'مفتاح المرور غير صحيح — الوصول مقيد لمديري دار لوفينوس فقط'
-          : 'Invalid Master Key — Access strictly restricted to Maison Directors'
+        isArabic ? 'تعذر الاتصال بخادم التحقق الأمني' : 'Could not verify credentials with security server'
       );
+    } finally {
+      setAuthSubmitting(false);
     }
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('lv_admin_session');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/v1/admin/auth', { method: 'DELETE' });
+    } catch {}
     setIsAuthenticated(false);
     setPasscode('');
+    setSecurityData(null);
   };
 
-  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'orders' | 'patrons' | 'coupons' | 'overview'>('products');
+  const [activeTab, setActiveTab] = useState<
+    'products' | 'categories' | 'orders' | 'patrons' | 'coupons' | 'overview' | 'security'
+  >('products');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -235,9 +291,132 @@ export default function AdminDashboardPage() {
     description: '',
   });
 
+  const refreshSecurity = async () => {
+    if (!isAuthenticated) return;
+    try {
+      const res = await fetch('/api/v1/admin/security');
+      if (res.ok) {
+        const json = await res.json();
+        if (json?.data) setSecurityData(json.data);
+      }
+    } catch {}
+  };
+
+  // Security Center Handlers
+  const handleRotateMasterKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setKeyChangeMsg(null);
+    if (newKeyInput !== confirmNewKeyInput) {
+      setKeyChangeMsg({
+        type: 'err',
+        text: isArabic ? 'مفتاح المرور الجديد غير متطابق مع التأكيد' : 'New Master Key confirmation does not match',
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/v1/admin/security', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'rotate_key',
+          currentKey: currentKeyInput,
+          newKey: newKeyInput,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setKeyChangeMsg({
+          type: 'err',
+          text: json?.message || (isArabic ? 'فشل تحديث مفتاح المرور' : 'Failed to rotate key'),
+        });
+        return;
+      }
+      if (json?.data) setSecurityData(json.data);
+      setCurrentKeyInput('');
+      setNewKeyInput('');
+      setConfirmNewKeyInput('');
+      setKeyChangeMsg({
+        type: 'ok',
+        text: isArabic
+          ? 'تم تغيير مفتاح المرور وتشفيره بنجاح، وإغلاق كافة الجلسات الأخرى!'
+          : 'Master Key updated with salted scrypt hash and all other sessions invalidated!',
+      });
+    } catch {
+      setKeyChangeMsg({ type: 'err', text: isArabic ? 'تعذر الاتصال بالسيرفر' : 'Server connection error' });
+    }
+  };
+
+  const handleRevokeAllSessions = async () => {
+    if (
+      !confirm(
+        isArabic
+          ? 'هل تريد إنهاء كافة جلسات الدخول المفتوحة على الأجهزة الأخرى فوراً؟'
+          : 'Immediately invalidate all other active Admin sessions?'
+      )
+    )
+      return;
+
+    try {
+      const res = await fetch('/api/v1/admin/security', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'revoke_sessions' }),
+      });
+      const json = await res.json();
+      if (json?.data) setSecurityData(json.data);
+    } catch {}
+  };
+
+  const handleBlockIp = async (ipAddr: string) => {
+    const clean = ipAddr.trim();
+    if (!clean) return;
+    try {
+      const res = await fetch('/api/v1/admin/security', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'block_ip', ip: clean }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        alert(json?.message || 'Failed to block IP');
+        return;
+      }
+      if (json?.data) setSecurityData(json.data);
+      setIpBlockInput('');
+    } catch {}
+  };
+
+  const handleUnblockIp = async (ipAddr: string) => {
+    try {
+      const res = await fetch('/api/v1/admin/security', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'unblock_ip', ip: ipAddr }),
+      });
+      const json = await res.json();
+      if (json?.data) setSecurityData(json.data);
+    } catch {}
+  };
+
+  const handleClearSecurityLogs = async () => {
+    if (!confirm(isArabic ? 'هل تريد مسح سجل التنبيهات السابق؟' : 'Clear archived security logs?')) return;
+    try {
+      const res = await fetch('/api/v1/admin/security', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clear_logs' }),
+      });
+      const json = await res.json();
+      if (json?.data) setSecurityData(json.data);
+    } catch {}
+  };
+
   const refreshCoupons = async () => {
+    if (!isAuthenticated) return;
     try {
       const res = await fetch('/api/v1/coupons');
+      if (!res.ok) return;
       const json = await res.json();
       if (json?.data) {
         setCoupons(json.data);
@@ -276,8 +455,17 @@ export default function AdminDashboardPage() {
                 ? item.items
                 : item.items?.map((i: any) => `${i.name_en || 'Flacon'} (${i.size_ml || 50}ml)`).join(', ')
               : 'Bespoke Flacon',
+            // Preserve rich order detail fields for the order detail panel
+            items_detail: item.items_detail || (Array.isArray(item.items) ? item.items : undefined),
+            map_url: item.map_url || item.customer?.map_url || undefined,
+            map_coords: item.map_coords || item.customer?.map_coords || undefined,
             total: item.total || item.pricing?.total || 3600,
-            payment: item.payment || (item.payment?.method === 'cod' ? 'COD' : 'Paymob Card'),
+            payment:
+              typeof item.payment === 'object' && item.payment
+                ? item.payment.method === 'cod'
+                  ? 'COD'
+                  : 'Paymob Card'
+                : item.payment || 'COD',
             status: item.status || 'Processing',
             date:
               item.date ||
@@ -293,16 +481,31 @@ export default function AdminDashboardPage() {
 
           const rawClient = typeof window !== 'undefined' ? localStorage.getItem('lv_client_orders') : null;
           const currentClient: MaisonOrder[] = rawClient ? JSON.parse(rawClient) : [];
-          const existingIds = new Set(currentClient.map((o) => o.id));
-          let hasNew = false;
+          const existingMap = new Map(currentClient.map((o) => [o.id, o]));
+          let hasChanges = false;
           for (const ao of apiOrders) {
-            if (!existingIds.has(ao.id)) {
+            if (!existingMap.has(ao.id)) {
               currentClient.unshift(ao);
-              existingIds.add(ao.id);
-              hasNew = true;
+              existingMap.set(ao.id, ao);
+              hasChanges = true;
+            } else {
+              // Merge rich fields into existing entry without overwriting local status overrides
+              const existing = existingMap.get(ao.id)!;
+              if (ao.items_detail && !existing.items_detail) {
+                existing.items_detail = ao.items_detail;
+                hasChanges = true;
+              }
+              if (ao.map_url && !existing.map_url) {
+                existing.map_url = ao.map_url;
+                hasChanges = true;
+              }
+              if (ao.map_coords && !existing.map_coords) {
+                existing.map_coords = ao.map_coords;
+                hasChanges = true;
+              }
             }
           }
-          if (hasNew && typeof window !== 'undefined') {
+          if (hasChanges && typeof window !== 'undefined') {
             localStorage.setItem('lv_client_orders', JSON.stringify(currentClient));
           }
         }
@@ -313,16 +516,19 @@ export default function AdminDashboardPage() {
     setOrders(getStoredOrders());
   };
 
-  // Load persisted catalog & orders on mount + real-time listener
+  // Load persisted catalog & orders ONLY after server authentication succeeds
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     setProducts(getStoredCatalog(true));
     setCategories(getStoredCategories());
     refreshOrders();
     refreshCoupons();
+    refreshSecurity();
 
-    // 1. Sync server catalog to keep products & reviews updated
-    fetch('/api/v1/products')
-      .then((res) => res.json())
+    // 1. Sync server catalog (including hidden items for admin control)
+    fetch('/api/v1/products?include_hidden=true')
+      .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
         if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
           setProducts(json.data);
@@ -331,9 +537,9 @@ export default function AdminDashboardPage() {
       })
       .catch(() => {});
 
-    // 2. Sync patrons from server database so registered patrons never disappear
+    // 2. Sync patrons from authenticated server endpoint
     fetch('/api/v1/patrons')
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
         if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
           localStorage.setItem('lv_patrons_registry', JSON.stringify(json.data));
@@ -381,7 +587,7 @@ export default function AdminDashboardPage() {
       window.removeEventListener('lv_order_created', handleLocalNewOrder);
       window.removeEventListener('lv_catalog_updated', handleCatalogUpdate);
     };
-  }, [soundEnabled]);
+  }, [isAuthenticated, soundEnabled]);
 
   // Open Modal for New Product
   const openAddProductModal = () => {
@@ -982,7 +1188,18 @@ export default function AdminDashboardPage() {
     return sum + price * stock;
   }, 0);
 
-  // Security Gate Screen
+  // Security Gate Screen (No hardcoded credentials or client-side passcode hints)
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-[#0D0A08] text-[#FDFBF7] flex flex-col items-center justify-center p-4 gap-4">
+        <WaxSeal size={56} />
+        <span className="font-display text-xs uppercase tracking-[0.3em] text-[#B08D57] animate-pulse">
+          {isArabic ? 'جاري التحقق من الجلسة الأمنية...' : 'Verifying Cryptographic Session...'}
+        </span>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#0D0A08] text-[#FDFBF7] flex items-center justify-center p-4 relative overflow-hidden select-none">
@@ -998,15 +1215,15 @@ export default function AdminDashboardPage() {
             <WaxSeal size={64} />
             <div>
               <span className="font-display text-[10px] tracking-[0.35em] uppercase text-[#B08D57] font-semibold block mb-1">
-                {isArabic ? 'المشغل الخاص — الدخول مقيد' : 'ATELIER PRIVÉ — RESTRICTED ACCESS'}
+                {isArabic ? 'المشغل الخاص — حماية مشددة' : 'ATELIER PRIVÉ — SECURED VAULT'}
               </span>
               <h1 className="font-serif text-3xl tracking-wider text-[#FDFBF7]">
                 {isArabic ? 'بوابة إدارة لوفينوس' : 'Maison L’VENUS'}
               </h1>
               <p className="text-xs text-[#8C6E3D] dark:text-[#DFCA9B]/70 mt-1 font-body italic">
                 {isArabic
-                  ? 'لوحة التحكم المركزية بالكتالوج، الطلبات، والعملاء'
-                  : 'Master Catalog, Orders & Patron Directory'}
+                  ? 'لوحة التحكم المركزية المحمية بالتشفير وجدار الحماية'
+                  : 'Encrypted Master Catalog, Orders & Patron Directory'}
               </p>
             </div>
           </div>
@@ -1020,7 +1237,8 @@ export default function AdminDashboardPage() {
                 <input
                   type="password"
                   required
-                  placeholder="••••••••••••"
+                  autoComplete="current-password"
+                  placeholder="••••••••••••••••"
                   value={passcode}
                   onChange={(e) => setPasscode(e.target.value)}
                   className="w-full px-4 py-3 rounded-2xl bg-[#1C1613] border border-[#B08D57]/40 text-[#FDFBF7] placeholder-[#FDFBF7]/20 text-sm focus:outline-none focus:border-[#B08D57] transition-all"
@@ -1038,16 +1256,25 @@ export default function AdminDashboardPage() {
 
             <button
               type="submit"
-              className="w-full py-3.5 rounded-full bg-[#6B1D2F] hover:bg-[#8A1D2E] text-[#FDFBF7] font-display text-xs uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer font-medium"
+              disabled={authSubmitting}
+              className="w-full py-3.5 rounded-full bg-[#6B1D2F] hover:bg-[#8A1D2E] disabled:opacity-50 text-[#FDFBF7] font-display text-xs uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer font-medium"
             >
               <Unlock size={14} />
-              <span>{isArabic ? 'دخول لوحة التحكم' : 'Authenticate Entry'}</span>
+              <span>
+                {authSubmitting
+                  ? isArabic ? 'جاري التحقق المشفر...' : 'Verifying...'
+                  : isArabic ? 'دخول لوحة التحكم' : 'Authenticate Entry'}
+              </span>
             </button>
           </form>
 
-          <div className="pt-2 border-t border-[#B08D57]/20 text-[11px] text-[#DFCA9B]/50 flex items-center justify-center gap-1 font-mono">
-            <span>Passcode:</span>
-            <code className="text-[#DFCA9B] font-bold">lvenus2026</code>
+          <div className="pt-3 border-t border-[#B08D57]/20 text-[11px] text-[#DFCA9B]/60 flex items-center justify-center gap-2">
+            <ShieldCheck size={14} className="text-emerald-400 shrink-0" />
+            <span>
+              {isArabic
+                ? 'محمي بتشفير HttpOnly وحظر تلقائي لمحاولات الاختراق'
+                : 'Protected by HttpOnly HMAC Sessions & Brute-Force Lockout'}
+            </span>
           </div>
         </div>
       </div>
@@ -1265,7 +1492,7 @@ export default function AdminDashboardPage() {
               <span className="text-[10px] opacity-70">({coupons.length})</span>
             </button>
 
-            <button
+          <button
             onClick={() => setActiveTab('overview')}
             className={`px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
               activeTab === 'overview'
@@ -1275,6 +1502,21 @@ export default function AdminDashboardPage() {
           >
             <TrendingUp size={15} />
             <span>{isArabic ? 'المؤشرات والمالية الحقيقية' : 'Financial Insights'}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('security');
+              refreshSecurity();
+            }}
+            className={`px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+              activeTab === 'security'
+                ? 'bg-[#14110F] dark:bg-[#6B1D2F] text-[#FDFBF7] shadow-sm'
+                : 'text-[#14110F]/70 dark:text-[#FDFBF7]/70 hover:text-[#14110F] dark:hover:text-[#FDFBF7] hover:bg-[#F1EADA] dark:hover:bg-[#1A1412]'
+            }`}
+          >
+            <ShieldCheck size={15} className="text-emerald-500" />
+            <span>{isArabic ? 'الأمان وجدار الحماية' : 'Security & Firewall'}</span>
           </button>
         </div>
 
@@ -2193,6 +2435,326 @@ export default function AdminDashboardPage() {
                     ))
                   )}
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: SECURITY CENTER & ANTI-HACKING FIREWALL */}
+        {activeTab === 'security' && (
+          <div className="space-y-8">
+            {/* Active Defense Badges */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-5 rounded-3xl bg-[#F1EADA]/60 dark:bg-[#161210] border border-emerald-500/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-bold">
+                    {isArabic ? 'جلسات HttpOnly المشفرة' : 'HMAC-SHA256 Sessions'}
+                  </span>
+                  <ShieldCheck size={18} className="text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <h4 className="font-serif text-xl text-[#14110F] dark:text-[#FDFBF7]">
+                  {isArabic ? `نشط · دورة رقم #${securityData?.sessionEpoch || 1}` : `Active · Epoch #${securityData?.sessionEpoch || 1}`}
+                </h4>
+                <p className="text-[11px] text-[#8C6E3D] dark:text-[#DFCA9B]/80">
+                  {isArabic ? 'توقيع رقمي غير قابل للتزوير أو السرقة عبر المتصفح' : 'Tamper-proof server cookies isolated from JS'}
+                </p>
+              </div>
+
+              <div className="p-5 rounded-3xl bg-[#F1EADA]/60 dark:bg-[#161210] border border-[#B08D57]/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-widest text-[#B08D57] font-bold">
+                    {isArabic ? 'حماية التخمين (Brute-Force)' : 'Brute-Force Lockout'}
+                  </span>
+                  <Lock size={18} className="text-[#6B1D2F] dark:text-[#DFCA9B]" />
+                </div>
+                <h4 className="font-serif text-xl text-[#14110F] dark:text-[#FDFBF7]">
+                  {securityData?.activeLockouts?.length || 0} {isArabic ? 'حظر مؤقت نشط' : 'Active Lockouts'}
+                </h4>
+                <p className="text-[11px] text-[#8C6E3D] dark:text-[#DFCA9B]/80">
+                  {isArabic ? 'إغلاق تلقائي 15 دقيقة بعد 5 محاولات خاطئة' : 'Auto 15-min lock after 5 failed attempts'}
+                </p>
+              </div>
+
+              <div className="p-5 rounded-3xl bg-[#F1EADA]/60 dark:bg-[#161210] border border-[#B08D57]/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-widest text-[#B08D57] font-bold">
+                    {isArabic ? 'جدار الحماية و CSRF / XSS' : 'Edge WAF & Headers'}
+                  </span>
+                  <Shield size={18} className="text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <h4 className="font-serif text-xl text-[#14110F] dark:text-[#FDFBF7]">
+                  {isArabic ? 'مُفعّل بالكامل (CSP + WAF)' : 'Enforced (CSP + CSRF)'}
+                </h4>
+                <p className="text-[11px] text-[#8C6E3D] dark:text-[#DFCA9B]/80">
+                  {isArabic ? 'منع فحص الثغرات، الحقن، وتزوير الطلبات' : 'Blocks probes, XSS, SQLi & cross-origin mutations'}
+                </p>
+              </div>
+
+              <div className="p-5 rounded-3xl bg-[#F1EADA]/60 dark:bg-[#161210] border border-red-500/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-widest text-red-700 dark:text-red-400 font-bold">
+                    {isArabic ? 'قائمة الحظر الدائمة' : 'Firewall Blocklist'}
+                  </span>
+                  <Ban size={18} className="text-red-600 dark:text-red-400" />
+                </div>
+                <h4 className="font-serif text-xl text-[#14110F] dark:text-[#FDFBF7]">
+                  {securityData?.blockedIps?.length || 0} {isArabic ? 'عنوان محظور' : 'Blocked IPs'}
+                </h4>
+                <p className="text-[11px] text-[#8C6E3D] dark:text-[#DFCA9B]/80">
+                  {isArabic ? 'منع فوري لعناوين IP المشبوهة من الوصول' : 'Hard block on banned network addresses'}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Rotate Master Access Key & Panic Session Reset */}
+              <div className="p-6 rounded-3xl bg-[#FDFBF7] dark:bg-[#14100E] border border-[#B08D57]/30 shadow-sm space-y-5">
+                <div className="flex items-center justify-between border-b border-[#B08D57]/20 pb-3">
+                  <div>
+                    <h4 className="font-serif text-xl text-[#14110F] dark:text-[#FDFBF7]">
+                      {isArabic ? 'تغيير مفتاح المرور السري (Master Key)' : 'Rotate Admin Master Key'}
+                    </h4>
+                    <p className="text-[11px] text-[#8C6E3D] dark:text-[#DFCA9B]/80">
+                      {isArabic
+                        ? 'يتم التشفير بخوارزمية scrypt مع ملح عشوائي وإنهاء كافة الجلسات المفتوحة'
+                        : 'Hashed via salted scrypt; rotates session epoch immediately'}
+                    </p>
+                  </div>
+                  <KeyRound size={20} className="text-[#B08D57]" />
+                </div>
+
+                <form onSubmit={handleRotateMasterKey} className="space-y-3 text-xs">
+                  <div>
+                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                      {isArabic ? 'مفتاح المرور الحالي' : 'Current Master Key'}
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      value={currentKeyInput}
+                      onChange={(e) => setCurrentKeyInput(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-[#B08D57]/40 bg-white dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7]"
+                      placeholder="••••••••••••"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                        {isArabic ? 'المفتاح الجديد (10+ أحرف مختلطة)' : 'New Master Key (10+ mixed chars)'}
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        minLength={10}
+                        value={newKeyInput}
+                        onChange={(e) => setNewKeyInput(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-[#B08D57]/40 bg-white dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7]"
+                        placeholder="Aa123456!@"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#8C6E3D] dark:text-[#DFCA9B] mb-1">
+                        {isArabic ? 'تأكيد المفتاح الجديد' : 'Confirm New Key'}
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        minLength={10}
+                        value={confirmNewKeyInput}
+                        onChange={(e) => setConfirmNewKeyInput(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-[#B08D57]/40 bg-white dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7]"
+                        placeholder="••••••••••••"
+                      />
+                    </div>
+                  </div>
+
+                  {keyChangeMsg && (
+                    <div
+                      className={`p-3 rounded-xl text-xs font-medium ${
+                        keyChangeMsg.type === 'ok'
+                          ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-red-500/15 border border-red-500/30 text-red-700 dark:text-red-300'
+                      }`}
+                    >
+                      {keyChangeMsg.text}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 rounded-full bg-[#6B1D2F] hover:bg-[#8A1D2E] text-white text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors shadow-sm"
+                    >
+                      {isArabic ? 'حفظ وتحديث المفتاح' : 'Rotate Master Key'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleRevokeAllSessions}
+                      className="px-4 py-2.5 rounded-full border border-red-400/50 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white text-xs font-medium cursor-pointer transition-colors"
+                    >
+                      {isArabic ? 'طرد كافة الجلسات الأخرى فوراً' : 'Revoke All Other Sessions'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Manual IP Blocklist */}
+              <div className="p-6 rounded-3xl bg-[#FDFBF7] dark:bg-[#14100E] border border-[#B08D57]/30 shadow-sm space-y-5">
+                <div className="flex items-center justify-between border-b border-[#B08D57]/20 pb-3">
+                  <div>
+                    <h4 className="font-serif text-xl text-[#14110F] dark:text-[#FDFBF7]">
+                      {isArabic ? 'إدارة حظر عناوين الشبكة (IP Firewall)' : 'IP Access Blocklist'}
+                    </h4>
+                    <p className="text-[11px] text-[#8C6E3D] dark:text-[#DFCA9B]/80">
+                      {isArabic ? 'منع أي عنوان IP مريب من استخدام الـ API أو الدخول' : 'Block suspicious IPs across all endpoints'}
+                    </p>
+                  </div>
+                  <Ban size={20} className="text-red-500" />
+                </div>
+
+                <div className="flex gap-2 text-xs">
+                  <input
+                    type="text"
+                    value={ipBlockInput}
+                    onChange={(e) => setIpBlockInput(e.target.value)}
+                    placeholder="e.g. 192.168.1.50"
+                    className="flex-1 p-2.5 rounded-xl border border-[#B08D57]/40 bg-white dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleBlockIp(ipBlockInput)}
+                    className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium cursor-pointer transition-colors shrink-0"
+                  >
+                    {isArabic ? 'حظر IP' : 'Block IP'}
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-44 overflow-y-auto">
+                  {(!securityData?.blockedIps || securityData.blockedIps.length === 0) ? (
+                    <p className="text-xs text-stone-400 text-center py-6">
+                      {isArabic ? 'لا توجد عناوين IP محظورة حالياً' : 'No blocked IPs in firewall'}
+                    </p>
+                  ) : (
+                    securityData.blockedIps.map((ipAddr) => (
+                      <div
+                        key={ipAddr}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-[#F1EADA]/40 dark:bg-[#1C1613] border border-red-500/20 text-xs"
+                      >
+                        <span className="font-mono font-semibold text-red-700 dark:text-red-300">{ipAddr}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleUnblockIp(ipAddr)}
+                          className="text-[11px] px-3 py-1 rounded-full border border-stone-300 dark:border-stone-700 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
+                        >
+                          {isArabic ? 'رفع الحظر' : 'Unblock'}
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Live Security Audit Logs */}
+            <div className="bg-[#FDFBF7] dark:bg-[#14100E] rounded-3xl border border-[#B08D57]/30 overflow-hidden shadow-sm">
+              <div className="p-5 border-b border-[#B08D57]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#F1EADA]/50 dark:bg-[#161210]">
+                <div className="flex items-center gap-2.5">
+                  <ShieldAlert size={18} className="text-[#6B1D2F] dark:text-[#DFCA9B]" />
+                  <div>
+                    <h4 className="font-serif text-lg text-[#14110F] dark:text-[#FDFBF7]">
+                      {isArabic ? 'سجل الحماية ومحاولات الاختراق المباشر' : 'Live Security Audit Logs'}
+                    </h4>
+                    <span className="text-[11px] text-[#8C6E3D] dark:text-[#DFCA9B]/70">
+                      {isArabic ? 'يتم تسجيل كل محاولة دخول، حظر، أو تلاعب بالطلبات لحظياً' : 'Real-time intrusion and authentication events'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={refreshSecurity}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#B08D57]/40 text-xs hover:bg-[#B08D57]/15 cursor-pointer"
+                  >
+                    <RefreshCw size={12} />
+                    <span>{isArabic ? 'تحديث' : 'Refresh'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClearSecurityLogs}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-red-300 dark:border-red-900/50 text-red-600 dark:text-red-400 text-xs hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <Trash2 size={12} />
+                    <span>{isArabic ? 'مسح السجل' : 'Clear Logs'}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-[#F1EADA]/40 dark:bg-[#1C1613] border-b border-[#B08D57]/20 text-[#8C6E3D] dark:text-[#DFCA9B] uppercase tracking-wider font-display">
+                      <th className="py-3 px-4">{isArabic ? 'المستوى' : 'Severity'}</th>
+                      <th className="py-3 px-4">{isArabic ? 'الحدث' : 'Event'}</th>
+                      <th className="py-3 px-4">{isArabic ? 'عنوان الشبكة' : 'IP'}</th>
+                      <th className="py-3 px-4">{isArabic ? 'التفاصيل والمسار' : 'Details'}</th>
+                      <th className="py-3 px-4 text-right">{isArabic ? 'إجراء' : 'Action'}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#B08D57]/15">
+                    {(!securityData?.logs || securityData.logs.length === 0) ? (
+                      <tr>
+                        <td colSpan={5} className="py-10 text-center text-stone-400">
+                          {isArabic ? 'لا توجد تنبيهات أمنية مسجلة حتى الآن' : 'No security alerts logged yet'}
+                        </td>
+                      </tr>
+                    ) : (
+                      securityData.logs.map((log) => (
+                        <tr key={log.id} className="hover:bg-[#F1EADA]/25 dark:hover:bg-[#1C1613]/50">
+                          <td className="py-3 px-4">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                log.severity === 'critical'
+                                  ? 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300'
+                                  : log.severity === 'warning'
+                                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                                  : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                              }`}
+                            >
+                              {log.severity}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-mono font-semibold text-[#14110F] dark:text-[#FDFBF7]">
+                            <span>{log.event}</span>
+                            <span className="block text-[10px] text-stone-400 font-normal">
+                              {new Date(log.timestamp).toLocaleString()}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-mono text-[#6B1D2F] dark:text-[#DFCA9B]">
+                            {log.ip}
+                          </td>
+                          <td className="py-3 px-4 text-[#3A332D] dark:text-[#FDFBF7]/80">
+                            <span className="block font-medium">{log.details}</span>
+                            <span className="text-[10px] font-mono text-stone-400">{log.path}</span>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            {log.ip && log.ip !== '127.0.0.1' && !securityData.blockedIps.includes(log.ip) && (
+                              <button
+                                type="button"
+                                onClick={() => handleBlockIp(log.ip)}
+                                className="px-2.5 py-1 rounded-full border border-red-300 text-red-600 hover:bg-red-600 hover:text-white text-[10px] cursor-pointer transition-colors"
+                              >
+                                {isArabic ? 'حظر' : 'Ban IP'}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

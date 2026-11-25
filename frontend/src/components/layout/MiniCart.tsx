@@ -43,23 +43,9 @@ export const MiniCart: React.FC = () => {
         setCouponCode('');
       }
     } catch {
-      // Offline fallback: test coupon LVENUS10 or VENUS10 gives 10%
-      const codeUpper = couponCode.trim().toUpperCase();
-      if (codeUpper === 'LVENUS10' || codeUpper === 'VENUS10') {
-        applyCoupon({
-          id: 1,
-          code: codeUpper,
-          type: 'percent',
-          value: 10,
-          min_order: 0,
-          max_uses: 100,
-          used_count: 1,
-          expires_at: null,
-        });
-        setCouponCode('');
-      } else {
-        setCouponError(isArabic ? 'رمز الخصم غير صالح' : 'Invalid coupon code');
-      }
+      setCouponError(
+        isArabic ? 'تعذر التحقق من الكود، يرجى المحاولة مرة أخرى' : 'Could not verify coupon code'
+      );
     } finally {
       setCouponLoading(false);
     }

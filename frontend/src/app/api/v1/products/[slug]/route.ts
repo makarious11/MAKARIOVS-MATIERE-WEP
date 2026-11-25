@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerProductBySlug } from '@/lib/serverDb';
+import { sanitizeSlug, verifyAdminFromRequest } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,10 +10,16 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    const { searchParams } = new URL(request.url);
-    const includeHidden = searchParams.get('include_hidden') === 'true';
+    const cleanSlug = sanitizeSlug(slug);
+    if (!cleanSlug) {
+      return NextResponse.json({ message: 'Invalid product identifier' }, { status: 400 });
+    }
 
-    const perfume = getServerProductBySlug(slug);
+    const { searchParams } = new URL(request.url);
+    const requestedHidden = searchParams.get('include_hidden') === 'true';
+    const includeHidden = requestedHidden && verifyAdminFromRequest(request).authenticated;
+
+    const perfume = getServerProductBySlug(cleanSlug);
 
     if (!perfume || (!includeHidden && perfume.is_hidden === true)) {
       return NextResponse.json(

@@ -7,8 +7,31 @@
 import fs from 'fs';
 import path from 'path';
 import { CANONICAL_PERFUMES, MAISON_CATEGORIES, PerfumeData, MaisonCategory } from './catalog';
-import { INITIAL_PATRONS, PatronProfile } from './patronAuth';
+import { PatronProfile } from './patronAuth';
 import { MaisonOrder } from './orders';
+
+const SERVER_SEED_PATRONS: PatronProfile[] = [
+  {
+    id: 'patron_1',
+    name: 'أحمد محمود القاضي',
+    phone: '01012345678',
+    email: 'ahmed.kadi@al-maison.eg',
+    governorate: 'Cairo',
+    city: 'New Cairo — Choueifat',
+    address: 'Villa 14, 2nd Settlement',
+    registeredAt: '2026',
+  },
+  {
+    id: 'patron_2',
+    name: 'فاطمة الزهراء الشريف',
+    phone: '01129876543',
+    email: 'fatma.elsharif@luxury.eg',
+    governorate: 'Alexandria',
+    city: 'Smouha',
+    address: 'Building 18, Victor Emmanuel',
+    registeredAt: '2026',
+  },
+];
 
 function getDataDir(): string {
   // If running inside frontend/
@@ -34,6 +57,8 @@ const ORDERS_FILE = () => path.join(getDataDir(), 'orders.json');
 const PATRONS_FILE = () => path.join(getDataDir(), 'patrons.json');
 const REVIEWS_FILE = () => path.join(getDataDir(), 'reviews.json');
 const COUPONS_FILE = () => path.join(getDataDir(), 'coupons.json');
+const CONTACTS_FILE = () => path.join(getDataDir(), 'contacts.json');
+const NEWSLETTER_FILE = () => path.join(getDataDir(), 'newsletter.json');
 
 // --- Helper Functions ---
 function readJsonFile<T>(filePath: string, fallback: T): T {
@@ -208,23 +233,33 @@ export function deleteServerOrder(orderId: string): MaisonOrder[] {
 // ==========================================
 // 4. Patrons / Customers Persistence
 // ==========================================
-export function getServerPatrons(): PatronProfile[] {
-  return readJsonFile<PatronProfile[]>(PATRONS_FILE(), INITIAL_PATRONS);
+export type ServerPatronRecord = PatronProfile & {
+  passwordHash?: string;
+};
+
+export function getServerPatrons(): ServerPatronRecord[] {
+  return readJsonFile<ServerPatronRecord[]>(PATRONS_FILE(), SERVER_SEED_PATRONS);
 }
 
-export function saveServerPatron(profile: PatronProfile): PatronProfile[] {
+export function saveServerPatron(profile: ServerPatronRecord): ServerPatronRecord[] {
   const current = getServerPatrons();
-  const normPhone = profile.phone.replace(/\D/g, '');
+  const normPhone = (profile.phone || '').replace(/\D/g, '');
   const idx = current.findIndex(
     (p) =>
-      (normPhone && p.phone.replace(/\D/g, '') === normPhone) ||
+      (normPhone && (p.phone || '').replace(/\D/g, '') === normPhone) ||
       (profile.email && p.email && profile.email.toLowerCase() === p.email.toLowerCase())
   );
 
-  let updated: PatronProfile[];
+  let updated: ServerPatronRecord[];
   if (idx >= 0) {
     updated = [...current];
-    updated[idx] = { ...updated[idx], ...profile };
+    const existingHash = updated[idx].passwordHash;
+    updated[idx] = {
+      ...updated[idx],
+      ...profile,
+      // Never wipe an existing passwordHash when checkout updates shipping details
+      passwordHash: profile.passwordHash || existingHash,
+    };
   } else {
     updated = [profile, ...current];
   }
@@ -385,3 +420,40 @@ export function incrementServerCouponUsage(code: string): void {
     writeJsonFile(COUPONS_FILE(), current);
   }
 }
+
+// ==========================================
+// 6. Contact & Newsletter Submissions
+// ==========================================
+export interface ContactRecord {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+  ip: string;
+  createdAt: string;
+}
+
+export function saveServerContact(entry: Omit<ContactRecord, 'id' | 'createdAt'>): ContactRecord {
+  const current = readJsonFile<ContactRecord[]>(CONTACTS_FILE(), []);
+  const rec: ContactRecord = {
+    id: `msg_${Date.now()}`,
+    ...entry,
+    createdAt: new Date().toISOString(),
+  };
+  writeJsonFile(CONTACTS_FILE(), [rec, ...current].slice(0, 500));
+  return rec;
+}
+
+export function saveServerNewsletter(email: string, ip: string): void {
+  const current = readJsonFile<Array<{ email: string; ip: string; createdAt: string }>>(NEWSLETTER_FILE(), []);
+  const cleanEmail = email.trim().toLowerCase();
+  if (!current.some((s) => s.email.toLowerCase() === cleanEmail)) {
+    writeJsonFile(
+      NEWSLETTER_FILE(),
+      [{ email: cleanEmail, ip, createdAt: new Date().toISOString() }, ...current].slice(0, 2000)
+    );
+  }
+}
+

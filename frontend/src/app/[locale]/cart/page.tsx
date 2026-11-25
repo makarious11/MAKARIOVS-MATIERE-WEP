@@ -41,22 +41,9 @@ export default function CartPage() {
         setCouponCode('');
       }
     } catch {
-      const codeUpper = couponCode.trim().toUpperCase();
-      if (codeUpper === 'LVENUS10' || codeUpper === 'VENUS10' || codeUpper === 'MAKARIOVS10') {
-        applyCoupon({
-          id: 1,
-          code: codeUpper,
-          type: 'percent',
-          value: 10,
-          min_order: 0,
-          max_uses: 100,
-          used_count: 1,
-          expires_at: null,
-        });
-        setCouponCode('');
-      } else {
-        setCouponError(isArabic ? 'كوبون الخصم غير متاح حالياً' : 'Coupon code unavailable');
-      }
+      setCouponError(
+        isArabic ? 'تعذر التحقق من الكود، يرجى المحاولة مرة أخرى' : 'Could not verify coupon code'
+      );
     } finally {
       setCouponLoading(false);
     }

@@ -18,23 +18,27 @@ use App\Http\Controllers\Api\V1\ContactController;
 */
 
 Route::prefix('v1')->group(function () {
-    // 1. Categories & Lines
+    // 1. Categories & Lines (Public Read)
     Route::get('/categories', [CategoryController::class, 'index']);
-    Route::post('/categories', [CategoryController::class, 'store']);
 
-    // 2. Catalog & Products
+    // 2. Catalog & Products (Public Read)
     Route::get('/products', [ProductController::class, 'index']);
-    Route::post('/products', [ProductController::class, 'store']);
     Route::get('/products/{slug}', [ProductController::class, 'show']);
-    Route::put('/products/{id}', [ProductController::class, 'update']);
-    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
     Route::get('/shipping-zones', [ShippingZoneController::class, 'index']);
+
+    // Authenticated Admin Mutations (Sanctum Protected)
+    Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+        Route::post('/categories', [CategoryController::class, 'store']);
+        Route::post('/products', [ProductController::class, 'store']);
+        Route::put('/products/{id}', [ProductController::class, 'update']);
+        Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+    });
 
     // 3. Checkout & Orders
     Route::post('/cart/validate', [OrderController::class, 'validateCart'])->middleware('throttle:30,1');
-    Route::post('/coupons/apply', [CouponController::class, 'apply']);
-    Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:20,1');
-    Route::get('/orders/{number}', [OrderController::class, 'show']);
+    Route::post('/coupons/apply', [CouponController::class, 'apply'])->middleware('throttle:15,1');
+    Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:10,1');
+    Route::get('/orders/{number}', [OrderController::class, 'show'])->middleware('throttle:20,1');
 
     // 4. Payments (Paymob Egypt Gateway)
     Route::match(['get', 'post'], '/payments/paymob/callback', [PaymentController::class, 'paymobCallback']);

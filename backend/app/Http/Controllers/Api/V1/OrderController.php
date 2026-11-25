@@ -31,9 +31,9 @@ class OrderController extends Controller
             'gift_note' => 'nullable|string|max:200',
             'payment_method' => 'required|in:cod,card',
             'coupon_code' => 'nullable|string',
-            'items' => 'required|array|min:1',
+            'items' => 'required|array|min:1|max:25',
             'items.*.variant_id' => 'required|exists:product_variants,id',
-            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.quantity' => 'required|integer|min:1|max:50',
         ]);
 
         return DB::transaction(function () use ($validated, $paymob, $request) {
@@ -160,11 +160,18 @@ class OrderController extends Controller
         ]);
     }
 
-    public function show(string $number): JsonResponse
+    public function show(Request $request, string $number): JsonResponse
     {
         $order = Order::with('items')
             ->where('number', $number)
             ->firstOrFail();
+
+        $isOwner = $request->user() && $order->user_id && $request->user()->id === $order->user_id;
+        if (!$isOwner) {
+            // Redact sensitive PII (phone, email, exact street address) on unauthenticated tracking queries
+            $order->makeHidden(['phone', 'guest_email', 'address', 'notes']);
+            $order->name = mb_substr($order->name, 0, 3) . '***';
+        }
 
         return response()->json([
             'data' => $order,

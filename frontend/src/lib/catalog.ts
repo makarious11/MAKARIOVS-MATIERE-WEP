@@ -997,7 +997,7 @@ export function getStoredCatalog(includeHidden: boolean = false): PerfumeData[] 
 
 export function saveProductToCatalog(product: PerfumeData): PerfumeData[] {
   if (typeof window === 'undefined') return CANONICAL_PERFUMES;
-  const current = getStoredCatalog();
+  const current = getStoredCatalog(true);
   const existingIdx = current.findIndex((p) => p.id === product.id || p.slug === product.slug);
   let updated: PerfumeData[];
   if (existingIdx >= 0) {
@@ -1013,7 +1013,7 @@ export function saveProductToCatalog(product: PerfumeData): PerfumeData[] {
 
 export function deleteProductFromCatalog(id: number): PerfumeData[] {
   if (typeof window === 'undefined') return CANONICAL_PERFUMES;
-  const current = getStoredCatalog();
+  const current = getStoredCatalog(true);
   const updated = current.filter((p) => p.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
@@ -1034,7 +1034,7 @@ export function addProductReview(
   slug: string,
   review: { name: string; rating: number; body_ar: string; body_en: string }
 ): PerfumeData | null {
-  const catalog = getStoredCatalog();
+  const catalog = getStoredCatalog(true);
   const product = catalog.find((p) => p.slug === slug);
   if (!product) return null;
 
@@ -1057,7 +1057,7 @@ export function addProductReview(
 }
 
 export function deleteProductReview(slug: string, reviewId: number): PerfumeData | null {
-  const catalog = getStoredCatalog();
+  const catalog = getStoredCatalog(true);
   const product = catalog.find((p) => p.slug === slug);
   if (!product) return null;
 

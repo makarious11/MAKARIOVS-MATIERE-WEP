@@ -39,6 +39,14 @@ desktop.ini
 *.pem
 *.p12
 
+# ── Runtime Sensitive Data & Security Logs ────────────────
+frontend/data/admin_security.json
+frontend/data/security_logs.json
+frontend/data/orders.json
+frontend/data/patrons.json
+frontend/data/contacts.json
+frontend/data/newsletter.json
+
 # ── Build artifacts ───────────────────────────────────────
 *.log
 npm-debug.log*

@@ -43,10 +43,15 @@ export default function AccountPage() {
 
   // Login Form
   const [loginIdentifier, setLoginIdentifier] = useState('');
+  const [loginPin, setLoginPin] = useState('');
+  const [needsActivation, setNeedsActivation] = useState(false);
+  const [activationOrderRef, setActivationOrderRef] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
 
   // Register Form
   const [regName, setRegName] = useState('');
   const [regPhone, setRegPhone] = useState('');
+  const [regPin, setRegPin] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regCity, setRegCity] = useState('');
   const [regAddress, setRegAddress] = useState('');
@@ -58,13 +63,32 @@ export default function AccountPage() {
   const [activeTab, setActiveTab] = useState<'orders' | 'wishlist' | 'addresses'>('orders');
   const [patronOrders, setPatronOrders] = useState<MaisonOrder[]>([]);
 
-  // Load Patron & Patron's Orders
-  const loadPatronData = () => {
+  // Load ONLY the currently authenticated Patron's own profile & orders from server cookie
+  const loadPatronData = async () => {
+    try {
+      const res = await fetch('/api/v1/patrons/auth');
+      if (res.ok) {
+        const json = await res.json();
+        if (json?.authenticated && json?.patron) {
+          setPatron(json.patron);
+          setCurrentPatron(json.patron);
+          const serverOrders: MaisonOrder[] = Array.isArray(json.orders) ? json.orders : [];
+          const localOrders = getPatronOrders(json.patron.phone, json.patron.name);
+          const mergedMap = new Map<string, MaisonOrder>();
+          for (const o of [...serverOrders, ...localOrders]) {
+            if (o?.id && !mergedMap.has(o.id)) mergedMap.set(o.id, o);
+          }
+          setPatronOrders(Array.from(mergedMap.values()));
+          return;
+        }
+      }
+    } catch {}
+
+    // Fallback: only read current browser's own session if offline
     const active = getCurrentPatron();
     setPatron(active);
     if (active) {
-      const orders = getPatronOrders(active.phone, active.name);
-      setPatronOrders(orders);
+      setPatronOrders(getPatronOrders(active.phone, active.name));
     } else {
       setPatronOrders([]);
     }
@@ -72,16 +96,6 @@ export default function AccountPage() {
 
   useEffect(() => {
     loadPatronData();
-
-    // Sync patrons registry with server database
-    fetch('/api/v1/patrons')
-      .then((res) => res.json())
-      .then((json) => {
-        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
-          localStorage.setItem('lv_patrons_registry', JSON.stringify(json.data));
-        }
-      })
-      .catch(() => {});
 
     const handleAuthChange = () => {
       loadPatronData();
@@ -99,76 +113,122 @@ export default function AccountPage() {
     };
   }, []);
 
-  // Handle Login
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  // Handle Secure Server Login
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (authLoading) return;
     setAuthError('');
     if (!loginIdentifier.trim()) {
       setAuthError(isArabic ? 'يرجى إدخال رقم الهاتف أو البريد الإلكتروني' : 'Please enter your phone number or email');
       return;
     }
 
-    const res = loginPatron(loginIdentifier.trim());
-    if (!res.success || !res.patron) {
-      setAuthError(res.error || (isArabic ? 'تعذر الدخول، يرجى التحقق من البيانات' : 'Authentication failed'));
-      return;
-    }
+    setAuthLoading(true);
+    try {
+      const res = await fetch('/api/v1/patrons/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'login',
+          identifier: loginIdentifier.trim(),
+          pin: loginPin,
+          orderRef: needsActivation ? activationOrderRef.trim() : undefined,
+        }),
+      });
+      const json = await res.json();
 
-    setPatron(res.patron);
-    setPatronOrders(getPatronOrders(res.patron.phone, res.patron.name));
-
-    // Save patron permanently to server database so it never disappears from admin
-    fetch('/api/v1/patrons', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(res.patron),
-    }).catch(() => {});
-  };
-
-  // Handle Register
-  const handleRegisterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthError('');
-
-    const res = registerPatron({
-      name: regName,
-      phone: regPhone,
-      email: regEmail,
-      city: regCity,
-      address: regAddress,
-      allowExisting: false,
-    });
-
-    if (!res.success || !res.patron) {
-      setAuthError(
-        res.error ||
-          (isArabic
-            ? 'هذا الرقم مسجل بالفعل في سجلات الدار. لا يمكن إنشاء حسابين بنفس الرقم، يرجى تسجيل الدخول.'
-            : 'This mobile number is already registered. Cannot create duplicate accounts, please sign in.')
-      );
-      if (res.alreadyRegistered) {
-        setLoginIdentifier(regPhone);
+      if (!res.ok || !json?.patron) {
+        if (json?.needsActivation) {
+          setNeedsActivation(true);
+        }
+        setAuthError(
+          isArabic
+            ? json?.message_ar || json?.message || 'تعذر الدخول، يرجى التحقق من البيانات'
+            : json?.message || 'Authentication failed'
+        );
+        return;
       }
-      return;
+
+      setNeedsActivation(false);
+      setActivationOrderRef('');
+      setLoginPin('');
+      setPatron(json.patron);
+      setCurrentPatron(json.patron);
+      const serverOrders: MaisonOrder[] = Array.isArray(json.orders) ? json.orders : [];
+      const localOrders = getPatronOrders(json.patron.phone, json.patron.name);
+      const mergedMap = new Map<string, MaisonOrder>();
+      for (const o of [...serverOrders, ...localOrders]) {
+        if (o?.id && !mergedMap.has(o.id)) mergedMap.set(o.id, o);
+      }
+      setPatronOrders(Array.from(mergedMap.values()));
+    } catch {
+      setAuthError(isArabic ? 'تعذر الاتصال بالخادم، يرجى المحاولة لاحقاً' : 'Network error during sign in');
+    } finally {
+      setAuthLoading(false);
     }
-
-    setPatron(res.patron);
-    setPatronOrders(getPatronOrders(res.patron.phone, res.patron.name));
-
-    // Save patron permanently to server database so it never disappears from admin
-    fetch('/api/v1/patrons', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(res.patron),
-    }).catch(() => {});
   };
 
-  // Handle Logout
-  const handleLogout = () => {
+  // Handle Secure Server Registration
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (authLoading) return;
+    setAuthError('');
+    setAuthLoading(true);
+
+    try {
+      const res = await fetch('/api/v1/patrons/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'register',
+          name: regName,
+          phone: regPhone,
+          pin: regPin,
+          email: regEmail,
+          city: regCity,
+          address: regAddress,
+        }),
+      });
+      const json = await res.json();
+
+      if (!res.ok || !json?.patron) {
+        setAuthError(
+          isArabic
+            ? json?.message_ar || json?.message || 'تعذر إنشاء العضوية'
+            : json?.message || 'Registration failed'
+        );
+        if (json?.alreadyRegistered) {
+          setLoginIdentifier(regPhone);
+        }
+        return;
+      }
+
+      setRegPin('');
+      setPatron(json.patron);
+      setCurrentPatron(json.patron);
+      setPatronOrders(Array.isArray(json.orders) ? json.orders : []);
+    } catch {
+      setAuthError(isArabic ? 'تعذر الاتصال بالخادم، يرجى المحاولة لاحقاً' : 'Network error during registration');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Handle Secure Logout
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/v1/patrons/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout' }),
+      });
+    } catch {}
     logoutPatron();
     setPatron(null);
     setPatronOrders([]);
     setLoginIdentifier('');
+    setLoginPin('');
+    setNeedsActivation(false);
   };
 
   // Handle Direct Track
@@ -292,19 +352,53 @@ export default function AccountPage() {
                       className="w-full p-3.5 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/40 text-xs font-body focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57]"
                     />
                   </div>
+                </div>
+
+                {needsActivation && (
+                  <div className="space-y-1.5">
+                    <label className="block font-display text-xs uppercase tracking-wider text-[#6B1D2F] dark:text-[#DFCA9B]">
+                      {isArabic ? 'رقم أحد طلباتك السابقة للتحقق (مثال: LV-xxxxxx)' : 'Previous Order Reference to Verify Account'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={activationOrderRef}
+                      onChange={(e) => setActivationOrderRef(e.target.value)}
+                      placeholder="LV-XXXXXX"
+                      className="w-full p-3.5 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/60 text-xs font-mono uppercase focus:outline-none focus:border-[#6B1D2F]"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="block font-display text-xs uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
+                    {needsActivation
+                      ? isArabic ? 'اختر كلمة سر جديدة لحماية حسابك *' : 'Set a New Security PIN (min 4 chars) *'
+                      : isArabic ? 'كلمة السر / رمز الحماية *' : 'Security PIN / Password *'}
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={4}
+                    value={loginPin}
+                    onChange={(e) => setLoginPin(e.target.value)}
+                    placeholder="••••••"
+                    className="w-full p-3.5 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/40 text-xs font-body focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57]"
+                  />
                   <p className="text-[11px] text-[#8C6E3D] dark:text-[#DFCA9B]/70">
                     {isArabic
-                      ? 'أدخل نفس رقم الموبايل الذي استخدمته عند طلب العطر لإظهار شحناتك تلقائياً.'
-                      : 'Enter the phone number used during your order dispatch to retrieve your vessels.'}
+                      ? 'حسابك محمي برمز أمان لضمان خصوصية عناوينك وطلباتك.'
+                      : 'Protected by a private PIN so only you can view your addresses and orders.'}
                   </p>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-4 rounded-full bg-[#14110F] dark:bg-[#6B1D2F] hover:bg-[#6B1D2F] dark:hover:bg-[#8A1D2E] text-[#FDFBF7] font-display text-xs uppercase tracking-widest3 transition-all duration-300 shadow-md border border-[#B08D57]/30 cursor-pointer font-medium flex items-center justify-center gap-2"
+                  disabled={authLoading}
+                  className="w-full py-4 rounded-full bg-[#14110F] dark:bg-[#6B1D2F] hover:bg-[#6B1D2F] dark:hover:bg-[#8A1D2E] disabled:opacity-50 text-[#FDFBF7] font-display text-xs uppercase tracking-widest3 transition-all duration-300 shadow-md border border-[#B08D57]/30 cursor-pointer font-medium flex items-center justify-center gap-2"
                 >
                   <UserCheck size={14} />
-                  <span>{isArabic ? 'فتح محراب العميل' : 'Open Patron Sanctum'}</span>
+                  <span>{authLoading ? (isArabic ? 'جاري الدخول...' : 'Signing In...') : (isArabic ? 'فتح محراب العميل' : 'Open Patron Sanctum')}</span>
                 </button>
               </form>
             )}
@@ -343,6 +437,23 @@ export default function AccountPage() {
 
                   <div className="space-y-1">
                     <label className="block font-display text-xs uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
+                      {isArabic ? 'كلمة السر / رمز الحماية *' : 'Security PIN / Password *'}
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      minLength={4}
+                      value={regPin}
+                      onChange={(e) => setRegPin(e.target.value)}
+                      placeholder={isArabic ? '4 أحرف أو أرقام على الأقل' : 'Min 4 characters'}
+                      className="w-full p-3 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/40 text-xs font-body focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="block font-display text-xs uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
                       {isArabic ? 'البريد (اختياري)' : 'Email (Optional)'}
                     </label>
                     <input
@@ -353,9 +464,7 @@ export default function AccountPage() {
                       className="w-full p-3 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/40 text-xs font-body focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57]"
                     />
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="block font-display text-xs uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
                       {isArabic ? 'المدينة / المنطقة' : 'City / District'}
@@ -368,26 +477,29 @@ export default function AccountPage() {
                       className="w-full p-3 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/40 text-xs font-body focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57]"
                     />
                   </div>
+                </div>
 
-                  <div className="space-y-1">
-                    <label className="block font-display text-xs uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
-                      {isArabic ? 'العنوان بالتفصيل' : 'Street Address'}
-                    </label>
-                    <input
-                      type="text"
-                      value={regAddress}
-                      onChange={(e) => setRegAddress(e.target.value)}
-                      placeholder={isArabic ? 'رقم المبنى والشارع والشقة' : 'Building, street, apt...'}
-                      className="w-full p-3 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/40 text-xs font-body focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57]"
-                    />
-                  </div>
+                <div className="space-y-1">
+                  <label className="block font-display text-xs uppercase tracking-wider text-[#14110F] dark:text-[#FDFBF7]">
+                    {isArabic ? 'العنوان بالتفصيل' : 'Street Address'}
+                  </label>
+                  <input
+                    type="text"
+                    value={regAddress}
+                    onChange={(e) => setRegAddress(e.target.value)}
+                    placeholder={isArabic ? 'رقم المبنى والشارع والشقة' : 'Building, street, apt...'}
+                    className="w-full p-3 rounded-xl bg-[#FDFBF7] dark:bg-[#1C1613] text-[#14110F] dark:text-[#FDFBF7] border border-[#B08D57]/40 text-xs font-body focus:outline-none focus:border-[#6B1D2F] dark:focus:border-[#B08D57]"
+                  />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-4 rounded-full bg-[#14110F] dark:bg-[#6B1D2F] hover:bg-[#6B1D2F] dark:hover:bg-[#8A1D2E] text-[#FDFBF7] font-display text-xs uppercase tracking-widest3 transition-all duration-300 shadow-md border border-[#B08D57]/30 cursor-pointer font-medium mt-2"
+                  disabled={authLoading}
+                  className="w-full py-4 rounded-full bg-[#14110F] dark:bg-[#6B1D2F] hover:bg-[#6B1D2F] dark:hover:bg-[#8A1D2E] disabled:opacity-50 text-[#FDFBF7] font-display text-xs uppercase tracking-widest3 transition-all duration-300 shadow-md border border-[#B08D57]/30 cursor-pointer font-medium mt-2"
                 >
-                  {isArabic ? 'تأسيس عضوية جديدة' : 'Establish Patron Membership'}
+                  {authLoading
+                    ? isArabic ? 'جاري تسجيل العضوية...' : 'Creating Account...'
+                    : isArabic ? 'تأسيس عضوية جديدة' : 'Establish Patron Membership'}
                 </button>
               </form>
             )}

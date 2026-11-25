@@ -33,9 +33,9 @@ class ProductController extends Controller
             $query->where('family', $request->family);
         }
 
-        // Search
+        // Search (escape LIKE wildcards to prevent wildcard DoS)
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], (string) $request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('name_en', 'like', "%{$search}%")
                   ->orWhere('name_ar', 'like', "%{$search}%")

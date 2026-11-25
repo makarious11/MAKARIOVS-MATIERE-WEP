@@ -63,6 +63,7 @@ export default function OrderTrackingPage({ params }: TrackingPageProps) {
   const [order, setOrder] = useState<OrderData | null>(null);
   const [currentStatus, setCurrentStatus] = useState<string>('Processing');
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   const loadOrderData = async () => {
     // 1. Check local store first (captures live status updates from Admin immediately)
@@ -71,9 +72,8 @@ export default function OrderTrackingPage({ params }: TrackingPageProps) {
     const matched = allOrders.find((o) => o.id === number);
 
     const activeStatus = overrides[number] || (matched ? matched.status : 'Processing');
-    setCurrentStatus(activeStatus);
-
     if (matched) {
+      setCurrentStatus(activeStatus);
       setOrder({
         order_number: matched.id,
         customer: {
@@ -105,9 +105,15 @@ export default function OrderTrackingPage({ params }: TrackingPageProps) {
     // 2. Fetch server API data and merge
     try {
       const res = await fetch(`/api/v1/orders/${encodeURIComponent(number)}`);
-      if (res.ok) {
+      if (res.status === 404) {
+        if (!matched) {
+          // Order not found anywhere — show 404 state
+          setNotFound(true);
+        }
+      } else if (res.ok) {
         const json = await res.json();
         if (json.data) {
+          setNotFound(false);
           // If admin has overridden status locally, respect the override
           const serverStatus = overrides[number] || json.data.status || activeStatus;
           setCurrentStatus(serverStatus);
@@ -123,6 +129,7 @@ export default function OrderTrackingPage({ params }: TrackingPageProps) {
       }
     } catch (err) {
       console.error('Error fetching order from API:', err);
+      if (!matched) setNotFound(true);
     } finally {
       setLoading(false);
     }
@@ -240,7 +247,33 @@ export default function OrderTrackingPage({ params }: TrackingPageProps) {
           </a>
         </div>
 
-        {/* Card */}
+        {/* 404 — Order Not Found */}
+        {notFound && (
+          <div className="text-center py-24">
+            <AlertCircle size={48} className="mx-auto mb-4 text-[#B08D57]/60" />
+            <h2 className="font-display text-2xl uppercase tracking-widest text-[#14110F] dark:text-[#FDFBF7] mb-3">
+              {isArabic ? 'رقم الطلب غير موجود' : 'Order Reference Not Found'}
+            </h2>
+            <p className="text-sm text-[#3A332D]/70 dark:text-[#DFCA9B]/70 max-w-sm mx-auto mb-8">
+              {isArabic
+                ? `لم نتمكن من العثور على طلب برقم "${number}". تأكد من رقم الطلب أو تواصل معنا عبر واتساب.`
+                : `No order found for reference "${number}". Please double-check the number or contact our concierge.`}
+            </p>
+            <a
+              href={`https://wa.me/201210593766?text=${encodeURIComponent(
+                `Hello, I cannot find my order #${number} on the tracking page.`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#6B1D2F] text-white text-xs font-display uppercase tracking-widest hover:bg-[#8B2D3F] transition-colors"
+            >
+              <MessageCircle size={14} />
+              {isArabic ? 'تواصل مع الكونسيرج' : 'Contact Concierge'}
+            </a>
+          </div>
+        )}
+
+        {!notFound && (
         <div className="p-6 sm:p-12 rounded-3xl bg-[#F1EADA]/60 dark:bg-[#161210] border border-[#B08D57]/40 shadow-xl space-y-8">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#B08D57]/30 pb-6 gap-4">
@@ -430,6 +463,7 @@ export default function OrderTrackingPage({ params }: TrackingPageProps) {
             </Link>
           </div>
         </div>
+        )} {/* end !notFound */}
       </div>
     </div>
   );

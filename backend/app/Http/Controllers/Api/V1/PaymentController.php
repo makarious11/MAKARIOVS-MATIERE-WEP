@@ -16,9 +16,9 @@ class PaymentController extends Controller
         $receivedHmac = $request->query('hmac') ?: $request->header('X-Paymob-HMAC');
         $payload = $request->all();
 
-        if ($receivedHmac && !$paymob->verifyHmac($payload, $receivedHmac)) {
-            Log::warning('Paymob HMAC verification failed for payload: ' . json_encode($payload));
-            return response()->json(['message' => 'Invalid signature'], 400);
+        if (!$receivedHmac || !$paymob->verifyHmac($payload, $receivedHmac)) {
+            Log::warning('Paymob HMAC verification failed or missing signature');
+            return response()->json(['message' => 'Invalid or missing signature'], 403);
         }
 
         $merchantOrderId = $payload['obj']['order']['merchant_order_id'] ?? null;

@@ -32,57 +32,8 @@ export interface MaisonOrder {
   is_new?: boolean;
 }
 
-// Baseline mock orders exclusively for Maison Admin oversight demonstration
-export const BASELINE_ADMIN_ORDERS: MaisonOrder[] = [
-  {
-    id: 'LV-842910',
-    customer: 'أحمد محمود القاضي',
-    phone: '01012345678',
-    gov: 'Cairo — New Cairo',
-    items: 'La Fleur du Nil (100ml)',
-    total: 5850,
-    payment: 'COD',
-    status: 'Shipped',
-    date: '15 Nov 2026',
-    is_new: false,
-  },
-  {
-    id: 'LV-842909',
-    customer: 'فاطمة الزهراء الشريف',
-    phone: '01129876543',
-    gov: 'Alexandria — Smouha',
-    items: 'Crème Sublime aux Roses (50ml), Ambre d’Alexandrie (50ml)',
-    total: 7150,
-    payment: 'Paymob Card',
-    status: 'Processing',
-    date: '14 Nov 2026',
-    is_new: false,
-  },
-  {
-    id: 'LV-842908',
-    customer: 'كريم عبد العزيز',
-    phone: '01204567890',
-    gov: 'Giza — Sheikh Zayed',
-    items: 'Al Oud Al Aswad (100ml)',
-    total: 7600,
-    payment: 'COD',
-    status: 'Delivered',
-    date: '13 Nov 2026',
-    is_new: false,
-  },
-  {
-    id: 'LV-842907',
-    customer: 'د. نور الدين حسن',
-    phone: '01001122334',
-    gov: 'Dakahlia — Mansoura',
-    items: 'Bois de Louxor (50ml)',
-    total: 3800,
-    payment: 'COD',
-    status: 'Delivered',
-    date: '12 Nov 2026',
-    is_new: false,
-  },
-];
+// Baseline client orders empty to avoid leaking PII or inflating analytics
+export const BASELINE_ADMIN_ORDERS: MaisonOrder[] = [];
 
 const STORAGE_KEY = 'lv_client_orders';
 
