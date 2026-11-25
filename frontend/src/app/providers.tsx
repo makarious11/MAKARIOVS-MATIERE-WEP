@@ -1,10 +1,12 @@
 'use client';
 
 import { ReactNode, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Lenis from 'lenis';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { WhatsAppConcierge } from '@/components/ui/WhatsAppConcierge';
+import { isAdminRoute } from '@/lib/constants';
 
 // Create a stable QueryClient for the app lifetime
 function makeQueryClient() {
@@ -30,6 +32,8 @@ function getQueryClient() {
 }
 
 export default function Providers({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const onAdmin = isAdminRoute(pathname);
   const queryClient = getQueryClient();
   const lenisRef = useRef<Lenis | null>(null);
 
@@ -58,8 +62,8 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <ThemeToggle variant="floating" />
-      <WhatsAppConcierge />
+      {!onAdmin && <ThemeToggle variant="floating" />}
+      {!onAdmin && <WhatsAppConcierge />}
     </QueryClientProvider>
   );
 }

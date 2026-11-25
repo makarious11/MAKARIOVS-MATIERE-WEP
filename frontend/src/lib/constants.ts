@@ -19,6 +19,10 @@ export const API_URL =
 export const SUPPORTED_LOCALES = ['en', 'ar'] as const;
 export const DEFAULT_LOCALE = 'en' as const;
 
+export function isAdminRoute(pathname?: string | null): boolean {
+  return Boolean(pathname && /^\/(?:ar\/)?admin(?:\/|$)/.test(pathname));
+}
+
 // Egyptian governorates with shipping info & pricing
 export const GOVERNORATES = [
   { value: 'cairo', label_en: 'Cairo', label_ar: 'القاهرة', fee: 65, eta_en: '1-2 business days', eta_ar: 'خلال 1-2 يوم عمل' },

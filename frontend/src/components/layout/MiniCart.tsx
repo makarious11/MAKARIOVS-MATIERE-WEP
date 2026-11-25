@@ -11,6 +11,7 @@ import { useUIStore } from '@/store/uiStore';
 import { WaxSeal } from '@/components/ui/WaxSeal';
 import { NumberRoll } from '@/components/ui/NumberRoll';
 import { Price } from '@/components/ui/Price';
+import { isAdminRoute } from '@/lib/constants';
 
 export const MiniCart: React.FC = () => {
   const { isCartOpen, closeCart } = useUIStore();
@@ -50,6 +51,9 @@ export const MiniCart: React.FC = () => {
       setCouponLoading(false);
     }
   };
+
+  // Hide storefront cart drawer on dedicated Admin Console routes
+  if (isAdminRoute(pathname)) return null;
 
   return (
     <AnimatePresence>

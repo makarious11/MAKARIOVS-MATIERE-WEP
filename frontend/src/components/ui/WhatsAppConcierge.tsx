@@ -4,17 +4,22 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, Sparkles } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { isAdminRoute } from '@/lib/constants';
 
 export const WhatsAppConcierge: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const pathname = usePathname();
   const isArabic = pathname ? pathname.startsWith('/ar') : false;
+  const onAdmin = isAdminRoute(pathname);
 
   useEffect(() => {
+    if (onAdmin) return;
     // Show after 2.5 seconds so as not to distract during initial hero presentation
     const timer = setTimeout(() => setIsVisible(true), 2500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [onAdmin]);
+
+  if (onAdmin) return null;
 
   const phoneNumber = '201000000000'; // Default Maison VIP line
   const message = isArabic

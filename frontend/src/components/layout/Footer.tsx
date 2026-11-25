@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { WaxSeal } from '@/components/ui/WaxSeal';
 import { BotanicalPattern } from '@/components/ui/BotanicalPattern';
+import { isAdminRoute } from '@/lib/constants';
 
 export const Footer: React.FC = () => {
   const pathname = usePathname();
@@ -59,6 +60,9 @@ export const Footer: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Hide storefront footer on dedicated Admin Console routes
+  if (isAdminRoute(pathname)) return null;
 
   return (
     <footer className="relative bg-[#0D0A08] text-[#FDFBF7] overflow-hidden pt-24 pb-14 border-t border-[#B08D57]/25">

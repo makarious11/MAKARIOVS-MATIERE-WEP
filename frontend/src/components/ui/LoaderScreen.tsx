@@ -1,13 +1,18 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { isAdminRoute } from '@/lib/constants';
 
 export const LoaderScreen: React.FC = () => {
+  const pathname = usePathname();
+  const onAdmin = isAdminRoute(pathname);
   const [shouldShow, setShouldShow] = useState(false);
   const [step, setStep] = useState<'draw' | 'stamp' | 'reveal' | 'done'>('draw');
 
   useEffect(() => {
+    if (onAdmin) return;
     const hasLoaded = sessionStorage.getItem('lv_loader_viewed');
     if (hasLoaded) {
       setStep('done');
@@ -28,9 +33,9 @@ export const LoaderScreen: React.FC = () => {
       clearTimeout(revealTimer);
       clearTimeout(doneTimer);
     };
-  }, []);
+  }, [onAdmin]);
 
-  if (!shouldShow || step === 'done') return null;
+  if (onAdmin || !shouldShow || step === 'done') return null;
 
   return (
     <AnimatePresence>

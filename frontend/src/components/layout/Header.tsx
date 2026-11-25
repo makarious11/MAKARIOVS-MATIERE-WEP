@@ -10,6 +10,7 @@ import { useUIStore } from '@/store/uiStore';
 import { WaxSeal } from '@/components/ui/WaxSeal';
 import { CurrencySelector } from '@/components/ui/CurrencySelector';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { isAdminRoute } from '@/lib/constants';
 
 export const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -25,6 +26,9 @@ export const Header: React.FC = () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Hide storefront header on dedicated Admin Console routes
+  if (isAdminRoute(pathname)) return null;
 
   const isArabic = pathname ? pathname.startsWith('/ar') : false;
 

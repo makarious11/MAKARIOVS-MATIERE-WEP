@@ -50,6 +50,7 @@ import {
   ExternalLink,
   ChevronRight,
   Sparkle,
+  Globe,
 } from 'lucide-react';
 import {
   MaisonOrder,
@@ -85,6 +86,16 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 export default function AdminDashboardPage() {
   const pathname = usePathname();
   const isArabic = Boolean(pathname?.startsWith('/ar'));
+
+  const toggleAdminLanguage = () => {
+    const nextLocale = isArabic ? 'en' : 'ar';
+    try {
+      document.cookie = `NEXT_LOCALE=${nextLocale}; path=/; max-age=31536000; SameSite=Lax`;
+    } catch {}
+    if (typeof window !== 'undefined') {
+      window.location.assign(nextLocale === 'ar' ? '/ar/admin' : '/admin');
+    }
+  };
 
   // Security Authentication Gate (Cryptographic HttpOnly Session via Server)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -1211,6 +1222,16 @@ export default function AdminDashboardPage() {
         />
 
         <div className="relative z-10 max-w-md w-full p-8 sm:p-10 rounded-3xl ios-glass-dark border border-[#B08D57]/30 shadow-2xl space-y-8 text-center">
+          <div className="flex justify-end -mb-4">
+            <button
+              type="button"
+              onClick={toggleAdminLanguage}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#B08D57]/30 text-[11px] text-[#DFCA9B] hover:border-[#B08D57] hover:bg-[#B08D57]/10 transition-colors cursor-pointer"
+            >
+              <Globe size={12} />
+              <span>{isArabic ? 'English' : 'العربية'}</span>
+            </button>
+          </div>
           <div className="flex flex-col items-center space-y-4">
             <WaxSeal size={64} />
             <div>
@@ -1282,10 +1303,10 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#FDFBF7] dark:bg-[#0D0A08] text-[#14110F] dark:text-[#FDFBF7] pt-28 pb-20 select-none transition-colors duration-300">
+    <div className="relative min-h-screen bg-[#FDFBF7] dark:bg-[#0D0A08] text-[#14110F] dark:text-[#FDFBF7] pt-8 pb-16 select-none transition-colors duration-300">
       {/* Toast Notification for Live Orders */}
       {latestToast && (
-        <div className="fixed top-24 right-4 z-50 max-w-sm w-full bg-[#1C1613] text-[#FDFBF7] border border-[#B08D57] rounded-2xl p-4 shadow-2xl flex items-start gap-3 animate-slide-in">
+        <div className="fixed top-6 right-4 z-50 max-w-sm w-full bg-[#1C1613] text-[#FDFBF7] border border-[#B08D57] rounded-2xl p-4 shadow-2xl flex items-start gap-3 animate-slide-in">
           <div className="w-10 h-10 rounded-full bg-[#6B1D2F] flex items-center justify-center shrink-0">
             <BellRing size={18} className="text-[#DFCA9B] animate-bounce" />
           </div>
@@ -1388,7 +1409,17 @@ export default function AdminDashboardPage() {
               )}
             </div>
 
-            <ThemeToggle />
+            <button
+              type="button"
+              onClick={toggleAdminLanguage}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-[#B08D57]/40 text-[#14110F] dark:text-[#FDFBF7] hover:border-[#B08D57] text-xs font-medium cursor-pointer transition-colors"
+              title={isArabic ? 'Switch to English' : 'التحويل للعربية'}
+            >
+              <Globe size={14} className="text-[#B08D57]" />
+              <span>{isArabic ? 'EN' : 'عربي'}</span>
+            </button>
+
+            <ThemeToggle variant="header" />
 
             <Link
               href="/"
@@ -1418,10 +1449,10 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#B08D57]/20 dark:border-[#B08D57]/30">
+        <div className="flex items-center flex-wrap gap-2 pb-3 border-b border-[#B08D57]/20 dark:border-[#B08D57]/30">
           <button
             onClick={() => setActiveTab('products')}
-            className={`px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-full text-[11px] uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
               activeTab === 'products'
                 ? 'bg-[#14110F] dark:bg-[#6B1D2F] text-[#FDFBF7] shadow-sm'
                 : 'text-[#14110F]/70 dark:text-[#FDFBF7]/70 hover:text-[#14110F] dark:hover:text-[#FDFBF7] hover:bg-[#F1EADA] dark:hover:bg-[#1A1412]'
@@ -1434,7 +1465,7 @@ export default function AdminDashboardPage() {
 
           <button
             onClick={() => setActiveTab('categories')}
-            className={`px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-full text-[11px] uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
               activeTab === 'categories'
                 ? 'bg-[#14110F] dark:bg-[#6B1D2F] text-[#FDFBF7] shadow-sm'
                 : 'text-[#14110F]/70 dark:text-[#FDFBF7]/70 hover:text-[#14110F] dark:hover:text-[#FDFBF7] hover:bg-[#F1EADA] dark:hover:bg-[#1A1412]'
@@ -1450,7 +1481,7 @@ export default function AdminDashboardPage() {
               setActiveTab('orders');
               handleMarkAllRead();
             }}
-            className={`px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-full text-[11px] uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
               activeTab === 'orders'
                 ? 'bg-[#14110F] dark:bg-[#6B1D2F] text-[#FDFBF7] shadow-sm'
                 : 'text-[#14110F]/70 dark:text-[#FDFBF7]/70 hover:text-[#14110F] dark:hover:text-[#FDFBF7] hover:bg-[#F1EADA] dark:hover:bg-[#1A1412]'
@@ -1468,7 +1499,7 @@ export default function AdminDashboardPage() {
 
           <button
             onClick={() => setActiveTab('patrons')}
-            className={`px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-full text-[11px] uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
               activeTab === 'patrons'
                 ? 'bg-[#14110F] dark:bg-[#6B1D2F] text-[#FDFBF7] shadow-sm'
                 : 'text-[#14110F]/70 dark:text-[#FDFBF7]/70 hover:text-[#14110F] dark:hover:text-[#FDFBF7] hover:bg-[#F1EADA] dark:hover:bg-[#1A1412]'
@@ -1480,21 +1511,21 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
-              onClick={() => setActiveTab('coupons')}
-              className={`px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
-                activeTab === 'coupons'
-                  ? 'bg-[#14110F] dark:bg-[#6B1D2F] text-[#FDFBF7] shadow-sm'
-                  : 'text-[#14110F]/70 dark:text-[#FDFBF7]/70 hover:text-[#14110F] dark:hover:text-[#FDFBF7] hover:bg-[#F1EADA] dark:hover:bg-[#1A1412]'
-              }`}
-            >
-              <Tag size={15} />
-              <span>{isArabic ? 'أكواد الخصم والبروموكود' : 'Coupons & Promos'}</span>
-              <span className="text-[10px] opacity-70">({coupons.length})</span>
-            </button>
+            onClick={() => setActiveTab('coupons')}
+            className={`px-4 py-2 rounded-full text-[11px] uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+              activeTab === 'coupons'
+                ? 'bg-[#14110F] dark:bg-[#6B1D2F] text-[#FDFBF7] shadow-sm'
+                : 'text-[#14110F]/70 dark:text-[#FDFBF7]/70 hover:text-[#14110F] dark:hover:text-[#FDFBF7] hover:bg-[#F1EADA] dark:hover:bg-[#1A1412]'
+            }`}
+          >
+            <Tag size={15} />
+            <span>{isArabic ? 'أكواد الخصم والبروموكود' : 'Coupons & Promos'}</span>
+            <span className="text-[10px] opacity-70">({coupons.length})</span>
+          </button>
 
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-full text-[11px] uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
               activeTab === 'overview'
                 ? 'bg-[#14110F] dark:bg-[#6B1D2F] text-[#FDFBF7] shadow-sm'
                 : 'text-[#14110F]/70 dark:text-[#FDFBF7]/70 hover:text-[#14110F] dark:hover:text-[#FDFBF7] hover:bg-[#F1EADA] dark:hover:bg-[#1A1412]'
@@ -1509,7 +1540,7 @@ export default function AdminDashboardPage() {
               setActiveTab('security');
               refreshSecurity();
             }}
-            className={`px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-full text-[11px] uppercase tracking-widest font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
               activeTab === 'security'
                 ? 'bg-[#14110F] dark:bg-[#6B1D2F] text-[#FDFBF7] shadow-sm'
                 : 'text-[#14110F]/70 dark:text-[#FDFBF7]/70 hover:text-[#14110F] dark:hover:text-[#FDFBF7] hover:bg-[#F1EADA] dark:hover:bg-[#1A1412]'
@@ -1537,7 +1568,7 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Category Filter Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
+              <div className="flex items-center flex-wrap gap-1.5 w-full sm:w-auto">
                 <button
                   onClick={() => setSelectedCategory('all')}
                   className={`px-3 py-1.5 rounded-full text-[11px] uppercase tracking-wider transition-all cursor-pointer ${
