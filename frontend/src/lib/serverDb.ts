@@ -5,6 +5,7 @@
 // ============================================================
 
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { CANONICAL_PERFUMES, MAISON_CATEGORIES, PerfumeData, MaisonCategory } from './catalog';
 import { PatronProfile } from './patronAuth';
@@ -33,22 +34,59 @@ const SERVER_SEED_PATRONS: PatronProfile[] = [
   },
 ];
 
+const dbGlobal = globalThis as unknown as {
+  __LV_DB_CACHE__?: Record<string, unknown>;
+};
+
+function isServerlessReadOnly(): boolean {
+  return Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+}
+
+function getSeedDataDir(): string | null {
+  try {
+    const direct = path.join(process.cwd(), 'data');
+    if (fs.existsSync(direct)) return direct;
+    const nested = path.join(process.cwd(), 'frontend', 'data');
+    if (fs.existsSync(nested)) return nested;
+  } catch {
+    // Ignore
+  }
+  return null;
+}
+
 function getDataDir(): string {
-  // If running inside frontend/
-  if (fs.existsSync(path.join(process.cwd(), 'src'))) {
-    const d = path.join(process.cwd(), 'data');
-    if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
-    return d;
+  // On Vercel / Serverless, deployment filesystem is read-only — write runtime updates to /tmp
+  if (isServerlessReadOnly()) {
+    const tmpDir = path.join(os.tmpdir(), 'lvenus-data');
+    try {
+      if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+    } catch {
+      // Fallback safely to memory cache if mkdir fails
+    }
+    return tmpDir;
   }
-  // If running from root directory
-  const dInFrontend = path.join(process.cwd(), 'frontend', 'data');
-  if (fs.existsSync(path.join(process.cwd(), 'frontend'))) {
-    if (!fs.existsSync(dInFrontend)) fs.mkdirSync(dInFrontend, { recursive: true });
-    return dInFrontend;
+
+  try {
+    if (fs.existsSync(path.join(process.cwd(), 'src'))) {
+      const d = path.join(process.cwd(), 'data');
+      if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+      return d;
+    }
+    const dInFrontend = path.join(process.cwd(), 'frontend', 'data');
+    if (fs.existsSync(path.join(process.cwd(), 'frontend'))) {
+      if (!fs.existsSync(dInFrontend)) fs.mkdirSync(dInFrontend, { recursive: true });
+      return dInFrontend;
+    }
+    const rootD = path.join(process.cwd(), 'data');
+    if (!fs.existsSync(rootD)) fs.mkdirSync(rootD, { recursive: true });
+    return rootD;
+  } catch {
+    const tmpDir = path.join(os.tmpdir(), 'lvenus-data');
+    try {
+      if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+    } catch {}
+    return tmpDir;
   }
-  const rootD = path.join(process.cwd(), 'data');
-  if (!fs.existsSync(rootD)) fs.mkdirSync(rootD, { recursive: true });
-  return rootD;
 }
 
 const CATALOG_FILE = () => path.join(getDataDir(), 'catalog.json');
@@ -62,14 +100,40 @@ const NEWSLETTER_FILE = () => path.join(getDataDir(), 'newsletter.json');
 
 // --- Helper Functions ---
 function readJsonFile<T>(filePath: string, fallback: T): T {
+  const key = path.basename(filePath);
+  if (!dbGlobal.__LV_DB_CACHE__) dbGlobal.__LV_DB_CACHE__ = {};
+
+  if (dbGlobal.__LV_DB_CACHE__[key] !== undefined) {
+    return dbGlobal.__LV_DB_CACHE__[key] as T;
+  }
+
   try {
-    if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, JSON.stringify(fallback, null, 2), 'utf8');
-      return fallback;
+    if (fs.existsSync(filePath)) {
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (parsed !== null && parsed !== undefined) {
+        dbGlobal.__LV_DB_CACHE__[key] = parsed;
+        return parsed as T;
+      }
     }
-    const raw = fs.readFileSync(filePath, 'utf8');
-    const parsed = JSON.parse(raw);
-    return parsed !== null && parsed !== undefined ? parsed : fallback;
+
+    // In serverless/Vercel read-only environments, read bundled seed JSON from repo data/ if present
+    const seedDir = getSeedDataDir();
+    if (seedDir) {
+      const seedFile = path.join(seedDir, key);
+      if (seedFile !== filePath && fs.existsSync(seedFile)) {
+        const rawSeed = fs.readFileSync(seedFile, 'utf8');
+        const parsedSeed = JSON.parse(rawSeed);
+        if (parsedSeed !== null && parsedSeed !== undefined) {
+          dbGlobal.__LV_DB_CACHE__[key] = parsedSeed;
+          return parsedSeed as T;
+        }
+      }
+    }
+
+    dbGlobal.__LV_DB_CACHE__[key] = fallback;
+    writeJsonFile(filePath, fallback);
+    return fallback;
   } catch (err) {
     console.error(`Error reading ${filePath}:`, err);
     return fallback;
@@ -77,6 +141,10 @@ function readJsonFile<T>(filePath: string, fallback: T): T {
 }
 
 function writeJsonFile<T>(filePath: string, data: T): void {
+  const key = path.basename(filePath);
+  if (!dbGlobal.__LV_DB_CACHE__) dbGlobal.__LV_DB_CACHE__ = {};
+  dbGlobal.__LV_DB_CACHE__[key] = data;
+
   try {
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });

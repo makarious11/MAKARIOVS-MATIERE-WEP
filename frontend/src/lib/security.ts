@@ -6,6 +6,7 @@
 
 import crypto from 'crypto';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { NextResponse } from 'next/server';
 
@@ -24,19 +25,35 @@ const LOGIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
 // 1. Storage Paths
 // ------------------------------------------------------------
 export function getSecurityDataDir(): string {
-  if (fs.existsSync(path.join(process.cwd(), 'src'))) {
-    const d = path.join(process.cwd(), 'data');
-    if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
-    return d;
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    const tmpDir = path.join(os.tmpdir(), 'lvenus-security');
+    try {
+      if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+    } catch {}
+    return tmpDir;
   }
-  const dInFrontend = path.join(process.cwd(), 'frontend', 'data');
-  if (fs.existsSync(path.join(process.cwd(), 'frontend'))) {
-    if (!fs.existsSync(dInFrontend)) fs.mkdirSync(dInFrontend, { recursive: true });
-    return dInFrontend;
+
+  try {
+    if (fs.existsSync(path.join(process.cwd(), 'src'))) {
+      const d = path.join(process.cwd(), 'data');
+      if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+      return d;
+    }
+    const dInFrontend = path.join(process.cwd(), 'frontend', 'data');
+    if (fs.existsSync(path.join(process.cwd(), 'frontend'))) {
+      if (!fs.existsSync(dInFrontend)) fs.mkdirSync(dInFrontend, { recursive: true });
+      return dInFrontend;
+    }
+    const rootD = path.join(process.cwd(), 'data');
+    if (!fs.existsSync(rootD)) fs.mkdirSync(rootD, { recursive: true });
+    return rootD;
+  } catch {
+    const tmpDir = path.join(os.tmpdir(), 'lvenus-security');
+    try {
+      if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+    } catch {}
+    return tmpDir;
   }
-  const rootD = path.join(process.cwd(), 'data');
-  if (!fs.existsSync(rootD)) fs.mkdirSync(rootD, { recursive: true });
-  return rootD;
 }
 
 const ADMIN_SECURITY_FILE = () => path.join(getSecurityDataDir(), 'admin_security.json');
@@ -70,6 +87,7 @@ export interface SecurityLogEntry {
 const g = globalThis as unknown as {
   __LV_ADMIN_SEC__?: AdminSecurityState;
   __LV_RATE_LIMITS__?: Map<string, { count: number; resetAt: number }>;
+  __LV_SEC_LOGS__?: SecurityLogEntry[];
 };
 
 function readSecurityState(): AdminSecurityState {
@@ -571,32 +589,39 @@ export function checkRateLimit(
 // 6. Security Audit Logging
 // ------------------------------------------------------------
 export function getSecurityLogs(): SecurityLogEntry[] {
+  if (Array.isArray(g.__LV_SEC_LOGS__)) {
+    return g.__LV_SEC_LOGS__;
+  }
   try {
     const filePath = SECURITY_LOGS_FILE();
     if (!fs.existsSync(filePath)) return [];
     const raw = fs.readFileSync(filePath, 'utf8');
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    const logs = Array.isArray(parsed) ? parsed : [];
+    g.__LV_SEC_LOGS__ = logs;
+    return logs;
   } catch {
-    return [];
+    return g.__LV_SEC_LOGS__ || [];
   }
 }
 
 export function logSecurityEvent(entry: Omit<SecurityLogEntry, 'id' | 'timestamp'>): void {
+  const record: SecurityLogEntry = {
+    id: `sec_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+    timestamp: new Date().toISOString(),
+    ...entry,
+  };
+  const logs = getSecurityLogs();
+  const nextLogs = [record, ...logs].slice(0, 300);
+  g.__LV_SEC_LOGS__ = nextLogs;
+
   try {
-    const logs = getSecurityLogs();
-    const record: SecurityLogEntry = {
-      id: `sec_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
-      timestamp: new Date().toISOString(),
-      ...entry,
-    };
-    const nextLogs = [record, ...logs].slice(0, 300);
     const filePath = SECURITY_LOGS_FILE();
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(filePath, JSON.stringify(nextLogs, null, 2), 'utf8');
   } catch {
-    // Non-fatal in read-only environments
+    // Non-fatal in read-only environments; memory cache preserves recent logs
   }
 }
 
@@ -612,8 +637,11 @@ export function clearSecurityLogs(ip: string): SecurityLogEntry[] {
       details: 'Security audit log archive cleared by Admin',
     },
   ];
+  g.__LV_SEC_LOGS__ = resetLog;
   try {
     const filePath = SECURITY_LOGS_FILE();
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(filePath, JSON.stringify(resetLog, null, 2), 'utf8');
   } catch {}
   return resetLog;
